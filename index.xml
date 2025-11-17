@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice PublicBeta" commit="f71392dee6c6dbe833dcf33a286ba3aa241d7abc">
+<index version="1" name="hsuanice PublicBeta" commit="8b5fad181427fc32780ea816e2af18455d312361">
+  <category name="Library">
+    <reapack name="hsuanice_List Table.lua" type="script">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 hsuanice_List Table.lua \u8212- Minimal helper library for Item List Editor. Provides pure, side-effect-free utilities (no UI, no REAPER writes).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Functions include: \u8226 ? Column helpers: rebuild_display_mapping() \u8226 ? Row helpers: build_row_index_map(), filter_rows() \u8226 ? Selection helpers: sel_rect_apply() (Shift-rectangle) \u8226 ? Clipboard helpers: copy_selection(), parse_clipboard_table(), flatten_tsv_to_list(), src_shape_dims() \u8226 ? Destination builders: build_dst_list_from_selection(), build_dst_by_anchor_and_shape() \u8226 ? Summary: compute_summary() for item count, span, length totals \u8226 ? Export: build_table_text() to TSV/CSV (follows visual column order)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Intended usage: Called from the Item List Editor (or similar scripts) to handle table logic, selection mechanics, and text I/O, keeping the Editor focused on UI and REAPER state changes only.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.2.7" time="2025-11-17T18:27:19Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/8b5fad181427fc32780ea816e2af18455d312361/Library/hsuanice_List%20Table.lua</source>
+      </version>
+    </reapack>
+  </category>
   <metadata>
     <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
