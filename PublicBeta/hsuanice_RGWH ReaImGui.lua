@@ -1,12 +1,11 @@
 --[[
 @description RGWH GUI - ImGui Interface for RGWH Core
 @author hsuanice
-@version 0.1.0-beta (251114.1920)
+@version 0.1.0
 @about
   ImGui-based GUI for configuring and running RGWH Core operations.
   Provides visual controls for all RGWH Wrapper Template parameters.
 
-@usage
   Run this script in REAPER to open the RGWH GUI window.
   Adjust parameters using the visual controls and click operation buttons to execute.
 
