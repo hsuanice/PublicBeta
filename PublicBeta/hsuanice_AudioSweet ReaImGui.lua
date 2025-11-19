@@ -1,7 +1,7 @@
 --[[
 @description AudioSweet ReaImGui - ImGui Interface for AudioSweet
 @author hsuanice
-@version 0.1.0-beta (251106.1600)
+@version 0.1.0 (251106.1600)
 @about
   Complete AudioSweet control center with:
   - Focused/Chain modes with FX chain display
