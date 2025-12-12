@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice PublicBeta" commit="58a3e39ba95bd0f35846aa1f39aa4cb2574295e1">
+<index version="1" name="hsuanice PublicBeta" commit="5be86d911bf8b36f0a1af4890628c1446642d288">
   <category name="Example">
-    <reapack name="cfillion_Hello world.lua" type="script" desc="Hello world">
+    <reapack name="cfillion_Hello world YYH Test.lua" type="script" desc="Hello world">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -16,17 +16,17 @@ Markdown
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="cfillion" time="2021-01-04T23:30:32Z">
-        <source main="main">https://github.com/cfillion/reapack-repository-template/raw/58a3e39ba95bd0f35846aa1f39aa4cb2574295e1/Example/cfillion_Hello%20world.lua</source>
+      <version name="1.0" author="cfillion" time="2025-12-12T08:26:45Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/5be86d911bf8b36f0a1af4890628c1446642d288/Example/cfillion_Hello%20world%20YYH%20Test.lua</source>
       </version>
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 ReaPack Repository Template\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 ReaPack Repository Template\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 A template for GitHub-hosted ReaPack repositories with automated {\field{\*\fldinst{HYPERLINK "https://github.com/cfillion/reapack-index"}}{\fldrslt{\ul
 reapack-index
 }}}
