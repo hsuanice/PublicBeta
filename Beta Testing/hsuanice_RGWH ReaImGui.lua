@@ -14,13 +14,29 @@
   Adjust parameters using the visual controls and click operation buttons to execute.
 
 @changelog
-  0.1.0 [v251215.2300] - CLEANUP: Removed unused Rename Mode setting + Documentation improvements
+  0.1.0 [v251213.0023] - ADDED DOCKING TOGGLE OPTION
+    - Added: Window docking toggle option in Settings menu.
+      - New location: Menu Bar → Settings → "Enable Window Docking" (checkbox)
+      - When disabled: window cannot be docked into REAPER's dock system (WindowFlags_NoDocking)
+      - When enabled: window can be docked like any other ImGui window
+      - Setting persists between sessions via ExtState
+      - Lines: 396 (setting definition), 415 (persist_keys), 1604-1606 (window flags), 1634-1638 (Settings menu)
+    - Purpose: Prevents accidental docking for users who prefer floating windows, while allowing flexibility for those who want docking.
+
+  [v251215.2300] - CLEANUP: Removed unused settings + Documentation improvements
     - Removed: Rename Mode setting (was never implemented, no functional change)
-      • Removed from GUI state variables (line 350-354)
-      • Removed from persist_keys array (line 372-380)
-      • Removed from print_all_settings() output (line 454-458)
-      • Removed from build_args_from_gui() function (line 697-743)
-      • Removed combo box from Settings window (was line 917-918)
+    - Removed: Glue After Mono Apply setting (was never implemented, no functional change)
+      • Removed from GUI state variables (line 377-379)
+      • Removed from persist_keys array (line 396-404)
+      • Removed from build_args_from_gui() policies (line 759-763)
+      • Removed checkbox from Settings window (was line 941-943)
+      • Updated Mono mode tooltip to reflect fixed behavior (line 1646-1652)
+      • Actual behavior unchanged: AUTO/GLUE modes always glue multi-item units after mono apply
+    - Removed: Rename Mode setting (complete removal details)
+      • Removed from GUI state variables
+      • Removed from persist_keys array
+      • Removed from build_args_from_gui() function
+      • Removed combo box from Settings window
       • Actual naming behavior unchanged: RENDER still uses "TakeName-renderedN", GLUE still uses "TakeName-glued-XX.wav"
     - Improved: TIMECODE MODE section clarity in Settings
       • Title changed: "TIMECODE MODE" → "TIMECODE MODE (RENDER only)" (line 884)
@@ -375,7 +391,6 @@ local gui = {
 
   -- Policies
   glue_single_items = false,  -- AUTO mode: false=single→render, true=single→glue
-  glue_after_mono_apply = true,  -- AUTO mode: when channel_mode=mono, glue after applying mono to each item
   glue_no_trackfx_policy = 0,    -- 0=preserve, 1=force_multi
   render_no_trackfx_policy = 0,  -- 0=preserve, 1=force_multi
 
@@ -385,6 +400,9 @@ local gui = {
 
   -- Selection policy (wrapper-only)
   selection_policy = 1,      -- 0=progress, 1=restore, 2=none
+
+  -- UI settings
+  enable_docking = false,    -- Allow window docking
 
   -- Status
   is_running = false,
@@ -401,8 +419,9 @@ local persist_keys = {
   'handle_mode','handle_length',
   'epsilon_mode','epsilon_value',
   'cue_write_edge','cue_write_glue',
-  'glue_single_items','glue_after_mono_apply','glue_no_trackfx_policy','render_no_trackfx_policy',
-  'debug_level','debug_no_clear','selection_policy'
+  'glue_single_items','glue_no_trackfx_policy','render_no_trackfx_policy',
+  'debug_level','debug_no_clear','selection_policy',
+  'enable_docking'
 }
 
 local function serialize_gui_state(tbl)
@@ -759,7 +778,6 @@ local function build_args_from_gui(operation)
 
     policies = {
       glue_single_items = glue_single_items,  -- Use the mode-specific value
-      glue_after_mono_apply = gui.glue_after_mono_apply,
       glue_no_trackfx_output_policy = policy_names[gui.glue_no_trackfx_policy + 1],
       render_no_trackfx_output_policy = policy_names[gui.render_no_trackfx_policy + 1],
     },
@@ -939,10 +957,6 @@ local function draw_settings_popup()
 
   rv, new_val = ImGui.Combo(ctx, "Render No-TrackFX Policy", gui.render_no_trackfx_policy, "Preserve\0Force Multi\0")
   if rv then gui.render_no_trackfx_policy = new_val end
-
-  rv, new_val = ImGui.Checkbox(ctx, "Glue After Mono Apply (AUTO mode)", gui.glue_after_mono_apply)
-  if rv then gui.glue_after_mono_apply = new_val end
-  draw_help_marker("When Channel Mode=Mono in AUTO mode with multi-item units:\n• ON: Apply mono (40361) to each item, then glue into one\n• OFF: Apply mono (40361) to each item, keep as separate items\nNote: GLUE mode always glues after mono apply (ignores this setting)")
 
   -- === DEBUG ===
   draw_section_header("DEBUG")
@@ -1595,6 +1609,11 @@ local function draw_gui()
   local before_state = serialize_gui_state(gui)
   local window_flags = ImGui.WindowFlags_MenuBar | ImGui.WindowFlags_AlwaysAutoResize | ImGui.WindowFlags_NoResize
 
+  -- Add NoDocking flag if docking is disabled
+  if not gui.enable_docking then
+    window_flags = window_flags | ImGui.WindowFlags_NoDocking
+  end
+
   local visible, open = ImGui.Begin(ctx, 'RGWH Control Panel', true, window_flags)
   if not visible then
     ImGui.End(ctx)
@@ -1619,8 +1638,19 @@ local function draw_gui()
       ImGui.EndMenu(ctx)
     end
 
-    if ImGui.MenuItem(ctx, 'Settings...', nil, false, true) then
-      gui.show_settings = true
+    if ImGui.BeginMenu(ctx, 'Settings') then
+      -- UI Settings
+      local rv_dock, new_dock = ImGui.MenuItem(ctx, 'Enable Window Docking', nil, gui.enable_docking, true)
+      if rv_dock then
+        gui.enable_docking = new_dock
+        save_persist()
+      end
+      ImGui.Separator(ctx)
+
+      if ImGui.MenuItem(ctx, 'All Settings...', nil, false, true) then
+        gui.show_settings = true
+      end
+      ImGui.EndMenu(ctx)
     end
 
     if ImGui.BeginMenu(ctx, 'Help') then
@@ -1649,17 +1679,13 @@ local function draw_gui()
   if ImGui.RadioButton(ctx, "Mono##channel", gui.channel_mode == 1) then gui.channel_mode = 1 end
   -- Mono mode tooltip (show current glue_after_mono_apply setting)
   if ImGui.IsItemHovered(ctx) then
-    ImGui.SetTooltip(ctx, string.format(
+    ImGui.SetTooltip(ctx,
       "Mono mode: Apply mono (40361) to each item\n\n" ..
-      "Current setting:\n" ..
-      "  • Glue After Mono Apply: %s\n" ..
-      "  • RENDER mode: Never glues\n" ..
-      "  • AUTO mode: %s\n" ..
-      "  • GLUE mode: Always glues\n\n" ..
-      "Change this setting in: Menu > Settings > Policies",
-      gui.glue_after_mono_apply and "ON" or "OFF",
-      gui.glue_after_mono_apply and "Glues after mono apply" or "Keeps items separate"
-    ))
+      "Behavior by operation mode:\n" ..
+      "  • RENDER mode: Never glues (processes items individually)\n" ..
+      "  • AUTO mode: Multi-item units are glued after mono apply\n" ..
+      "  • GLUE mode: Always glues after mono apply"
+    )
   end
   ImGui.SameLine(ctx)
   if ImGui.RadioButton(ctx, "Multi##channel", gui.channel_mode == 2) then gui.channel_mode = 2 end
