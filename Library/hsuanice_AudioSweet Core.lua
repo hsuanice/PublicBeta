@@ -2,7 +2,6 @@
 @description AudioSweet Core - Focused Track FX render via RGWH Core
 @version 0.1.0
 @author hsuanice
-@noindex
 
 @provides
   [main] .

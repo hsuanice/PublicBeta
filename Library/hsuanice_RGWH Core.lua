@@ -2,7 +2,6 @@
 @description RGWH Core - Render or Glue with Handles
 @version 0.1.0
 @author hsuanice
-@noindex
 
 @provides
   [main] .

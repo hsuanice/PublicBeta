@@ -2,7 +2,6 @@
 @description AudioSweet Preview Core
 @version 0.1.0
 @author hsuanice
-@noindex
 
 @provides
   [main] .

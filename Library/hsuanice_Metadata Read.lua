@@ -2,7 +2,6 @@
 @description Metadata Read (reader / normalizer / tokens)
 @version 0.3.0
 @author hsuanice
-@noindex
 
 @provides
   [main] .
