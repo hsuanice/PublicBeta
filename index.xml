@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice PublicBeta" commit="ae9cc9a528a3014fc26c6808f43f1d5dc5938127">
+<index version="1" name="hsuanice Scripts" commit="ae9cc9a528a3014fc26c6808f43f1d5dc5938127">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
       <metadata>
