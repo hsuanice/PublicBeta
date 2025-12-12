@@ -3,6 +3,10 @@
 @version 0.3.0
 @author hsuanice
 @noindex
+
+@provides
+  [main] .
+
 @about
   Read-only metadata utilities for REAPER items:
   - Unwrap SECTION to real parent source

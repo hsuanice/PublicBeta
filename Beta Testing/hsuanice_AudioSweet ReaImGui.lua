@@ -3,9 +3,7 @@
 @author hsuanice
 @version 0.1.0
 @provides
-  [main]   Beta Testing/hsuanice_AudioSweet ReaImGui.lua
-  [nomain] Library/hsuanice_AudioSweet Core.lua
-  [nomain] Library/hsuanice_AS Preview Core.lua
+  [main] .
 @about
   Complete AudioSweet control center with:
   - Focused/Chain modes with FX chain display

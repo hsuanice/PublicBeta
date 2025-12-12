@@ -4,8 +4,6 @@
 @version 0.1.0
 @provides
   [main] .
-  [nomain] Library/hsuanice_RGWH Core.lua
-  [nomain] Library/hsuanice_Metadata Embed.lua
 
 @about
   ImGui-based GUI for configuring and running RGWH Core operations.

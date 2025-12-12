@@ -3,6 +3,10 @@
 @version 0.1.0
 @author hsuanice
 @noindex
+
+@provides
+  [main] .
+
 @about
   Core library for handle-aware Render/Glue workflows with clear, single-entry API.
   Features:

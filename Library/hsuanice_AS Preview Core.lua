@@ -4,6 +4,9 @@
 @author hsuanice
 @noindex
 
+@provides
+  [main] .
+
 @about Minimal, self-contained preview runtime. Later we can extract helpers to "hsuanice_AS Core.lua".
 
 @changelog

@@ -3,6 +3,10 @@
 @version 0.3.0
 @author hsuanice
 @noindex
+
+@provides
+  [main] .
+
 @about
   Helpers to call BWF MetaEdit safely:
   - Shell quoting

@@ -3,6 +3,10 @@
 @version 0.1.0
 @author hsuanice
 @noindex
+
+@provides
+  [main] .
+
 @notes
 
 Tim Chimes (original), adapted by hsuanice for AudioSweet Core integration.
