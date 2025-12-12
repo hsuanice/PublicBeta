@@ -200,7 +200,23 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is https://github.com/hsuanice/PublicBeta/raw/master/index.xml\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is {\field{\*\fldinst{HYPERLINK "https://raw.githubusercontent.com/hsuanice/PublicBeta/master/index.xml"}}{\fldrslt{\ul
+https://github.com/hsuanice/PublicBeta/raw/master/index.xml
+}}}
+\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The scripts in this repository are created and maintained by hsuanice, with the assistance of AI tools such as ChatGPT and Claude.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 2025-12-12 \u8212- Beta release\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 RGWH\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Render or glue items with handles.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 AudioSweet\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab AudioSuite-style processing for REAPER.\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Original concept and script by Tim Chimes, adapted and integrated by hsuanice for AudioSweet Core.\par}
+{\pard \ql \f0 \sa180 \li360 \fi0 Credits & Reference (AudioSweet)\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab \u8220"AudioSuite-like Script\u8221" \u8212- renders the selected plug-in to the selected media item.\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab Written in Lua for REAPER 5.1.\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab Version 1.1 (2015-12-22): Added PreventUIRefresh.\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab Original author: Tim Chimes\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab http://chimesaudio.com\sa180\sa180\par}
 }
 ]]></description>
   </metadata>
