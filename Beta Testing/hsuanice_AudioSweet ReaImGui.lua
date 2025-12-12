@@ -20,7 +20,42 @@
 
 
 @changelog
-  0.1.0 [Internal Build 251212.1230] - IMPROVED UNDO BEHAVIOR FOR SINGLE-STEP UNDO
+  0.1.0 [Internal Build 251213.0026] - IMPROVED CHAIN PREVIEW TARGET SELECTION AND SOLO TARGETING
+    - Improved: Chain preview now intelligently selects target track.
+      - If FX chain is focused: Uses the focused FX chain track for preview
+      - If no FX chain is focused: Falls back to settings target track name
+      - Rationale: Allows quick preview of currently focused chain without changing settings
+      - Lines: 1003-1017 (toggle_preview target selection logic), 1019-1027 (args setup)
+    - Improved: Solo toggle button now correctly targets preview track in chain mode.
+      - In Focused mode: Targets gui.focused_track (existing behavior)
+      - In Chain mode: Prioritizes gui.focused_track if exists, otherwise finds track by gui.preview_target_track name
+      - Previously: Solo button didn't work correctly in chain mode
+      - Lines: 1014-1073 (toggle_solo enhanced targeting logic)
+    - Fixed: Chain preview target resolution now works correctly with Preview Core.
+      - Issue 1: Previously used target="TARGET_TRACK_NAME" which triggered fallback to "AudioSweet"
+      - Issue 2: gui.focused_track_name format included track number prefix (e.g., "#3 - TrackName")
+      - Solution: Get pure track name directly from gui.focused_track using P_NAME (without track number)
+      - Result: Chain preview now correctly targets focused FX chain track or settings target track
+      - Lines: 1008-1024 (target track name extraction), 1026-1034 (args without explicit target)
+    - Added: Comprehensive debug logging for both preview and solo operations in chain mode.
+
+  Internal Build 251213.0018 - IMPROVED DOCKING SETTING DISCOVERABILITY
+    - Improved: Moved window docking toggle from History Settings to main Settings menu.
+      - New location: Menu Bar → Settings → "Enable Window Docking" (checkbox)
+      - Previous location: History Settings popup (removed)
+      - Rationale: Docking is a UI-level setting unrelated to history; placing it in Settings menu is more intuitive and discoverable
+      - Lines: 1689-1693 (Settings menu checkbox), removed lines 1802-1813 (old History Settings UI section)
+
+  Internal Build 251213.0008 - ADDED DOCKING TOGGLE OPTION
+    - Added: Window docking toggle option.
+      - New setting: "Enable Window Docking" checkbox (default: OFF)
+      - When disabled: window cannot be docked into REAPER's dock system (WindowFlags_NoDocking)
+      - When enabled: window can be docked like any other ImGui window
+      - Setting persists between sessions via ExtState
+      - Lines: 579 (setting definition), 610-611 (save), 657-658 (load), 1645-1647 (window flags)
+    - Purpose: Prevents accidental docking for users who prefer floating windows, while allowing flexibility for those who want docking.
+
+  Internal Build 251212.1230 - IMPROVED UNDO BEHAVIOR FOR SINGLE-STEP UNDO
     - Improved: Main AUDIOSWEET button execution now uses single undo block.
       - Issue: Executing AudioSweet required multiple undo steps to fully revert (render, glue, print FX, etc.)
       - Solution: Wrapped run_audiosweet() execution with Undo_BeginBlock/EndBlock (lines 1039-1040, 1110-1113)
@@ -575,6 +610,8 @@ local gui = {
   -- Feature flags
   enable_saved_chains = true,   -- Now working with OVERRIDE ExtState mechanism
   enable_history = true,        -- Now working with OVERRIDE ExtState mechanism
+  -- UI settings
+  enable_docking = false,       -- Allow window docking
 }
 
 ------------------------------------------------------------
@@ -605,6 +642,8 @@ local function save_gui_settings()
   r.SetExtState(SETTINGS_NAMESPACE, "preview_target_track", gui.preview_target_track, true)
   r.SetExtState(SETTINGS_NAMESPACE, "preview_solo_scope", tostring(gui.preview_solo_scope), true)
   r.SetExtState(SETTINGS_NAMESPACE, "preview_restore_mode", tostring(gui.preview_restore_mode), true)
+  -- UI settings
+  r.SetExtState(SETTINGS_NAMESPACE, "enable_docking", gui.enable_docking and "1" or "0", true)
 end
 
 local function load_gui_settings()
@@ -650,6 +689,8 @@ local function load_gui_settings()
   gui.preview_target_track = get_string("preview_target_track", "AudioSweet")
   gui.preview_solo_scope = get_int("preview_solo_scope", 0)
   gui.preview_restore_mode = get_int("preview_restore_mode", 0)
+  -- UI settings
+  gui.enable_docking = get_bool("enable_docking", false)
 
   -- Debug output on startup
   if gui.debug then
@@ -965,12 +1006,30 @@ local function toggle_preview()
   local solo_scope_names = { "track", "item" }
   local restore_mode_names = { "timesel", "guid" }
 
+  -- Determine target track for chain mode
+  local target_track_name = gui.preview_target_track  -- Default to settings
+  if gui.mode == 1 then
+    -- Chain mode: prioritize focused FX chain track if available
+    if gui.focused_track and r.ValidatePtr2(0, gui.focused_track, "MediaTrack*") then
+      -- Get pure track name from track object (P_NAME doesn't include track number)
+      local _, pure_name = r.GetSetMediaTrackInfo_String(gui.focused_track, "P_NAME", "", false)
+      target_track_name = pure_name
+      if gui.debug then
+        r.ShowConsoleMsg("[AudioSweet] Chain preview using focused FX chain track: " .. (gui.focused_track_name or pure_name) .. "\n")
+      end
+    else
+      if gui.debug then
+        r.ShowConsoleMsg("[AudioSweet] Chain preview using settings target track: " .. target_track_name .. "\n")
+      end
+    end
+  end
+
   local args = {
     debug = gui.debug,
     chain_mode = (gui.mode == 1),  -- 0=focused, 1=chain
     mode = "solo",
-    target = "TARGET_TRACK_NAME",
-    target_track_name = gui.preview_target_track,
+    -- Don't set target explicitly; let Preview Core use target_track_name directly
+    target_track_name = target_track_name,
     solo_scope = solo_scope_names[gui.preview_solo_scope + 1],
     restore_mode = restore_mode_names[gui.preview_restore_mode + 1],
   }
@@ -993,26 +1052,55 @@ local function toggle_solo()
   -- Debug logging
   if gui.debug then
     local scope_name = (gui.preview_solo_scope == 0) and "Track Solo" or "Item Solo"
-    r.ShowConsoleMsg(string.format("[AS GUI] SOLO button clicked (scope=%s)\n", scope_name))
+    r.ShowConsoleMsg(string.format("[AS GUI] SOLO button clicked (scope=%s, mode=%s)\n",
+      scope_name, gui.mode == 0 and "Focused" or "Chain"))
   end
 
   -- Toggle solo based on solo_scope setting
   if gui.preview_solo_scope == 0 then
-    -- Track solo: toggle solo on focused track (not selected tracks)
-    if gui.focused_track then
-      local current_solo = r.GetMediaTrackInfo_Value(gui.focused_track, "I_SOLO")
+    -- Track solo: determine target track based on mode
+    local target_track = nil
+    local track_name = ""
+
+    if gui.mode == 0 then
+      -- Focused mode: use focused track
+      target_track = gui.focused_track
+      track_name = gui.focused_track_name
+    else
+      -- Chain mode: use preview target track or focused track
+      if gui.focused_track then
+        -- If there's a focused FX chain, use that track
+        target_track = gui.focused_track
+        track_name = gui.focused_track_name
+      else
+        -- Otherwise find track by preview_target_track name
+        local tc = r.CountTracks(0)
+        for i = 0, tc - 1 do
+          local tr = r.GetTrack(0, i)
+          local _, tn = r.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+          if tn == gui.preview_target_track then
+            target_track = tr
+            track_name = gui.preview_target_track
+            break
+          end
+        end
+      end
+    end
+
+    if target_track then
+      local current_solo = r.GetMediaTrackInfo_Value(target_track, "I_SOLO")
       -- Toggle: 0=unsolo, 1=solo, 2=solo in place
       -- Simple toggle: if any solo state, set to 0; if 0, set to 1
       local new_solo = (current_solo == 0) and 1 or 0
-      r.SetMediaTrackInfo_Value(gui.focused_track, "I_SOLO", new_solo)
+      r.SetMediaTrackInfo_Value(target_track, "I_SOLO", new_solo)
 
       if gui.debug then
         r.ShowConsoleMsg(string.format("[AS GUI] Toggled track solo: %s -> %s (Track: %s)\n",
-          current_solo, new_solo, gui.focused_track_name))
+          current_solo, new_solo, track_name))
       end
     else
       if gui.debug then
-        r.ShowConsoleMsg("[AS GUI] No focused track to solo\n")
+        r.ShowConsoleMsg("[AS GUI] No target track found for solo\n")
       end
     end
   else
@@ -1626,6 +1714,11 @@ local function draw_gui()
                        ImGui.WindowFlags_AlwaysAutoResize |
                        ImGui.WindowFlags_NoResize
 
+  -- Add NoDocking flag if docking is disabled
+  if not gui.enable_docking then
+    window_flags = window_flags | ImGui.WindowFlags_NoDocking
+  end
+
   local visible, open = ImGui.Begin(ctx, 'AudioSweet Control Panel', true, window_flags)
   if not visible then
     ImGui.End(ctx)
@@ -1665,6 +1758,14 @@ local function draw_gui()
     end
 
     if ImGui.BeginMenu(ctx, 'Settings') then
+      -- UI Settings
+      local rv_dock, new_dock = ImGui.MenuItem(ctx, 'Enable Window Docking', nil, gui.enable_docking, true)
+      if rv_dock then
+        gui.enable_docking = new_dock
+        save_gui_settings()
+      end
+      ImGui.Separator(ctx)
+
       if ImGui.MenuItem(ctx, 'Preview Settings...', nil, false, true) then
         gui.show_preview_settings = true
       end
