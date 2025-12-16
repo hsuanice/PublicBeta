@@ -1,6 +1,281 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="b634dd1786693d1137869a167029d864c5896abb">
+<index version="1" name="hsuanice Scripts" commit="959c37339bbe980d3a3a9450421d76e4998f30d4">
+  <category name="Beta Testing">
+    <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 AudioSweet ReaImGui - User Manual\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Overview\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Complete AudioSweet control center with ImGui interface for managing FX chains and presets.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Core Features\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Two operation modes: Focused FX and Full Chain\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Apply/Copy FX chains to AudioSweet Preview track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Save and manage FX presets with custom naming\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Automatic operation history tracking\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Real-time FX chain visualization\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Built-in keyboard shortcuts\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Persistent settings across sessions\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Operation Modes\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Focused Mode (Single FX)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Works with the currently focused FX window\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Click on any FX window to focus it\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Saves/applies only the selected FX\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Display shows: FX name only (e.g., "VST3: Pro-Q 4")\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Supports CLAP and VST3 plugins\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Chain Mode (Full FX Chain)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Works with the entire FX chain of selected track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Saves/applies all FX on the track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Display shows: "#N Track Name" format\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shows complete FX list in tooltips\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Main Actions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Apply\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Copies FX to Preview track AND enables it\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Removes all existing FX on Preview track first\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Use when you want to audition the FX immediately\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Copy\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Copies FX to Preview track but keeps it bypassed\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Removes all existing FX on Preview track first\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Use when you want to prepare FX without hearing it yet\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Open\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Opens the saved FX window(s)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Focused mode: Opens the specific FX window\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Chain mode: Opens all FX windows in the chain\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Preset System\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Saving Presets\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Click the "Save" button (in main controls or history section)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Enter a custom name, or leave empty to use default:\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab Focused mode default: FX name\par}
+{\pard \ql \f0 \sa0 \li720 \fi-360 \endash \tx360\tab Chain mode default: Track name\sa180\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Preset is saved and appears in the "Saved" section\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Managing Presets\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Open}: Opens the FX window(s) without applying\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Name}: Rename the preset (custom name or revert to default)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Save}: Save current FX as a new preset\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Delete} (X button): Remove the preset permanently\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Preset Display Names\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Custom name: Shows your custom name\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Default name (Focused): Shows current FX name from track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Default name (Chain): Shows "#N Current Track Name"\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Hover tooltip: Shows full FX chain with track info\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 History System\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Automatic Tracking\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Every Apply/Copy operation is automatically logged\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab History stores up to 50 recent operations\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Newest operations appear at the top\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Duplicates are automatically removed\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 History Actions\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Open}: Opens the FX window(s) from this history entry\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Name}: Rename this history entry (becomes a custom name)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Save}: Convert this history entry into a saved preset\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 History Display Names\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Inherits custom name from preset (if executed from a saved preset)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shows default name if executed directly\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Updates automatically when you rename the matching preset\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Keyboard Shortcuts\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Space}: Play/Stop transport\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b S}: Toggle solo on Preview track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Esc}: Close dialogs\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Settings Panel\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Target Track\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Select which track to use as AudioSweet Preview target\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Default: First track matching "AudioSweet Preview" in name\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Can manually override with any track\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Auto-Actions\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Auto Open FX}: Automatically opens FX window after Apply/Copy\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Auto Solo}: Automatically solos Preview track after Apply/Copy\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 File Naming\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Configure how bounced audio files are named:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Include Elements}: Track#, Track Name, FX Name, Timestamp, Item Name\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Show Type}: Display plugin type prefix (VST3:, CLAP:, JS:)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Separators}: Customize separators between name elements\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b FX Alias}: Replace long FX names with short aliases\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Chain Visibility\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Show Chain in Focused Mode}: Display full FX chain even in Focused mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Useful for context when working with multiple FX\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Debug Mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Enable console logging for troubleshooting\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shows: Save/Rename/Open/Run operations with indices and modes\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Tips & Tricks\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Workflow Example 1: Quick FX Auditioning\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Select track with FX chain\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Switch to Chain mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Click "Apply" to audition the full chain\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Click "Save" if you like it\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Workflow Example 2: Building FX Library\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Focus on individual FX window\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Switch to Focused mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Click "Save" and name it (e.g., "Vocal EQ Bright")\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Repeat for different FX\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 5.\tx360\tab Access your library from "Saved" section anytime\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Workflow Example 3: Using History\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Experiment with different FX chains using Apply\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab All attempts are logged in History\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Go back to History and click "Open" on any entry to review\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Click "Save" on the one you like to make it permanent\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Name Management\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Leave name empty when saving = dynamic name (updates with track/FX renames)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Enter custom name = static name (never changes)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab You can always rename later using the "Name" button\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Renaming a preset automatically updates all matching history entries\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 FX Chain Tooltips\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Hover over any preset/history item to see full FX chain\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Focused mode: Saved FX is highlighted in GREEN\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shows track number and current track name\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Troubleshooting\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 "No focused FX" in Focused Mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Click on any FX window to focus it\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Make sure the FX window is open (not just in FX chain list)\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Preset Opens Wrong FX\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab This can happen if you reordered FX after saving\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab The script tries to match by name as fallback\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Enable Debug mode to see index matching details\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 History Not Showing Custom Names\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Make sure you're using version 251215.0025 or later\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Old history entries won't have custom names (only new ones)\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Window Too Wide/Narrow\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Edit line 2482: ImGui.SetNextWindowSizeConstraints(ctx, 450, ...)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Change the first number (450) to your preferred width\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Technical Notes\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab All presets saved in REAPER project ExtState (persistent per project)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab History limited to 50 entries (configurable in gui.max_history)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Supports CLAP, VST3, VST2, AU, and JS plugins\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab FX matching uses both index and name for reliability\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Track identification uses GUID (survives track reordering)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20Monitor.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH ReaImGui.lua" type="script" desc="RGWH GUI - ImGui Interface for RGWH Core">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20Wrapper%20Template.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Library">
+    <reapack name="hsuanice_AS Preview Core.lua" type="script" desc="AudioSweet Preview Core">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_AS%20Preview%20Core.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_AudioSweet Core.lua" type="script" desc="AudioSweet Core - Focused Track FX render via RGWH Core">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_AudioSweet%20Core.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_Metadata Embed.lua" type="script" desc="Metadata Embed - BWF MetaEdit helpers">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Helpers to call BWF MetaEdit safely:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shell quoting\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Normalize iXML sidecar newline\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Copy iXML/core, read/write TimeReference\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Post-embed refresh (offline->online, rebuild peaks)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.3.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_Metadata%20Embed.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_Metadata Read.lua" type="script" desc="Metadata Read (reader / normalizer / tokens)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Read-only metadata utilities for REAPER items:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Unwrap SECTION to real parent source\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Read iXML TRACK_LIST (Wave Agent style)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Fallback parse sTRK#=Name from BWF/Description (EdiLoad split)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Interleave index \u8596 ? recorder channel mapping\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Token expansion for rename/export ($trk/$trkN/$trkall, $\{interleave\}, $\{chnum\}, ...)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.3.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_Metadata%20Read.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Core.lua" type="script" desc="RGWH Core - Render or Glue with Handles">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_RGWH%20Core.lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Tools">
+    <reapack name="hsuanice_AudioSweet Chain Preview Solo Exclusive.lua" type="script" desc="AudioSweet Chain Preview - Reads GUI Settings">
+      <version name="0.1.0" author="Hsuanice" time="2025-12-16T10:34:51Z">
+        <changelog><![CDATA[0.1.0 (2025-12-15) [internal: v251215.1220]
+  - FIXED: GetFocusedFX() now correctly detects focused FX chain track.
+    • Problem: Script used wrong API call format, always fell back to settings target track
+    • Root cause: Used `local focused_track = reaper.GetFocusedFX()` (wrong - only gets first return value)
+    • Solution: Use correct format `local retval, trackOut, itemOut, fxOut = reaper.GetFocusedFX()`
+    • Impact: Now matches GUI behavior - prioritizes focused FX track over settings
+    • Lines: 112-115 (correct GetFocusedFX usage with retval check)
+  - Previous: [internal: v251213.1330] Duplicate track name handling with GUID support
+  - Previous: [internal: v251213.0336] Smart chain preview target selection
+  - Previous: [internal: v251030.2335] Integration with AudioSweet GUI ExtState settings]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_AudioSweet%20Chain%20Preview%20Solo%20Exclusive.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_AudioSweet Preview Solo Exclusive.lua" type="script" desc="AudioSweet Focused Preview - Reads GUI Settings">
+      <version name="0.1.0" author="Hsuanice" time="2025-12-16T10:34:51Z">
+        <changelog><![CDATA[0.1.0 (2025-12-12) [internal: v251030.2335]
+  - Changed: Now reads all preview settings from AudioSweet GUI ExtState
+  - Reads: preview_target_track, preview_solo_scope, preview_restore_mode, debug
+  - Benefit: Single source of truth - change settings in GUI, all preview scripts use same settings
+  - Compatible: Works with AudioSweet ReaImGui v251030.2300 or newer
+  - Usage: Bind to keyboard shortcut for Focused Preview with GUI settings
+  - Reordered: `chain_mode` moved to top of Core Behavior section [internal: v251012_2025]
+  - Updated: `mode` now follows `chain_mode` to reflect most-used toggles order
+  - Grouped: `target` and `target_track_name` remain together for clarity
+  - Clean: Simplified to match latest ASP Core [internal: v251012_1320]
+  - Removed: Deprecated `target="track"` support
+  - Added: Clear inline comments describing each target mode
+  - Added: Convenience arg `target_track_name` for ASP.preview() [internal: v251010_2152]
+  - Added: Default target fallback "AudioSweet"
+  - Clean: Reorganized into clear sections [internal: v251010_1800]
+  - Option: Console logging now guarded by `args.debug`]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_AudioSweet%20Preview%20Solo%20Exclusive.lua</source>
+      </version>
+    </reapack>
     <reapack name="hsuanice_FX Alias Build.lua" type="script" desc="FX Alias Build - Build FX Alias JSON from Current Project">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -12,8 +287,38 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:27:26Z">
-        <source main="main">https://github.com/hsuanice/PublicBeta/raw/b634dd1786693d1137869a167029d864c5896abb/Tools/hsuanice_FX%20Alias%20Build.lua</source>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_FX%20Alias%20Build.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_FX Alias Export JSON to TSV.lua" type="script" desc="FX Alias Export - Convert FX Alias JSON to TSV">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Export Settings/fx_alias.json to Settings/fx_alias.tsv for easy editing in Excel/Numbers/Sheets.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Part of AudioSweet ReaImGui Tools suite.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_FX%20Alias%20Export%20JSON%20to%20TSV.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_FX Alias Update TSV to JSON.lua" type="script" desc="FX Alias Update - Update FX Alias JSON from TSV">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Read Settings/fx_alias.tsv and update Settings/fx_alias.json. Only rows that exist in TSV will be updated/added. Others are kept.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Part of AudioSweet ReaImGui Tools suite.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_FX%20Alias%20Update%20TSV%20to%20JSON.lua</source>
       </version>
     </reapack>
   </category>
