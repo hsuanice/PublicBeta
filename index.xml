@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="7e410af413f6b3f48c0edf1a26395994cf8d7e75">
+<index version="1" name="hsuanice Scripts" commit="dd5a0e1aa9ed40084664c9f32f146f44044421c8">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
       <metadata>
@@ -160,20 +160,6 @@
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
-    <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
-}
-]]></description>
-      </metadata>
-      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
-        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Glue.lua</source>
-      </version>
-    </reapack>
     <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Monitor.lua</source>
@@ -182,20 +168,6 @@
     <reapack name="hsuanice_RGWH ReaImGui.lua" type="script" desc="RGWH GUI - ImGui Interface for RGWH Core">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T08:30:59Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
-      </version>
-    </reapack>
-    <reapack name="hsuanice_RGWH Render.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
-}
-]]></description>
-      </metadata>
-      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
-        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Render.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
