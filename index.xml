@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="959c37339bbe980d3a3a9450421d76e4998f30d4">
+<index version="1" name="hsuanice Scripts" commit="c62263e700daf50141af4a04c5fb4ae80bddd22e">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
       <metadata>
@@ -287,8 +287,8 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
-        <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Tools/hsuanice_FX%20Alias%20Build.lua</source>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T10:42:01Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/c62263e700daf50141af4a04c5fb4ae80bddd22e/Tools/hsuanice_FX%20Alias%20Build.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_FX Alias Export JSON to TSV.lua" type="script" desc="FX Alias Export - Convert FX Alias JSON to TSV">
