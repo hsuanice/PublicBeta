@@ -3,9 +3,7 @@
 @author hsuanice
 @version 0.1.0
 @provides
-  [main] Beta Testing/hsuanice_RGWH Glue.lua
-  Library/hsuanice_RGWH Core.lua
-  Library/hsuanice_Metadata Embed.lua
+  [main] .
 @about
   Thin wrapper for calling RGWH Core via a single entry `RGWH.core(args)`.
   Use this as a starting point to test and ship wrappers that render/glue with handles.

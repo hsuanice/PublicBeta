@@ -3,8 +3,7 @@
 @version 0.1.0
 @author hsuanice
 @provides
-  [main] Beta Testing/hsuanice_RGWH Monitor.lua
-  Library/hsuanice_Metadata Read.lua
+  [main] .
 @note
 Console monitor for units (SINGLE/TOUCH/CROSSFADE/MIXED),
 item details, FX states, and # markers.

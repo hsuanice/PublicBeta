@@ -6,7 +6,7 @@
 @provides
   [main] .
 
-  @about
+@about
   Core library for handle-aware Render/Glue workflows with clear, single-entry API.
   Features:
     • Handle-aware windows with clamp-to-source.

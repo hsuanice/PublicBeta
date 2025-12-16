@@ -3,8 +3,7 @@
 @version 0.1.0
 @author Hsuanice
 @provides
-  [main] Tools/hsuanice_AudioSweet Chain Preview Solo Exclusive.lua
-  Library/hsuanice_AS Preview Core.lua
+  [main] .
 @changelog
   0.1.0 (2025-12-15) [internal: v251215.1220]
     - FIXED: GetFocusedFX() now correctly detects focused FX chain track.

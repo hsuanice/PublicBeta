@@ -3,8 +3,7 @@
 @version 0.1.0
 @author Hsuanice
 @provides
-  [main] Tools/hsuanice_AudioSweet Preview Solo Exclusive.lua
-  Library/hsuanice_AS Preview Core.lua
+  [main] .
 @changelog
   0.1.0 (2025-12-12) [internal: v251030.2335]
     - Changed: Now reads all preview settings from AudioSweet GUI ExtState

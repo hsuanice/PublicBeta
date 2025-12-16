@@ -3,7 +3,7 @@
 @version 0.1.0
 @author hsuanice
 @provides
-  [main] Tools/hsuanice_FX Alias Export JSON to TSV.lua
+  [main] .
 @about
   Export Settings/fx_alias.json to Settings/fx_alias.tsv for easy editing in Excel/Numbers/Sheets.
 

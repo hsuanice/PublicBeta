@@ -3,7 +3,7 @@
 @version 0.1.0
 @author hsuanice
 @provides
-  [main] Tools/hsuanice_FX Alias Build.lua
+  [main] .
 @about
   Scan all tracks' Track FX in the current project and populate/merge Settings/fx_alias.json.
   Then you can export to TSV and edit aliases comfortably.
