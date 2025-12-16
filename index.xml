@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="eaea8d7db34d41af4048289e3dd66672fadf60aa">
+<index version="1" name="hsuanice Scripts" commit="7e410af413f6b3f48c0edf1a26395994cf8d7e75">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
       <metadata>
@@ -160,9 +160,56 @@
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
+    <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Glue.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Monitor.lua</source>
+      </version>
+    </reapack>
     <reapack name="hsuanice_RGWH ReaImGui.lua" type="script" desc="RGWH GUI - ImGui Interface for RGWH Core">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T08:30:59Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Render.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Render.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Beta%20Testing/hsuanice_RGWH%20Wrapper%20Template.lua</source>
       </version>
     </reapack>
   </category>
@@ -172,9 +219,134 @@
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Library/hsuanice_AS%20Preview%20Core.lua</source>
       </version>
     </reapack>
+    <reapack name="hsuanice_AudioSweet Core.lua" type="script" desc="AudioSweet Core - Focused Track FX render via RGWH Core">
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Library/hsuanice_AudioSweet%20Core.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_Metadata Embed.lua" type="script" desc="Metadata Embed - BWF MetaEdit helpers">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Helpers to call BWF MetaEdit safely:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Shell quoting\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Normalize iXML sidecar newline\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Copy iXML/core, read/write TimeReference\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Post-embed refresh (offline->online, rebuild peaks)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.3.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Library/hsuanice_Metadata%20Embed.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_Metadata Read.lua" type="script" desc="Metadata Read (reader / normalizer / tokens)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Read-only metadata utilities for REAPER items:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Unwrap SECTION to real parent source\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Read iXML TRACK_LIST (Wave Agent style)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Fallback parse sTRK#=Name from BWF/Description (EdiLoad split)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Interleave index \u8596 ? recorder channel mapping\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Token expansion for rename/export ($trk/$trkN/$trkall, $\{interleave\}, $\{chnum\}, ...)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.3.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Library/hsuanice_Metadata%20Read.lua</source>
+      </version>
+    </reapack>
     <reapack name="hsuanice_RGWH Core.lua" type="script" desc="RGWH Core - Render or Glue with Handles">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T08:30:59Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/eaea8d7db34d41af4048289e3dd66672fadf60aa/Library/hsuanice_RGWH%20Core.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Tools">
+    <reapack name="hsuanice_AudioSweet Chain Preview Solo Exclusive.lua" type="script" desc="AudioSweet Chain Preview - Reads GUI Settings">
+      <version name="0.1.0" author="Hsuanice" time="2025-12-16T09:36:42Z">
+        <changelog><![CDATA[0.1.0 (2025-12-15) [internal: v251215.1220]
+  - FIXED: GetFocusedFX() now correctly detects focused FX chain track.
+    • Problem: Script used wrong API call format, always fell back to settings target track
+    • Root cause: Used `local focused_track = reaper.GetFocusedFX()` (wrong - only gets first return value)
+    • Solution: Use correct format `local retval, trackOut, itemOut, fxOut = reaper.GetFocusedFX()`
+    • Impact: Now matches GUI behavior - prioritizes focused FX track over settings
+    • Lines: 112-115 (correct GetFocusedFX usage with retval check)
+  - Previous: [internal: v251213.1330] Duplicate track name handling with GUID support
+  - Previous: [internal: v251213.0336] Smart chain preview target selection
+  - Previous: [internal: v251030.2335] Integration with AudioSweet GUI ExtState settings]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Tools/hsuanice_AudioSweet%20Chain%20Preview%20Solo%20Exclusive.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_AudioSweet Preview Solo Exclusive.lua" type="script" desc="AudioSweet Focused Preview - Reads GUI Settings">
+      <version name="0.1.0" author="Hsuanice" time="2025-12-16T09:36:42Z">
+        <changelog><![CDATA[0.1.0 (2025-12-12) [internal: v251030.2335]
+  - Changed: Now reads all preview settings from AudioSweet GUI ExtState
+  - Reads: preview_target_track, preview_solo_scope, preview_restore_mode, debug
+  - Benefit: Single source of truth - change settings in GUI, all preview scripts use same settings
+  - Compatible: Works with AudioSweet ReaImGui v251030.2300 or newer
+  - Usage: Bind to keyboard shortcut for Focused Preview with GUI settings
+  - Reordered: `chain_mode` moved to top of Core Behavior section [internal: v251012_2025]
+  - Updated: `mode` now follows `chain_mode` to reflect most-used toggles order
+  - Grouped: `target` and `target_track_name` remain together for clarity
+  - Clean: Simplified to match latest ASP Core [internal: v251012_1320]
+  - Removed: Deprecated `target="track"` support
+  - Added: Clear inline comments describing each target mode
+  - Added: Convenience arg `target_track_name` for ASP.preview() [internal: v251010_2152]
+  - Added: Default target fallback "AudioSweet"
+  - Clean: Reorganized into clear sections [internal: v251010_1800]
+  - Option: Console logging now guarded by `args.debug`]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Tools/hsuanice_AudioSweet%20Preview%20Solo%20Exclusive.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_FX Alias Build.lua" type="script" desc="FX Alias Build - Build FX Alias JSON from Current Project">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Scan all tracks' Track FX in the current project and populate/merge Settings/fx_alias.json. Then you can export to TSV and edit aliases comfortably.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Part of AudioSweet ReaImGui Tools suite.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Tools/hsuanice_FX%20Alias%20Build.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_FX Alias Export JSON to TSV.lua" type="script" desc="FX Alias Export - Convert FX Alias JSON to TSV">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Export Settings/fx_alias.json to Settings/fx_alias.tsv for easy editing in Excel/Numbers/Sheets.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Part of AudioSweet ReaImGui Tools suite.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Tools/hsuanice_FX%20Alias%20Export%20JSON%20to%20TSV.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_FX Alias Update TSV to JSON.lua" type="script" desc="FX Alias Update - Update FX Alias JSON from TSV">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Read Settings/fx_alias.tsv and update Settings/fx_alias.json. Only rows that exist in TSV will be updated/added. Others are kept.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Part of AudioSweet ReaImGui Tools suite.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1.0" author="hsuanice" time="2025-12-16T09:36:42Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/7e410af413f6b3f48c0edf1a26395994cf8d7e75/Tools/hsuanice_FX%20Alias%20Update%20TSV%20to%20JSON.lua</source>
       </version>
     </reapack>
   </category>
