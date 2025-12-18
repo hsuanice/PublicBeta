@@ -1,7 +1,7 @@
 --[[
 @description RGWH GUI - ImGui Interface for RGWH Core
 @author hsuanice
-@version 0.1.0
+@version 0.1.2
 @provides
   [main] .
 
@@ -14,418 +14,13 @@
   Adjust parameters using the visual controls and click operation buttons to execute.
 
 @changelog
-  0.1.0 [v251215.1730] - DISABLED SETTINGS WINDOW DOCKING
-    - FIXED: Settings window now always has docking disabled (WindowFlags_NoDocking).
-      • Prevents Settings window from being docked into REAPER's dock system
-      • Settings window should remain floating for better usability
-      • Line: 985 (settings window flags)
-    - PURPOSE: Match Manual window behavior - both popup windows now always float
-    - IMPACT: Improved stability and consistent UX for popup windows
+  0.1.2 [251218.2240] - Disabled collapse arrow
+    - Added: Main GUI window now uses WindowFlags_NoCollapse so users cannot collapse it accidentally
 
-  [v251215.1507] - REMOVED REDUNDANT CHANNEL MODE HELP MARKER
-    - REMOVED: Help marker (?) after Channel Mode radio buttons (line 1793-1794).
-      • Reason: Each radio button now has detailed hover tooltip
-      • Auto/Mono/Multi modes all provide comprehensive explanations on hover
-      • Redundant summary help marker no longer needed
-    - IMPACT: Cleaner UI, less visual clutter
-
-  [v251215.1500] - REMOVED PRESET MENU
-    - REMOVED: Preset menu and preset system completely removed from GUI.
-      • Removed preset data definitions (previously lines 622-653)
-      • Removed apply_preset() function (previously lines 834-844)
-      • Removed Presets menu from menu bar (previously lines 1752-1760)
-    - REASON: Preset system not needed - users prefer direct control
-    - IMPACT: Cleaner, simpler GUI interface
-
-  [v251215.1450] - IMPROVED CHANNEL MODE TOOLTIPS CLARITY
-    - IMPROVED: Channel Mode tooltips clarified to prevent item vs track channel count confusion (lines 1797-1837).
-      • Problem: Users might confuse item's own channel count with track channel count
-      • Solution: Added explicit warnings and reminders in tooltips
-    - Auto mode tooltip (lines 1797-1809):
-      • Added Note section warning about item vs track channel count distinction
-      • "Item channel count may differ from track channel count"
-      • "Use Multi mode to force output to match track channels"
-    - Mono mode tooltip (lines 1812-1821):
-      • REMOVED: Operation mode (AUTO/RENDER/GLUE) explanations - irrelevant to channel mode
-      • Simplified to focus only on mono channel behavior
-      • "All items converted to mono output"
-    - Multi mode tooltip (lines 1825-1837):
-      • Added Important section emphasizing output follows TRACK channel count
-      • "Output always follows TRACK channel count"
-      • "Item's own channel count is ignored"
-    - PURPOSE: Prevent user confusion between item channels vs track channels
-    - NOTE: All tooltips exclude command IDs (kept in manual only)
-
-  [v251214.0920] - CLARIFIED OPERATION MODE SCOPE
-    - Fixed: AUTO mode hover info no longer mentions TS scope logic (line 1933)
-      • Previous: "Scope: No TS→Units, TS=span→Units, TS≠span→TS" (incorrect)
-      • Corrected: "Always uses Units scope" (accurate)
-      • Rationale: AUTO mode always uses Units detection, TS logic only applies to GLUE mode
-    - Clarified: GLUE mode hover info clearly shows TS scope behavior (line 1935)
-      • "Scope: Has TS→TS, No TS→Units (like REAPER native)"
-      • TS scope logic is GLUE-specific feature, not AUTO feature
-  0.1.0 [v251214.0100] - SIMPLIFIED VOLUME MERGE INTERACTION
-    - Simplified: Clean mutual exclusion + binding logic, removed all warning text (lines 1816-1856)
-      • Merge to Item ◄──mutually exclusive──► Merge to Take ◄──bound to──► Print Volumes
-      • 4 valid states: ❌❌❌ (native) | ✓❌❌ (Item) | ❌✓❌ (Take) | ❌✓✓ (Take+Print)
-    - Behavior: Merge to Item
-      • When checked: auto-disables Merge to Take + Print Volumes
-      • Mutually exclusive with opposite, no Print support (REAPER only prints take volume)
-    - Behavior: Merge to Take
-      • When checked: auto-disables Merge to Item
-      • When unchecked: auto-disables Print Volumes (binding relationship)
-    - Behavior: Print Volumes
-      • When checked: auto-enables Merge to Take + disables Merge to Item
-      • Fully bound to Merge to Take
-    - Removed: Orange warning text and auto_switched state variable
-      • Mutual exclusion + binding behavior is intuitive enough, no extra prompts needed
-      • Avoids window resize issues
-    - Updated: Help markers clarify mutual exclusion and binding relationships
-  0.1.0 [v251214.0040] - SIMPLIFIED VOLUME MERGE UI
-    - Added: Auto-switch from Merge to Item to Merge to Take when Print ON is enabled
-      • Rationale: REAPER can only print take volume, not item volume
-      • When user enables Print with Merge to Item selected, auto-switches to Merge to Take
-      • Shows orange notification: "(Auto-switched to Merge to Take)"
-      • Updated Print Volumes help marker to explain this behavior
-      • Valid combinations: OFF | Merge to Item | Merge to Take + Print OFF | Merge to Take + Print ON
-    - Improved: Channel Mode help marker now clarifies Multi mode behavior
-      • Updated tooltip: "Multi: force item output to match track channel count"
-      • Makes it clear that Multi mode forces item to match the track's channel count
-    - Improved: Simplified Manual documentation for Volume Rendering
-      • Restored 3-column table format (Print OFF / Print ON) for consistency
-      • Direct language: "Combine take vol to item vol" instead of technical jargon
-      • Shows result, compensation behavior, and print options for each mode
-      • OFF mode now clearly explains REAPER native behavior
-      • Changed: "Bake" → "Print" for consistent terminology
-    - Updated: Manual documentation for bidirectional volume merge
-      • New table showing all merge/print combinations and their results
-      • Added technical details: REAPER renders with item×take, both must be 1.0 for Print OFF
-      • Clearer explanation of volume flow in each mode
-    - Tested: All four combinations verified working correctly
-      • Merge to Item + Print OFF: item=combined, take=1.0, audio at original level ✓
-      • Merge to Item + Print ON: item=1.0, take=1.0, audio with gain ✓
-      • Merge to Take + Print OFF: item=1.0, take=combined, audio at original level ✓
-      • Merge to Take + Print ON: item=1.0, take=1.0, audio with gain ✓
-    - Fixed: Merge to Item + Print OFF - BOTH item AND take set to 1.0 during render
-    - Critical: REAPER renders with item×take volume (not just take!)
-    - Logic: Preprocess sets item=1.0, take=1.0; Postprocess restores item=combined
-    - Added: Bidirectional volume merge support (merge to item OR merge to take).
-      - New checkbox: "Merge to Item" - merges take volume into item volume
-      - Existing checkbox: "Merge to Take" - merges item volume into take volume (original behavior)
-      - Checkboxes are mutually exclusive (radio button behavior)
-      - Print checkbox now disabled when neither merge option is selected
-      - Merge modes:
-        * Merge to Item: Consolidates volume at item level, all takes at 1.0 (0 dB)
-        * Merge to Take: Consolidates volume at take level (original behavior)
-        * OFF (neither checked): No volume merging, REAPER native behavior
-      - Print behavior:
-        * Print ON + Merge to Item: Transfers item volume to takes, then prints (all volumes → 0dB)
-        * Print ON + Merge to Take: Prints merged take volumes (all volumes → 0dB)
-        * Print OFF + Merge to Item: Preserves volume in item
-        * Print OFF + Merge to Take: Preserves volume in takes
-        * Print disabled when Merge = OFF (no effect in native mode)
-      - GUI state: merge_to_item (boolean), merge_to_take (boolean, replaces merge_volumes)
-      - Migration: Old merge_volumes boolean auto-converts to merge_to_take on load
-      - Lines: 384-385 (state vars), 425 (persist keys), 491-498 (migration), 817-820 (args), 1818-1848 (UI)
-    - Purpose: Supports both item-centric and take-centric volume workflows, with flexible print options.
-
-  [v251213.1430] - DISABLED MANUAL WINDOW DOCKING
-    - Fixed: Manual window now always has docking disabled (WindowFlags_NoDocking).
-      - Prevents ImGui_End assertion errors when manual window is docked
-      - Manual window should remain floating for better readability
-      - Line: 993 (manual window flags)
-    - Purpose: Improve stability and prevent docking-related errors for manual window.
-
-  [v251213.0023] - ADDED DOCKING TOGGLE OPTION
-    - Added: Window docking toggle option in Settings menu.
-      - New location: Menu Bar → Settings → "Enable Window Docking" (checkbox)
-      - When disabled: window cannot be docked into REAPER's dock system (WindowFlags_NoDocking)
-      - When enabled: window can be docked like any other ImGui window
-      - Setting persists between sessions via ExtState
-      - Lines: 396 (setting definition), 415 (persist_keys), 1610-1614 (window flags), 1643-1647 (Settings menu)
-    - Purpose: Prevents accidental docking for users who prefer floating windows, while allowing flexibility for those who want docking.
-
-  [v251215.2300] - CLEANUP: Removed unused settings + Documentation improvements
-    - Removed: Rename Mode setting (was never implemented, no functional change)
-    - Removed: Glue After Mono Apply setting (was never implemented, no functional change)
-      • Removed from GUI state variables (line 377-379)
-      • Removed from persist_keys array (line 396-404)
-      • Removed from build_args_from_gui() policies (line 759-763)
-      • Removed checkbox from Settings window (was line 941-943)
-      • Updated Mono mode tooltip to reflect fixed behavior (line 1646-1652)
-      • Actual behavior unchanged: AUTO/GLUE modes always glue multi-item units after mono apply
-    - Removed: Rename Mode setting (complete removal details)
-      • Removed from GUI state variables
-      • Removed from persist_keys array
-      • Removed from build_args_from_gui() function
-      • Removed combo box from Settings window
-      • Actual naming behavior unchanged: RENDER still uses "TakeName-renderedN", GLUE still uses "TakeName-glued-XX.wav"
-    - Improved: TIMECODE MODE section clarity in Settings
-      • Title changed: "TIMECODE MODE" → "TIMECODE MODE (RENDER only)" (line 884)
-      • Help marker updated to clarify GLUE mode always uses 'Current' (line 887)
-      • Prevents user confusion about TC mode applicability
-    - Improved: Volume Rendering terminology consistency
-      • Changed: "Volume Handling" → "Volume Rendering" throughout GUI (line 1607)
-      • Help markers now explain GLUE mode always forces merge and print (lines 1610, 1614)
-      • Manual updated with technical explanation of why GLUE requires this (lines 1077-1084, 1407-1414)
-    - Added: Comprehensive naming convention documentation in Manual
-      • New section 7 "NAMING CONVENTIONS" in Overview tab (lines 1181-1207)
-        - Table showing RENDER vs GLUE naming formats with examples
-        - Explains N and XX increment logic
-      • RENDER Mode tab: Detailed naming explanation (lines 1279-1287)
-        - Format: TakeName-renderedN (N = incremental 1,2,3...)
-        - Purpose: Distinguish original take from render iterations
-        - Fixed behavior, cannot be changed
-      • GLUE Mode tab: REAPER native naming explanation (lines 1392-1400)
-        - Format: TakeName-glued-XX.wav (XX = REAPER auto-increment 01,02,03...)
-        - Take name automatically becomes filename
-        - Preserves take names in final output
-    - Technical: All changes are documentation/UI cleanup, no Core logic modified
-    - Requires: RGWH Core v251215.2300 (Rename Mode setting removed from Core API)
-
-  [v251212.1230] - IMPROVED UNDO BEHAVIOR FOR SINGLE-STEP UNDO
-    - Improved: All RGWH operations now use single undo block.
-      - Issue: Executing RGWH operations required multiple undo steps to fully revert
-      - Solution: Wrapped run_rgwh() execution with Undo_BeginBlock/EndBlock (lines 761-762, 807-815)
-      - Added PreventUIRefresh to improve performance during execution
-      - Result: One Undo operation reverts entire RGWH execution back to pre-execution state
-      - Undo label format: "RGWH GUI: Glue/Render/Window/Handle"
-      - All operation modes (Glue, Render, Window, Handle) now have consistent undo behavior
-    - Technical: Nested undo blocks are supported by REAPER and merge correctly.
-      - GUI undo block wraps RGWH Core's internal undo blocks (if any)
-      - Outer block takes precedence, creating single undo point for user
-
-  v251114.1920 - Manual Window: Process Flow Updates (DOCUMENTATION REFINEMENT)
-    - Updated: RENDER Mode process flow table (now 14 steps, was 10)
-      • Added: Snapshot Take FX (step 1), Add/Remove Cue Markers (steps 4,8), Clone Take FX (step 13)
-      • Complete flow: Take FX snapshot → Volume Pre → Extend → Add Markers → Snapshot/Zero Fades → Apply/Render → Remove Markers → Restore Fades → Trim → Volume Post → Rename → Clone Take FX → Embed TC
-      • All steps now accurately reflect actual code execution order in RGWH Core
-    - Updated: GLUE Mode process flow table (now 12 steps, was 10)
-      • Added: Add Cue Markers (step 1), Snapshot/Restore Track Ch (steps 4,6), Remove Cue Markers (step 12)
-      • Complete flow: Add Markers → Extend → Volume Pre → Snapshot Track Ch → Glue → Restore Track Ch → Zero Fades → Apply → Embed TC → Trim → Volume Post → Remove Markers
-      • Clarifies that Glue cues are pre-embedded before Glue action (absorbed into media)
-    - Fixed: Multi-channel mode execution order description in GLUE technical notes
-      • Corrected: "Glue FIRST (42432) → Restore Track Ch → Apply (41993)" (was incorrectly reversed)
-      • Reason: Action 42432 auto-expands track channel count, so must snapshot/restore
-      • Technical notes now accurately describe the code implementation
-    - Fixed: Fade handling explanation for Apply actions (40361/41993)
-      • Changed: "print fades causing DUPLICATE fades" (was "bake fades")
-      • Clarified: Apply actions print fades into audio while keeping item fade settings
-      • Result: Both item fade property AND printed fade exist, doubling the fade effect
-      • Accurate description of the actual behavior and why snapshot/zero/restore is needed
-    - Improved: Terminology consistency across tabs
-      • Unified: "Add/Remove Cue Markers" (was mixed: "Edge Cues"/"Glue Cues"/"Clean Markers")
-      • Action descriptions now consistent between RENDER and GLUE tabs
-    - Removed: Line number column from process flow tables
-      • Reason: Simplifies maintenance, no need to update line numbers when code changes
-      • Tables now have 3 columns: Step, Function, Action (was 4 with Line column)
-    - Technical: Manual window remains fully functional with ESC key support
-
-  v251114.0045 - NEW FEATURE: Operation Modes Manual Window (MAJOR UPDATE)
-    - Added: Manual window (Help > Manual) with comprehensive operation modes guide
-      • Overview tab: Feature reference tables (Channel/FX/Volume/Handle/Cues/Actions)
-        - Lists all features with implementation details (API functions, Action IDs)
-        - 6 major feature categories with complete technical specifications
-      • RENDER Mode tab: Function-based process flow explanation
-        - Entry point: M.render_selection()
-        - 10-step process table with function names and actions
-        - Functions: snapshot_fades, preprocess_item_volumes, per_member_window_lr, etc.
-      • GLUE Mode tab: Function-based process flow for multi/auto and mono modes
-        - Entry point: M.glue_selection() → glue_auto_scope()
-        - 10-step process table for multi/auto mode
-        - 3-step simplified flow for mono mode
-        - Functions: detect_units_same_track, glue_unit, apply_multichannel_no_fx_preserve_take
-      • AUTO Mode tab: Decision logic with function flow
-        - Entry point: M.core(args) with op='auto' → auto_selection()
-        - 6-step intelligent batching process
-        - Shows how units are separated and batched by type
-    - Added: Manual window state management (show_manual flag, line 240)
-    - Added: ESC key closes Manual window (without closing main GUI)
-    - Technical: draw_manual_window() function (lines 861-1129)
-    - Technical: Help menu item "Manual (Operation Modes)" opens manual window (lines 891-893)
-    - Technical: Main loop calls draw_manual_window() (line 1344)
-    - Window size: 900x700 pixels, resizable with tabs for easy navigation
-    - Color-coded content: cyan for headings, green for features, red for limitations, yellow for notes
-    - Includes important design notes about GLUE multi mode creating 2 takes for efficiency
-    - Explains track channel count protection mechanism for force_multi policy
-    - Fixed: Comparison table corrections
-      • Take Name→Filename: RENDER=No (correct), GLUE=Yes, AUTO=Yes
-      • BWF TimeReference: RENDER=Cur/Prev/Off (3 options), GLUE=Current (only), AUTO=RENDER units
-      • Mixed unit types: GLUE=Yes(No TS) - supports mixed units without Time Selection
-      • Efficiency (multi-item): RENDER=Slow(N×), GLUE=Best(1×) - GLUE significantly faster for multiple items
-    - Added: Efficiency Advantage section in GLUE Mode tab
-      • Explains why GLUE is faster: merge first (1× operation) vs RENDER each (N× operations)
-      • Example: 10 items → GLUE processes 1 time vs RENDER processes 10 times
-
-  v251113.1820 - STABLE: Fully tested and verified
-    - No GUI changes in this release
-    - Requires: RGWH Core v251113.1820
-    - Status: Volume handling fully tested and working correctly
-    - All features verified working in production testing
-    - Recommended stable version for production use
-
-  v251113.1810 - Version sync with Core critical volume settings fix
-    - No GUI changes in this release
-    - Requires: RGWH Core v251113.1810 for proper volume settings support
-      • CRITICAL: Fixed volume settings not being read from ExtState
-      • GUI "Merge Volumes" and "Print Volumes" checkboxes now work correctly
-      • Previous versions ignored these settings (always used false/nil)
-    - Note: All GUI features remain unchanged and functional
-
-  v251113.1800 - Version sync with Core major refactor
-    - No GUI changes in this release
-    - Requires: RGWH Core v251113.1800 for unified volume/FX handling
-      • Major refactor: All volume and FX handling now uses centralized helper functions
-      • Fixed: GLUE multi/auto mode now properly handles volumes (was missing entirely)
-      • Improved: Single source of truth for volume logic across all modes
-      • More maintainable and less prone to bugs
-    - Note: All GUI features remain unchanged and functional
-
-  v251113.1700 - Version sync with Core volume handling fix
-    - No GUI changes in this release
-    - Requires: RGWH Core v251113.1700 for complete mono channel mode functionality
-      • Volume handling (merge_volumes/print_volumes) now working correctly in mono apply workflow
-      • Fixes volume reset to 1.0 issue when using mono channel mode
-      • Volumes now properly snapshot/merge/restore like RENDER mode
-    - Note: All GUI features from previous versions remain unchanged and functional
-
-  v251113.1650 - Version sync with Core FX control fixes
-    - No GUI changes in this release
-    - Requires: RGWH Core v251113.1650 for complete mono channel mode functionality
-      • FX control (TAKE_FX/TRACK_FX settings) now working correctly
-      • RENDER mode mono enforcement now functional
-    - Note: All GUI features from v251113.1540 remain unchanged and functional
-
-  v251113.1540 - GUI support for mono apply + conditional glue feature
-    - Added: "Glue After Mono Apply (AUTO mode)" checkbox in Settings > Policies
-      • Tooltip explains: ON=apply mono then glue, OFF=apply mono keep separate
-      • Notes that GLUE mode always glues (ignores this setting)
-    - Added: Hover tooltip on "Mono" channel mode radio button
-      • Displays current GLUE_AFTER_MONO_APPLY setting (ON/OFF)
-      • Shows behavior per operation mode (RENDER/AUTO/GLUE)
-      • Explains where to change the setting (Menu > Settings > Policies)
-    - Technical: Added glue_after_mono_apply to GUI state (line 215)
-    - Technical: Added to persist_keys for save/load across sessions (line 242)
-    - Technical: Added to build_args_from_gui() policies section (line 603)
-    - Technical: Settings checkbox implementation (lines 775-777)
-    - Technical: Mono channel mode hover tooltip (lines 856-869)
-    - Requires: RGWH Core v251113.1540 for mono apply workflow
-
-  v251112.1600 - Auto version extraction from @version tag
-    - Improved: VERSION constant now auto-extracts from @version tag in file header
-    - Technical: Uses debug.getinfo() and file parsing to read @version tag at runtime
-    - Result: Only need to update @version tag once, Help > About automatically syncs
-    - No more manual version string updates required
-
-  v251112.1500 - Settings window ESC key support + Auto version sync
-    - Added: ESC key now closes Settings window (without closing main GUI)
-    - Behavior: Press ESC when Settings window is focused to close only the Settings window
-    - Main GUI remains open and functional after Settings window is closed with ESC
-    - Improved: Help > About now automatically displays current version from VERSION constant
-    - Technical: Version string centralized at line 144, Help menu uses string.format() for auto-sync
-
-  v251107.1530 - CRITICAL FIX: Units glue handle content shift (CORE FIX)
-    - Fixed: Units glue with handles no longer causes content shift
-    - Core change: Removed incorrect pre-glue D_STARTOFFS adjustment that was being overwritten
-    - Impact: All glue operations now preserve audio alignment correctly
-    - Requires: RGWH Core v251107.1530 or later
-
-  v251107.0100 - FIXED AUTO MODE LOGIC (CORE MODIFICATION)
-    - Fixed: AUTO mode now correctly processes units based on their composition (not total selection count)
-      • Single-item units → RENDER (per-item)
-      • Multi-item units (TOUCH/CROSSFADE) → GLUE
-      • Works correctly even when selecting mixed unit types
-    - Added: New auto_selection() function in RGWH Core
-      • Analyzes each unit individually
-      • Separates single-item units (for render) and multi-item units (for glue)
-      • Processes them in appropriate batches
-    - Changed: core() function now calls auto_selection() for op="auto"
-    - Improved: AUTO mode description updated to reflect unit-based logic
-    - Technical: RGWH Core line 1340-1428 (new auto_selection function)
-    - Technical: RGWH Core line 1955-1959 (modified core function)
-
-  v251106.2250 - CLARIFIED AUTO VS GLUE BEHAVIOR
-    - Changed: Removed "Glue Single Items" checkbox from GUI for clarity
-    - Changed: AUTO mode behavior clarified (awaiting Core fix)
-    - Changed: GLUE mode now has clear, fixed behavior (always glue including single items)
-    - Changed: RENDER mode (unchanged - always per-item render)
-    - Improved: Mode descriptions now clearly explain the difference between AUTO and GLUE
-    - Technical: glue_single_items default changed to false (AUTO mode behavior)
-    - Technical: GLUE mode now uses selection_scope="auto" instead of "ts" for proper scope detection
-
-  v251106.2230 - COMPLETE UI REDESIGN & COMPACT LAYOUT
-    - Changed: Completely reorganized GUI layout for better clarity and compactness
-      • Common settings (Channel Mode, Printing, Handle) moved to top
-      • Channel Mode now displays in single horizontal row with label
-      • Auto Mode settings in single horizontal row (label + checkbox + help)
-    - Changed: AUTO mode simplified
-      • Single checkbox: "Glue Single Items" (single item → glue or render)
-      • Auto scope detection is always on (Units vs TS detection is automatic)
-    - Changed: GLUE mode uses Time Selection (always glue, no settings)
-    - Changed: RENDER mode has no settings (always per-item render)
-    - Added: Dynamic mode info display
-      • Hover over RENDER/AUTO/GLUE buttons to see detailed description
-      • Unified info area below buttons (much more compact than separate sections)
-      • Shows relevant scope detection logic and behavior for each mode
-    - Improved: Much shorter GUI window (removed redundant section headers and text blocks)
-    - Technical: Removed selected_mode and use_units state variables (no longer needed)
-
-  v251106.1800
-    - Add: Complete settings persistence - all GUI settings are now automatically saved and restored between sessions
-    - Add: Debug mode console output - when debug level >= 1:
-      • Print all settings on startup with prefix "[RGWH GUI - STARTUP]"
-      • Print all settings on close with prefix "[RGWH GUI - CLOSING]"
-    - Improve: Settings are automatically saved whenever any parameter is changed
-    - Technical: Added print_all_settings() function to display all current settings in organized format
-  v251102.1500
-    - Fix: Correct GLUE button hover/active colors to yellow shades.
-  v251102.0735
-    - Add: Press ESC to close the GUI window when the window is focused.
-  v251102.0730
-    - Change: Move Channel Mode to the right of Selection Scope and use a two-column layout so Channel Mode takes the right column.
-    - Change: Replace the 'View' menu in the menu bar with a direct 'Settings...' menu item for quicker access.
-    - Change: Reorder the bottom operation buttons to [RENDER] [AUTO] [GLUE]. Buttons use the default colors but their hover color becomes red (0xFFCC3333).
-    - Improve: Persist GUI settings across runs (save/load via ExtState so user choices are remembered between sessions).
-
-  v251102.0030
-    - Changed: Renamed "RENDER SETTINGS" to "PRINTING" for consistency
-    - Changed: Reorganized printing options into two-column layout:
-        • Left column: FX Processing (Print Take FX, Print Track FX)
-        • Right column: Volume Handling (Merge Volumes, Print Volumes)
-    - Changed: Updated terminology from "Bake" to "Print" for REAPER standard compliance
-    - Improved: More compact layout with parallel columns
-
-  v251102.0015
-    - Changed: Converted Selection Scope to radio button format for direct visibility
-        • Auto / Units / Time Selection / Per Item
-    - Changed: Converted Channel Mode to radio button format for direct visibility
-        • Auto / Mono / Multi
-    - Improved: All options now visible at once without dropdown menus
-
-  v251102.0000
-    - Changed: Removed Operation mode radio button selection
-    - Changed: Replaced single RUN RGWH button with three operation buttons:
-        • AUTO (blue) - Smart auto-detection based on selection
-        • RENDER (green) - Force single-item render
-        • GLUE (orange) - Force multi-item glue
-    - Added: Settings window (View > Settings) containing:
-        • Timecode Mode
-        • Epsilon settings
-        • Cue write options
-        • Policies (glue single items, no-trackfx policies, rename mode)
-        • Debug level and console options
-        • Selection Policy
-    - Changed: Main GUI now shows only frequently-used parameters:
-        • Selection Scope, Channel Mode, Handle
-        • Render settings (FX processing, volume handling)
-    - Improved: One-click workflow - directly execute operation without mode switching
-    - Improved: Color-coded buttons for quick visual identification
-
-  v251028_1900
-    - Initial GUI implementation
-    - All core parameters exposed as visual controls
-    - Real-time parameter validation
-    - Preset system for common workflows
+  0.1.1 [251218.1800] - BWF MetaEdit reminder + install guide
+    - Added: CLI detection flow that checks PATH/custom paths on startup, shows alert + guide when missing
+    - Added: Settings > Timecode section shows CLI status, allows custom path input and re-check action
+    - Added: Homebrew install modal with copy buttons for each step to simplify CLI installation
 ]]--
 
 ------------------------------------------------------------
@@ -434,6 +29,11 @@
 local r = reaper
 package.path = r.ImGui_GetBuiltinPath() .. '/?.lua'
 local ImGui = require 'imgui' '0.10'
+
+local OS_NAME = r.GetOS()
+local IS_WINDOWS = OS_NAME:match("Win") ~= nil
+local PATH_SEPARATOR = IS_WINDOWS and ';' or ':'
+local DIR_SEPARATOR = package.config:sub(1,1) or '/'
 
 -- Load RGWH Core
 local RES_PATH = r.GetResourcePath()
@@ -527,6 +127,10 @@ local gui = {
   -- UI settings
   enable_docking = false,    -- Allow window docking
 
+  -- Dependencies
+  bwfmetaedit_custom_path = "",
+  open_bwf_install_popup = false,
+
   -- Status
   is_running = false,
   last_result = "",
@@ -544,7 +148,7 @@ local persist_keys = {
   'cue_write_edge','cue_write_glue',
   'glue_single_items','glue_no_trackfx_policy','render_no_trackfx_policy',
   'debug_level','debug_no_clear','selection_policy',
-  'enable_docking'
+  'enable_docking','bwfmetaedit_custom_path'
 }
 
 local function serialize_gui_state(tbl)
@@ -586,6 +190,135 @@ local function load_persist()
     gui.merge_to_take = gui.merge_volumes
     gui.merge_to_item = false
     gui.merge_volumes = nil
+  end
+end
+
+------------------------------------------------------------
+-- BWF MetaEdit CLI Detection
+------------------------------------------------------------
+local bwf_cli = {
+  checked = false,
+  available = false,
+  resolved_path = "",
+  message = "",
+  last_source = "",
+  attempts = {},
+  warning_dismissed = false,
+}
+
+local function trim(s)
+  if not s then return "" end
+  return s:match("^%s*(.-)%s*$") or ""
+end
+
+local function sanitize_bwf_custom_path(path)
+  local v = trim(path or "")
+  v = v:gsub('^"(.*)"$', '%1')
+  v = v:gsub("^'(.*)'$", "%1")
+  return v
+end
+
+local function file_exists(path)
+  if not path or path == "" then return false end
+  local f = io.open(path, "rb")
+  if f then f:close() return true end
+  return false
+end
+
+local function join_path(base, fragment)
+  if base == "" then return fragment end
+  local last = base:sub(-1)
+  if last == '/' or last == '\\' then
+    return base .. fragment
+  end
+  local sep = DIR_SEPARATOR == "\\" and "\\" or "/"
+  return base .. sep .. fragment
+end
+
+local function check_bwfmetaedit(force)
+  if bwf_cli.checked and not force then return end
+  bwf_cli.checked = true
+  if force then bwf_cli.warning_dismissed = false end
+
+  local custom = sanitize_bwf_custom_path(gui.bwfmetaedit_custom_path or "")
+  gui.bwfmetaedit_custom_path = custom
+
+  local attempted = {}
+  local found_path, source_label
+  local binary_names = IS_WINDOWS and { "bwfmetaedit.exe", "bwfmetaedit" } or { "bwfmetaedit" }
+
+  local function register_attempt(path)
+    if path and path ~= "" then
+      attempted[#attempted+1] = path
+    end
+  end
+
+  local function try_candidate(path, label)
+    if found_path or not path or path == "" then return false end
+    register_attempt(path)
+    if file_exists(path) then
+      found_path = path
+      source_label = label or path
+      return true
+    end
+    return false
+  end
+
+  if custom ~= "" then
+    try_candidate(custom, "自訂路徑")
+    if IS_WINDOWS and not found_path and not custom:lower():match("%.exe$") then
+      try_candidate(custom .. ".exe", "自訂路徑 (.exe)")
+    end
+  end
+
+  local path_env = os.getenv(IS_WINDOWS and "Path" or "PATH") or ""
+  if not found_path and path_env ~= "" then
+    local pattern = string.format("([^%s]+)", PATH_SEPARATOR)
+    for dir in path_env:gmatch(pattern) do
+      dir = trim(dir:gsub('"', ''))
+      if dir ~= "" then
+        for _, name in ipairs(binary_names) do
+          try_candidate(join_path(dir, name), "PATH: " .. dir)
+          if found_path then break end
+        end
+      end
+      if found_path then break end
+    end
+  end
+
+  local fallback_dirs = {}
+  if IS_WINDOWS then
+    local pf = os.getenv("ProgramFiles")
+    local pf86 = os.getenv("ProgramFiles(x86)")
+    if pf then fallback_dirs[#fallback_dirs+1] = join_path(pf, "BWF MetaEdit") end
+    if pf86 then fallback_dirs[#fallback_dirs+1] = join_path(pf86, "BWF MetaEdit") end
+  else
+    fallback_dirs = { "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/opt/local/bin" }
+  end
+  if not found_path then
+    for _, dir in ipairs(fallback_dirs) do
+      for _, name in ipairs(binary_names) do
+        try_candidate(join_path(dir, name), dir)
+        if found_path then break end
+      end
+      if found_path then break end
+    end
+  end
+
+  bwf_cli.attempts = attempted
+  if found_path then
+    bwf_cli.available = true
+    bwf_cli.resolved_path = found_path
+    bwf_cli.last_source = source_label or ""
+    bwf_cli.message = string.format("BWF MetaEdit CLI ready (%s)", source_label or found_path)
+  else
+    bwf_cli.available = false
+    bwf_cli.resolved_path = ""
+    if custom ~= "" then
+      bwf_cli.message = "Custom BWF MetaEdit CLI path not found. Please verify the file exists."
+    else
+      bwf_cli.message = "No 'bwfmetaedit' binary detected. BWF TimeReference embedding is currently disabled."
+    end
   end
 end
 
@@ -635,6 +368,7 @@ end
 
 -- call load immediately so gui gets initial persisted values
 load_persist()
+check_bwfmetaedit(true)
 
 -- If debug level >= 1, print settings on startup
 if gui.debug_level >= 1 then
@@ -983,6 +717,103 @@ local function draw_help_marker(desc)
   end
 end
 
+local BWF_INSTALL_POPUP_ID = 'BWF MetaEdit CLI Install Guide'
+local BREW_INSTALL_CMD = '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+local BREW_BWF_CMD = 'brew install bwfmetaedit'
+local BWF_VERIFY_CMD = 'bwfmetaedit --version'
+
+local function draw_bwfmetaedit_warning_banner()
+  if bwf_cli.available or bwf_cli.warning_dismissed then return end
+
+  ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFF6666FF)
+  ImGui.Text(ctx, "BWF MetaEdit CLI missing – Timecode embedding is disabled.")
+  ImGui.PopStyleColor(ctx)
+
+  ImGui.TextWrapped(ctx,
+    "RGWH relies on the bwfmetaedit CLI to embed BWF TimeReference (timecode).\n" ..
+    "All other features stay available, but TC embedding remains off until the CLI is installed.")
+  if bwf_cli.message ~= "" then
+    ImGui.TextDisabled(ctx, bwf_cli.message)
+  end
+
+  if ImGui.Button(ctx, "Install Guide##warn") then
+    gui.open_bwf_install_popup = true
+  end
+  ImGui.SameLine(ctx)
+  if ImGui.Button(ctx, "Re-check##warn") then
+    check_bwfmetaedit(true)
+  end
+  ImGui.SameLine(ctx)
+  if ImGui.Button(ctx, "Remind Me Later##warn") then
+    bwf_cli.warning_dismissed = true
+  end
+  ImGui.Spacing(ctx)
+end
+
+local function draw_bwfmetaedit_install_modal()
+  if gui.open_bwf_install_popup then
+    ImGui.SetNextWindowSize(ctx, 520, 0, ImGui.Cond_Appearing)
+    ImGui.OpenPopup(ctx, BWF_INSTALL_POPUP_ID)
+    gui.open_bwf_install_popup = false
+  end
+
+  if ImGui.BeginPopupModal(ctx, BWF_INSTALL_POPUP_ID, true, ImGui.WindowFlags_AlwaysAutoResize) then
+    if ImGui.IsWindowFocused(ctx) and ImGui.IsKeyPressed(ctx, ImGui.Key_Escape, false) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.TextColored(ctx, 0x00AAFFFF, "Why is this required?")
+    ImGui.TextWrapped(ctx,
+      "AudioSweet / RGWH calls the BWF MetaEdit CLI to write BWF TimeReference (timecode) back into media files.\n" ..
+      "Without the CLI, timecode embedding stays disabled. The steps below cover a Homebrew-based installation on macOS:")
+    ImGui.Spacing(ctx)
+
+    ImGui.TextColored(ctx, 0xFFFFAAFF, "Step 1: Install Homebrew (if missing)")
+    ImGui.TextWrapped(ctx, "Open Terminal, run the command below, and follow the on-screen instructions to complete the Homebrew install:")
+    ImGui.SetNextItemWidth(ctx, 460)
+    ImGui.InputText(ctx, "##brew_install_cmd", BREW_INSTALL_CMD, ImGui.InputTextFlags_ReadOnly)
+    if ImGui.Button(ctx, "Copy Command##copy_brew_install") then
+      r.ImGui_SetClipboardText(ctx, BREW_INSTALL_CMD)
+    end
+    ImGui.SameLine(ctx)
+    ImGui.TextDisabled(ctx, "Reference: https://brew.sh")
+    ImGui.Separator(ctx)
+
+    ImGui.TextColored(ctx, 0xFFFFAAFF, "Step 2: Install BWF MetaEdit CLI")
+    ImGui.TextWrapped(ctx, "After Homebrew completes, install the CLI by running:")
+    ImGui.SetNextItemWidth(ctx, 460)
+    ImGui.InputText(ctx, "##brew_bwf_cmd", BREW_BWF_CMD, ImGui.InputTextFlags_ReadOnly)
+    if ImGui.Button(ctx, "Copy Command##copy_bwf") then
+      r.ImGui_SetClipboardText(ctx, BREW_BWF_CMD)
+    end
+    ImGui.SameLine(ctx)
+    ImGui.TextDisabled(ctx, "Binary will normally be placed in /opt/homebrew/bin")
+    ImGui.Separator(ctx)
+
+    ImGui.TextColored(ctx, 0xFFFFAAFF, "Step 3: Verify the CLI")
+    ImGui.TextWrapped(ctx, "Run the following to confirm it responds with a version string:")
+    ImGui.SetNextItemWidth(ctx, 460)
+    ImGui.InputText(ctx, "##brew_verify_cmd", BWF_VERIFY_CMD, ImGui.InputTextFlags_ReadOnly)
+    if ImGui.Button(ctx, "Copy Command##copy_verify") then
+      r.ImGui_SetClipboardText(ctx, BWF_VERIFY_CMD)
+    end
+    ImGui.SameLine(ctx)
+    ImGui.TextDisabled(ctx, "Version output confirms success")
+    ImGui.Spacing(ctx)
+
+    ImGui.TextWrapped(ctx,
+      "Once installed, return to the RGWH / AudioSweet settings panel and click \"Re-check CLI\" to re-enable TC embedding.\n" ..
+      "Windows users (or anyone not using Homebrew) can download installers from MediaArea: https://mediaarea.net/BWFMetaEdit")
+
+    ImGui.Separator(ctx)
+    if ImGui.Button(ctx, "Close", 120, 0) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+end
+
 local function draw_settings_popup()
   if not gui.show_settings then return end
 
@@ -1011,6 +842,32 @@ local function draw_settings_popup()
   rv, new_val = ImGui.Combo(ctx, "Timecode Mode", gui.tc_mode, "Previous\0Current\0Off\0")
   if rv then gui.tc_mode = new_val end
   draw_help_marker("BWF TimeReference embed mode for RENDER operations\n\nNote: GLUE mode always uses 'Current' (technical requirement)")
+
+  -- === BWF METAEDIT CLI ===
+  draw_section_header("BWF METAEDIT CLI (Timecode Embed)")
+  if bwf_cli.available then
+    ImGui.TextColored(ctx, 0x55FF55FF, ("CLI detected: %s"):format(bwf_cli.resolved_path))
+    if bwf_cli.last_source ~= "" then
+      ImGui.TextDisabled(ctx, ("Source: %s"):format(bwf_cli.last_source))
+    end
+  else
+    ImGui.TextColored(ctx, 0xFF6666FF, "bwfmetaedit CLI not detected – embedding stays disabled.")
+    if bwf_cli.message ~= "" then
+      ImGui.TextWrapped(ctx, bwf_cli.message)
+    end
+  end
+
+  local rv_path, new_path = ImGui.InputText(ctx, "Custom CLI Path (optional)", gui.bwfmetaedit_custom_path)
+  if rv_path then gui.bwfmetaedit_custom_path = new_path end
+  draw_help_marker("Leave blank to use PATH. Otherwise provide the full bwfmetaedit binary path (include .exe on Windows).")
+
+  if ImGui.Button(ctx, "Re-check CLI##settings") then
+    check_bwfmetaedit(true)
+  end
+  ImGui.SameLine(ctx)
+  if ImGui.Button(ctx, "Install Guide##settings") then
+    gui.open_bwf_install_popup = true
+  end
 
   -- === EPSILON ===
   draw_section_header("EPSILON (Tolerance)")
@@ -1707,7 +1564,7 @@ end
 
 local function draw_gui()
   local before_state = serialize_gui_state(gui)
-  local window_flags = ImGui.WindowFlags_MenuBar | ImGui.WindowFlags_AlwaysAutoResize | ImGui.WindowFlags_NoResize
+  local window_flags = ImGui.WindowFlags_MenuBar | ImGui.WindowFlags_AlwaysAutoResize | ImGui.WindowFlags_NoResize | ImGui.WindowFlags_NoCollapse
 
   -- Add NoDocking flag if docking is disabled
   if not gui.enable_docking then
@@ -1758,6 +1615,8 @@ local function draw_gui()
 
   -- Main content
   ImGui.PushItemWidth(ctx, 200)
+
+  draw_bwfmetaedit_warning_banner()
 
   -- === COMMON SETTINGS ===
 
@@ -1982,6 +1841,7 @@ local function loop()
   gui.open = draw_gui()
   draw_settings_popup()
   draw_manual_window()
+  draw_bwfmetaedit_install_modal()
 
   if gui.open then
     r.defer(loop)
