@@ -5,34 +5,35 @@
 @provides
   [main] .
 @about
-
-Key Features:
-  - Focused/Chain modes with real-time FX display
-  - Preset library with custom naming and rename sync
-  - Auto-tracked history (up to 50 operations)
-  - Keyboard shortcuts (Space=Play/Stop, S=Solo)
-  - Comprehensive file naming settings with FX Alias
-  - Debug mode with detailed console logging
-
-Reference:
-  Inspired by AudioSuite-like Script by Tim Chimes
-  'AudioSweet' is a name originally given by Tim Chimes.  
-  This project continues to use the name in reference to his original work.
-
-  Original: Renders selected plugin to selected media item
-  Written for REAPER 5.1 with Lua
-  v1.1 12/22/2015 - Added PreventUIRefresh
-  http://timchimes.com/scripting-with-reaper-audiosuite/
-
-Development:
-  This script was developed with the assistance of AI tools
-  including ChatGPT and Claude AI.
+  Key Features:
+    - Focused/Chain modes with real-time FX display
+    - Preset library with custom naming and rename sync
+    - Auto-tracked history (up to 50 operations)
+    - Keyboard shortcuts (Space=Play/Stop, S=Solo)
+    - Comprehensive file naming settings with FX Alias
+    - Debug mode with detailed console logging
+  
+  Reference:
+    Inspired by AudioSuite-like Script by Tim Chimes
+    'AudioSweet' is a name originally given by Tim Chimes.  
+    This project continues to use the name in reference to his original work.
+  
+    Original: Renders selected plugin to selected media item
+    Written for REAPER 5.1 with Lua
+    v1.1 12/22/2015 - Added PreventUIRefresh
+    http://timchimes.com/scripting-with-reaper-audiosuite/
+  
+  Development:
+    This script was developed with the assistance of AI tools
+    including ChatGPT and Claude AI.
 
 @changelog
-  0.1.2 [Internal Build 251218.2240] - Disabled collapse arrow
+  0.1.2 
+    - Disabled collapse arrow
     - Added: Main GUI window now has collapse controls disabled (WindowFlags_NoCollapse) to prevent accidental collapse errors reported by users
 
-  0.1.1 [Internal Build 251218.2150] - BWF MetaEdit reminder + install guide
+  0.1.1
+    - BWF MetaEdit reminder + install guide
     - Added: CLI detection at startup with warning banner so users know TC embedding requires bwfmetaedit
     - Added: Settings > Timecode Embed modal showing status, custom path input, and re-check/install buttons
     - Added: Homebrew install guide popup with copy-friendly commands for quick setup
