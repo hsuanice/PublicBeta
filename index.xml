@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="c62263e700daf50141af4a04c5fb4ae80bddd22e">
+<index version="1" name="hsuanice Scripts" commit="9282cbe4b46b1bf32418a31301351d4373516223">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
       <metadata>
@@ -168,6 +168,9 @@
     <reapack name="hsuanice_RGWH ReaImGui.lua" type="script" desc="RGWH GUI - ImGui Interface for RGWH Core">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+      <version name="0.1.2" author="hsuanice" time="2025-12-18T14:53:29Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/9282cbe4b46b1bf32418a31301351d4373516223/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
