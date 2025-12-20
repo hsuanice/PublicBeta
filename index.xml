@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="5fdb12bd57b0a3f02890c71e185c4b81236d21e5">
+<index version="1" name="hsuanice Scripts" commit="6d8626fb2e3f6fdd3080d7c18fbcd993dd7d8498">
   <category name="Beta Testing">
-    <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - ImGui Interface for AudioSweet">
+    <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Key Features:\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Focused/Chain modes with real-time FX display\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Preset library with custom naming and rename sync\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Auto-tracked history (up to 50 operations)\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Keyboard shortcuts (Space=Play/Stop, S=Solo)\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Comprehensive file naming settings with FX Alias\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Debug mode with detailed console logging\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Reference: Inspired by AudioSuite-like Script by Tim Chimes 'AudioSweet' is a name originally given by Tim Chimes.\line This project continues to use the name in reference to his original work.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 AudioSweet ReaImGui\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Complete AudioSweet control center with ImGui interface for managing FX chains and presets.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Quick Start\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Help \u8594 ? User Manual: Full documentation with workflows and tips\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Help \u8594 ? About: Reference and credits\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Reference\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Inspired by AudioSuite-like Script by Tim Chimes 'AudioSweet' is a name originally given by Tim Chimes. This project continues to use the name in reference to his original work.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Original: Renders selected plugin to selected media item Written for REAPER 5.1 with Lua v1.1 12/22/2015 - Added PreventUIRefresh http://timchimes.com/scripting-with-reaper-audiosuite/\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Development: This script was developed with the assistance of AI tools including ChatGPT and Claude AI.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 Development\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This script was developed with the assistance of AI tools including ChatGPT and Claude AI.\par}
 }
 ]]></description>
       </metadata>
@@ -25,6 +25,9 @@
       </version>
       <version name="0.1.2" author="hsuanice" time="2025-12-18T15:03:59Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/dd4d1dbb57e78401ce5bc57229f4dc4f84a2dc50/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+      <version name="0.1.14" author="hsuanice" time="2025-12-20T00:49:13Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/6d8626fb2e3f6fdd3080d7c18fbcd993dd7d8498/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
