@@ -29,11 +29,11 @@
 
 
 @changelog
-  + FIXED: Custom names now fully support type/vendor display toggles
-  + CHANGED: Rename dialog shows core name only, respects alias settings
-  + ADDED: Smart helper functions for custom name handling (get_fx_core_name, format_fx_label_with_custom_name)
-  + UPDATED: Display logic preserves original FX metadata while using custom names
-
+  v0.1.14
+    + FIXED: Custom names now fully support type/vendor display toggles
+    + CHANGED: Rename dialog shows core name only, respects alias settings
+    + ADDED: Smart helper functions for custom name handling
+    + UPDATED: Display logic preserves original FX metadata while using custom names
   0.1.13 [Internal Build 251220.0750] - Help System Refactoring
     - ADDED: In-app User Manual window (Help → User Manual)
       • New tabbed GUI window with 4 sections
