@@ -1,42 +1,317 @@
 --[[
-@description AudioSweet ReaImGui - ImGui Interface for AudioSweet
+@description AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)
 @author hsuanice
-@version 0.1.2
+@version 0.1.14
 @provides
   [main] .
 @about
-  Key Features:
-    - Focused/Chain modes with real-time FX display
-    - Preset library with custom naming and rename sync
-    - Auto-tracked history (up to 50 operations)
-    - Keyboard shortcuts (Space=Play/Stop, S=Solo)
-    - Comprehensive file naming settings with FX Alias
-    - Debug mode with detailed console logging
-  
-  Reference:
-    Inspired by AudioSuite-like Script by Tim Chimes
-    'AudioSweet' is a name originally given by Tim Chimes.  
-    This project continues to use the name in reference to his original work.
-  
-    Original: Renders selected plugin to selected media item
-    Written for REAPER 5.1 with Lua
-    v1.1 12/22/2015 - Added PreventUIRefresh
-    http://timchimes.com/scripting-with-reaper-audiosuite/
-  
-  Development:
-    This script was developed with the assistance of AI tools
-    including ChatGPT and Claude AI.
+  # AudioSweet ReaImGui
+
+  Complete AudioSweet control center with ImGui interface for managing FX chains and presets.
+
+  ## Quick Start
+  - Help → User Manual: Full documentation with workflows and tips
+  - Help → About: Reference and credits
+
+  ## Reference
+  Inspired by AudioSuite-like Script by Tim Chimes
+  'AudioSweet' is a name originally given by Tim Chimes.
+  This project continues to use the name in reference to his original work.
+
+  Original: Renders selected plugin to selected media item
+  Written for REAPER 5.1 with Lua
+  v1.1 12/22/2015 - Added PreventUIRefresh
+  http://timchimes.com/scripting-with-reaper-audiosuite/
+
+  ## Development
+  This script was developed with the assistance of AI tools
+  including ChatGPT and Claude AI.
+
 
 @changelog
-  0.1.2 
-    - Disabled collapse arrow
+  0.1.14 [Internal Build 251220.0802] - Rename System Refactoring
+    - FIXED: Custom names now fully support type/vendor display toggles
+      • Problem: After renaming, Show Type/Vendor settings had no effect
+      • Root cause: custom_name was displayed as-is without original type/vendor info
+      • Impact: Users lost ability to toggle display format after renaming
+      • Solution: Custom names now preserve original FX type/vendor metadata
+
+    - CHANGED: Rename dialog behavior for focused FX
+      • Input field now shows CORE NAME ONLY (no type, no vendor)
+      • Respects Button "Use Alias" setting:
+        - Alias ON: shows alias (e.g., "ProQ4")
+        - Alias OFF: shows core name (e.g., "FabFilter Pro-Q 4")
+      • Consistent with button display (what you see = what you edit)
+      • Lines: 4893, 4966 (preset and history rename pre-fill)
+
+    - ADDED: Smart helper functions
+      • get_fx_core_name() - Lines 1743-1761
+        - Extracts core FX name for rename input
+        - Respects gui.button_use_alias setting
+        - Returns alias if available, else parsed core name
+      • format_fx_label_with_custom_name() - Lines 1763-1804
+        - Formats custom name WITH original type/vendor preserved
+        - Extracts type/vendor from original chain.name
+        - Replaces only core portion with custom_name
+        - Respects context-specific display settings (button/tooltip/status/fxlist)
+
+    - UPDATED: Display logic to use new formatting function
+      • get_chain_display_info(): Line 2347 (preset button display)
+      • get_history_display_name(): Line 2389 (history button display)
+      • Custom names now dynamically formatted based on display settings
+
+    - BEHAVIOR: Data structure preserves original metadata
+      • Storage: chain.name = "VST3: VOXBOX (Universal Audio)" (unchanged)
+      • Storage: chain.custom_name = "VB" (only core name)
+      • Display logic extracts type/vendor from chain.name, replaces core with custom_name
+      • Result: Full toggle support for type/vendor display
+
+    - EXAMPLE 1 - Standard Rename:
+      • Original FX: "VST3: UADx Manley VOXBOX Channel Strip (Universal Audio (UADx))"
+      • Button "Use Alias": OFF
+      • Rename dialog shows: "UADx Manley VOXBOX Channel Strip"
+      • User renames to: "VOXBOX"
+      • Saved: custom_name = "VOXBOX"
+      • Display results:
+        - Show Type OFF, Vendor OFF → "VOXBOX"
+        - Show Type ON, Vendor OFF → "VST3: VOXBOX"
+        - Show Type OFF, Vendor ON → "VOXBOX (Universal Audio (UADx))"
+        - Show Type ON, Vendor ON → "VST3: VOXBOX (Universal Audio (UADx))"
+
+    - EXAMPLE 2 - Rename with Alias:
+      • Original FX: "VST3: FabFilter Pro-Q 4 (FabFilter)"
+      • Alias database: "ProQ4"
+      • Button "Use Alias": ON
+      • Button displays: "VST3: ProQ4 (FabFilter)" (if type/vendor ON)
+      • Rename dialog shows: "ProQ4" (matches button core)
+      • User renames to: "EQ"
+      • Saved: custom_name = "EQ"
+      • Display results (type/vendor from original):
+        - Show Type OFF, Vendor OFF → "EQ"
+        - Show Type ON, Vendor OFF → "VST3: EQ"
+        - Show Type OFF, Vendor ON → "EQ (FabFilter)"
+        - Show Type ON, Vendor ON → "VST3: EQ (FabFilter)"
+
+    - TECHNICAL: Complete separation of concerns
+      • Rename input: Only deals with core name (optionally alias)
+      • Storage: Keeps original full name + custom core name separately
+      • Display: Dynamically combines based on user settings
+      • Benefit: Maximum flexibility, no data loss
+
+  0.1.13 [Internal Build 251220.0750] - Help System Refactoring
+    - ADDED: In-app User Manual window (Help → User Manual)
+      • New tabbed GUI window with 4 sections
+      • Tab 1: Getting Started (Overview, Core Features, Operation Modes)
+      • Tab 2: Actions & Presets (Main Actions, Preset System)
+      • Tab 3: History & Workflows (History System, Workflow Examples)
+      • Tab 4: Tips & Troubleshooting (Tips, Keyboard Shortcuts, Troubleshooting)
+      • Window size: 700x600, scrollable content
+      • Lines: 4186-4441 (help window implementation)
+    - SIMPLIFIED: @about section (lines 7-28)
+      • Removed all manual content (moved to GUI)
+      • Now only contains: Quick Start, Reference, Development credits
+      • Much cleaner ReaPack package description
+      • Users directed to Help → User Manual for full docs
+    - IMPROVED: Help menu structure
+      • Help → User Manual (opens GUI window)
+      • Help → About (prints reference to console)
+      • Clear separation between documentation and credits
+      • Lines: 3657-3685 (updated Help menu)
+    - ADDED: GUI state variable
+      • gui.show_help_window flag (line 1399)
+      • Controls help window visibility
+    - UX: Better documentation access
+      • No need to read @about in ReaPack or text editor
+      • Interactive, searchable (via tabs) manual
+      • Always available in Help menu
+      • Consistent with Settings window design
+
+  0.1.12 [Internal Build 251220.0744] - FX Index Tracking Fix
+    - FIXED: Critical bug where presets/history execute wrong FX after reordering
+      • Problem: Stored fx_index becomes invalid when FX order changes on track
+      • Impact: Open and Execute buttons would process incorrect FX
+      • Root cause: Only index validation without name verification
+      • Lines affected: run_history_focused_apply (3277+), run_focused_fx_copy_mode (2947+)
+    - ADDED: Unified FX resolution function for consistent lookup
+      • New function: find_fx_on_track(track, saved_fx_index, saved_fx_name)
+      • Method 1: Try saved index with name verification (fast path)
+      • Method 2: Search by exact name if index invalid (fallback)
+      • Returns: actual_fx_idx, actual_fx_name, status
+      • Status values: "found_by_index", "found_by_name", "invalid_track", "no_fx", "not_found"
+      • Lines: 2244-2274 (unified FX resolution function)
+    - REFACTORED: All FX lookup operations now use unified function
+      • get_chain_display_info(): Lines 2359+ (display name generation)
+      • get_history_display_name(): Lines 2444+ (history display names)
+      • show_preset_tooltip(): Lines 2507+ (tooltip hover highlighting)
+      • open_saved_chain_fx(): Lines 3265+ (Open button)
+      • run_history_focused_apply(): Lines 3283+ (Execute/Apply)
+      • run_focused_fx_copy_mode(): Lines 2953+ (Copy mode)
+      • Eliminated ~70 lines of duplicate FX lookup code
+    - ADDED: Smart debug logging with anti-spam cache
+      • Tooltip hover: Shows when FX moved (line 2477-2487)
+      • Open button: Shows saved vs actual index (line 3272-3277)
+      • Execute operations: Already had debug logs
+      • Cache mechanism: Only logs each FX movement ONCE per session
+      • Cache key: "track_guid|fx_name|saved_idx|actual_idx"
+      • Cache storage: gui.fx_move_logged table (line 1388)
+      • Result: Clean, readable debug output without repetition
+    - TECHNICAL: DRY principle applied to FX resolution
+      • Single source of truth for FX lookup logic
+      • Easier to maintain and extend (e.g., fuzzy matching)
+      • Consistent behavior across all operations
+    - BEHAVIOR: Graceful fallback when FX order changes
+      • Index mismatch: Falls back to name search automatically
+      • FX not found: Clear error message with FX name
+      • Backward compatible: Existing presets work without migration
+    - EDGE CASES: Handled edge cases
+      • Invalid track pointer: Returns "invalid_track" status
+      • Empty FX chain: Returns "no_fx" status
+      • FX deleted: Returns "not_found" with clear error message
+      • Duplicate FX names: Matches first occurrence (same as before)
+
+  0.1.11 [Internal Build 251219.2245] - Unified Settings Window
+    - REDESIGNED: Unified Settings window with tabbed interface
+      • New: Settings → Settings... opens unified window
+      • Previous: 5 separate settings popups (History, File Naming, Preset/History Display, Preview, Timecode)
+      • Now: Single window with 5 tabs (FX Display, File Naming, Preview, History, Timecode)
+      • Lines: 3608-3945 (unified settings window implementation)
+    - IMPROVED: Settings menu reorganization
+      • Kept: Settings → Enable Window Docking (independent checkbox in menu)
+      • Removed: Individual setting menu items
+      • Added: Settings → Settings... (opens unified tabbed window)
+      • Lines: 3512-3526 (simplified settings menu)
+    - RENAMED: "Preset/History Display" → "FX Display"
+      • More accurate name covering all contexts: Button, Tooltip, Status, FX List
+      • Now appears as first tab in unified Settings window
+    - TECHNICAL: New GUI state variable
+      • Added: gui.show_unified_settings flag (line 1329)
+      • Controls unified settings window visibility
+    - IMPROVED: Better user experience with organized settings
+      • All settings in one place with clear categorization
+      • Easy navigation between different setting categories
+      • Consistent UI with tabbed interface
+    - LEGACY: Old popup code kept for backward compatibility
+      • Lines: 3947+ (legacy individual popups)
+      • Can be safely removed in future versions
+
+  0.1.10 [Internal Build 251219.2230] - FX Display Settings Refactoring
+    - REFACTORED: Unified FX label formatting with context-based settings
+      • New: format_fx_label(raw_label, context) function supports 4 contexts
+      • Contexts: "button", "tooltip", "status", "fxlist"
+      • Lines: 1669-1721 (unified formatting function)
+      • Legacy functions preserved for backward compatibility (1723-1730)
+    - ADDED: Individual display settings for 4 different contexts
+      • Button Display: Controls Preset/History button names
+      • Tooltip Display: Controls hover info formatting
+      • Status Display: Controls bottom status bar FX name
+      • FX List Display: Controls Chain mode FX list formatting
+      • Each context has 3 settings: show_type, show_vendor, use_alias
+      • Total: 12 new settings variables (lines 1243-1259)
+    - IMPROVED: Settings UI redesigned with 4 sections
+      • Menu: Settings → Preset/History Display...
+      • Section 1: Button Display (Preset/History Buttons)
+      • Section 2: Tooltip Display (Hover Info)
+      • Section 3: Status Display (Bottom Bar)
+      • Section 4: FX Chain List Display (Chain Mode)
+      • Lines: 3737-3837 (new settings popup)
+    - FIXED: Status bar now supports show_type and show_vendor settings
+      • Previous: Only formatted when use_alias = true
+      • Now: Respects all 3 settings independently
+      • Line: 1729 (uses unified format_fx_label function)
+    - FIXED: FX Chain List now applies formatting
+      • Previous: Displayed raw fx.name without formatting
+      • Now: Uses format_fx_label(fx.name, "fxlist")
+      • Line: 4382 (format FX names in chain list)
+    - IMPROVED: Tooltip formatting now uses dedicated settings
+      • Previous: Shared settings with buttons
+      • Now: Independent tooltip_show_type, tooltip_show_vendor, tooltip_use_alias
+      • Lines: 2358, 2374 (tooltip uses "tooltip" context)
+    - REMOVED: Old preset_display_* settings (backward incompatible)
+      • Replaced with new 4-context system
+      • Settings reset to defaults on first run with new version
+    - TECHNICAL: Updated save/load settings functions
+      • Save: Lines 1328-1341 (12 new ExtState keys)
+      • Load: Lines 1389-1402 (12 new settings with defaults)
+    - EXAMPLE: Flexible display configuration
+      • Button: Type=ON, Vendor=OFF, Alias=ON → "VST3: ProQ4"
+      • Tooltip: Type=ON, Vendor=ON, Alias=ON → "VST3: ProQ4 (FabFilter)"
+      • Status: Type=ON, Vendor=ON, Alias=OFF → "VST3: Pro-Q 4 (FabFilter)"
+      • FX List: Type=OFF, Vendor=OFF, Alias=OFF → "Pro-Q 4"
+
+  0.1.9 [Internal Build 251219.2216] - Rename preset/history improvements
+    - IMPROVED: Preset rename now pre-fills with formatted FX name (matches button display)
+      • Previous: Focused mode showed raw FX name (e.g., "VST3: Pro-Q 4 (FabFilter)")
+      • Now: Shows formatted name respecting Display Settings (e.g., "ProQ4" if using alias)
+      • Lines: 4065-4080 (get current FX and apply format_fx_label_for_preset)
+    - IMPROVED: Rename popup hint text now shows formatted FX name (consistent with button)
+      • Previous: Hint showed raw FX name regardless of display settings
+      • Now: Hint uses format_fx_label_for_preset() to match current display format
+      • Line: 4464 (use formatted_name for hint text)
+    - ADDED: History items now support right-click rename (same as presets)
+      • New: Right-click context menu on history items with "Rename" option
+      • Lines: 4140-4166 (history context menu implementation)
+      • Pre-fills with formatted name for focused mode, track name for chain mode
+    - ADDED: New rename_history_item() function for renaming history entries
+      • Function: rename_history_item(idx, new_custom_name)
+      • Lines: 2041-2080 (bidirectional sync between history and presets)
+      • Syncs custom_name to matching saved presets automatically
+    - ADDED: Bidirectional rename sync between presets and history
+      • Rename preset → updates matching history items
+      • Rename history → updates matching saved presets
+      • Match criteria: track_guid + mode + (fx_index for focused, name for chain)
+    - IMPROVED: Rename popup now dynamically shows "Preset Name" or "History Name"
+      • Lines: 4441-4499 (unified popup for both preset and history)
+      • Uses gui.rename_is_history flag to determine source and target
+    - TECHNICAL: Added gui.rename_is_history flag to track rename source
+      • Line: 1239 (initialization)
+      • Set to false for preset rename (line 4101)
+      • Set to true for history rename (line 4187)
+
+  0.1.8 [Internal Build 251219.1935] - Preset/History display alignment fix
+    - Fixed: Preset/History header toggles align without stretching window width
+
+  0.1.7 [Internal Build 251219.1915] - Preset/History display alias mapping
+    - Added: Preset/History display formatting now reads type/vendor/name from fx_alias.json when alias mode is enabled
+
+  0.1.6 [Internal Build 251219.1800] - Apply layout compact
+    - Changed: Moved Handle control to the Channel row for a two-line top layout
+
+  0.1.5 [Internal Build 251219.1754] - Preset/History show toggle
+    - Added: Toggle to show/hide Presets/History block with persistent setting
+
+  0.1.4 [Internal Build 251219.1745] - Removed Presets menu tab
+    - Removed: Presets menu from the top menu bar (use main controls instead)
+
+  0.1.3 [Internal Build 251219.1730] - Dynamic list height refinement
+    - Improved: Saved presets and History lists now auto-fit content height with no extra blank row
+
+  0.1.2 [Internal Build 251218.2240] - Disabled collapse arrow
     - Added: Main GUI window now has collapse controls disabled (WindowFlags_NoCollapse) to prevent accidental collapse errors reported by users
 
-  0.1.1
-    - BWF MetaEdit reminder + install guide
+  0.1.1 [Internal Build 251218.2150] - BWF MetaEdit reminder + install guide
     - Added: CLI detection at startup with warning banner so users know TC embedding requires bwfmetaedit
     - Added: Settings > Timecode Embed modal showing status, custom path input, and re-check/install buttons
     - Added: Homebrew install guide popup with copy-friendly commands for quick setup
+
+  0.1.0 [Internal Build 251215.1330] - ESC KEY FIX & WINDOW POSITION IMPROVEMENTS
+    - FIXED: ESC key now correctly closes main window and popups.
+      • Problem 1: ESC in Settings popups closed main window instead of popup
+      • Problem 2: ESC couldn't close main window when controls were active
+      • Root cause: ESC handler was in wrong location and missing IsWindowFocused() check
+      • Solution: Moved main window ESC handler to immediately after ImGui.Begin() (line 2774)
+      • Solution: Use IsWindowFocused() for all ESC handlers (main: 2774, popups: 2914, 2953, 3118)
+      • Impact: ESC closes focused window correctly, matching RGWH GUI behavior
+      • Reference: RGWH GUI ESC handler at line 1726 (immediately after Begin)
+    - FIXED: Main window position now remembered across sessions.
+      • Problem: Window always opened at default position, ignoring previous placement
+      • Root cause: SetNextWindowPos() overrode ImGui's automatic position memory
+      • Solution: Removed SetNextWindowPos() for main window, let ImGui handle position persistence
+      • Impact: Main window reopens where user last placed it
+    - ATTEMPTED: Settings popups open near mouse cursor (partial implementation).
+      • Implementation: Use GetMousePosition() + SetNextWindowPos() with Cond_Appearing
+      • Note: Popup modals may have limitations with position override in ReaImGui
+      • Affected popups: History Settings (2906-2907), File Naming (2945-2946), Preview (3110-3111)
+    - PURPOSE: Better UX - consistent window management matching RGWH GUI behavior
 ]]--
 
 ------------------------------------------------------------
@@ -77,6 +352,25 @@ local gui = {
   fxname_show_vendor = true,  -- Show vendor name in parentheses
   fxname_strip_symbol = true,  -- Strip spaces and symbols
   use_alias = false,           -- Use FX Alias for file naming
+
+  -- FX Display Settings (4 contexts: button, tooltip, status, fxlist)
+  -- Button Display (Preset/History buttons)
+  button_show_type = true,
+  button_show_vendor = false,
+  button_use_alias = false,
+  -- Tooltip Display (Hover info)
+  tooltip_show_type = true,
+  tooltip_show_vendor = true,
+  tooltip_use_alias = false,
+  -- Status Display (Bottom status bar)
+  status_show_type = true,
+  status_show_vendor = true,
+  status_use_alias = false,
+  -- FX Chain List Display (Chain mode FX list)
+  fxlist_show_type = true,
+  fxlist_show_vendor = true,
+  fxlist_use_alias = false,
+
   -- Chain mode naming
   chain_token_source = 0,      -- 0=track, 1=aliases, 2=fxchain
   chain_alias_joiner = "",     -- Joiner for aliases mode
@@ -94,16 +388,21 @@ local gui = {
   history = {},
   new_chain_name = "",
   new_chain_name_default = "",  -- Store initial default value to detect if user modified
+  fx_move_logged = {},  -- Cache for logged FX movements (key: "track_guid|fx_name|saved_idx|actual_idx")
   new_fx_preset_name = "",
   show_save_popup = false,
   show_save_fx_popup = false,
   show_rename_popup = false,
   rename_chain_idx = nil,
   rename_chain_name = "",
+  rename_is_history = false,  -- Track whether renaming a history item or preset
+  show_unified_settings = false,  -- Unified settings window with tabs
+  show_help_window = false,  -- Help/Manual window
   show_settings_popup = false,
   show_fxname_popup = false,
   show_preview_settings = false,
   show_naming_popup = false,
+  show_preset_display_popup = false,
   show_target_track_popup = false,
   show_tc_embed_popup = false,
   -- Preview settings
@@ -115,6 +414,7 @@ local gui = {
   -- Feature flags
   enable_saved_chains = true,   -- Now working with OVERRIDE ExtState mechanism
   enable_history = true,        -- Now working with OVERRIDE ExtState mechanism
+  show_presets_history = true,  -- Show/Hide Saved Preset + History block
   -- UI settings
   enable_docking = false,       -- Allow window docking
   bwfmetaedit_custom_path = "",
@@ -140,6 +440,21 @@ local function save_gui_settings()
   r.SetExtState(SETTINGS_NAMESPACE, "fxname_show_vendor", gui.fxname_show_vendor and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "fxname_strip_symbol", gui.fxname_strip_symbol and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "use_alias", gui.use_alias and "1" or "0", true)
+
+  -- FX Display Settings (4 contexts)
+  r.SetExtState(SETTINGS_NAMESPACE, "button_show_type", gui.button_show_type and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "button_show_vendor", gui.button_show_vendor and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "button_use_alias", gui.button_use_alias and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "tooltip_show_type", gui.tooltip_show_type and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "tooltip_show_vendor", gui.tooltip_show_vendor and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "tooltip_use_alias", gui.tooltip_use_alias and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "status_show_type", gui.status_show_type and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "status_show_vendor", gui.status_show_vendor and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "status_use_alias", gui.status_use_alias and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "fxlist_show_type", gui.fxlist_show_type and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "fxlist_show_vendor", gui.fxlist_show_vendor and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "fxlist_use_alias", gui.fxlist_use_alias and "1" or "0", true)
+
   r.SetExtState(SETTINGS_NAMESPACE, "chain_token_source", tostring(gui.chain_token_source), true)
   r.SetExtState(SETTINGS_NAMESPACE, "chain_alias_joiner", gui.chain_alias_joiner, true)
   r.SetExtState(SETTINGS_NAMESPACE, "max_fx_tokens", tostring(gui.max_fx_tokens), true)
@@ -152,6 +467,7 @@ local function save_gui_settings()
   r.SetExtState(SETTINGS_NAMESPACE, "preview_restore_mode", tostring(gui.preview_restore_mode), true)
   -- UI settings
   r.SetExtState(SETTINGS_NAMESPACE, "enable_docking", gui.enable_docking and "1" or "0", true)
+  r.SetExtState(SETTINGS_NAMESPACE, "show_presets_history", gui.show_presets_history and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "bwfmetaedit_custom_path", gui.bwfmetaedit_custom_path or "", true)
 end
 
@@ -185,6 +501,21 @@ local function load_gui_settings()
   gui.fxname_show_vendor = get_bool("fxname_show_vendor", false)
   gui.fxname_strip_symbol = get_bool("fxname_strip_symbol", true)
   gui.use_alias = get_bool("use_alias", false)
+
+  -- FX Display Settings (4 contexts) - reset to defaults
+  gui.button_show_type = get_bool("button_show_type", true)
+  gui.button_show_vendor = get_bool("button_show_vendor", false)
+  gui.button_use_alias = get_bool("button_use_alias", false)
+  gui.tooltip_show_type = get_bool("tooltip_show_type", true)
+  gui.tooltip_show_vendor = get_bool("tooltip_show_vendor", true)
+  gui.tooltip_use_alias = get_bool("tooltip_use_alias", false)
+  gui.status_show_type = get_bool("status_show_type", true)
+  gui.status_show_vendor = get_bool("status_show_vendor", true)
+  gui.status_use_alias = get_bool("status_use_alias", false)
+  gui.fxlist_show_type = get_bool("fxlist_show_type", true)
+  gui.fxlist_show_vendor = get_bool("fxlist_show_vendor", true)
+  gui.fxlist_use_alias = get_bool("fxlist_use_alias", false)
+
   gui.chain_token_source = get_int("chain_token_source", 0)
   gui.max_fx_tokens = get_int("max_fx_tokens", 3)
   gui.trackname_strip_symbols = get_bool("trackname_strip_symbols", true)
@@ -202,6 +533,7 @@ local function load_gui_settings()
   gui.bwfmetaedit_custom_path = get_string("bwfmetaedit_custom_path", "")
   -- UI settings
   gui.enable_docking = get_bool("enable_docking", false)
+  gui.show_presets_history = get_bool("show_presets_history", true)
 
   -- Debug output on startup
   if gui.debug then
@@ -221,6 +553,9 @@ local function load_gui_settings()
     r.ShowConsoleMsg(string.format("  FX Name - Show Vendor: %s\n", gui.fxname_show_vendor and "ON" or "OFF"))
     r.ShowConsoleMsg(string.format("  FX Name - Strip Symbol: %s\n", gui.fxname_strip_symbol and "ON" or "OFF"))
     r.ShowConsoleMsg(string.format("  FX Name - Use Alias: %s\n", gui.use_alias and "ON" or "OFF"))
+    r.ShowConsoleMsg(string.format("  Preset Display - Show Type: %s\n", gui.preset_display_show_type and "ON" or "OFF"))
+    r.ShowConsoleMsg(string.format("  Preset Display - Show Vendor: %s\n", gui.preset_display_show_vendor and "ON" or "OFF"))
+    r.ShowConsoleMsg(string.format("  Preset Display - Use Alias: %s\n", gui.preset_display_use_alias and "ON" or "OFF"))
     r.ShowConsoleMsg(string.format("  Max FX Tokens: %d\n", gui.max_fx_tokens))
     local chain_token_source_names = {"Track Name", "FX Aliases", "FXChain"}
     r.ShowConsoleMsg(string.format("  Chain Token Source: %s\n", chain_token_source_names[gui.chain_token_source + 1]))
@@ -277,6 +612,300 @@ local function join_path(base, fragment)
   end
   local sep = DIR_SEPARATOR == "\\" and "\\" or "/"
   return base .. sep .. fragment
+end
+
+------------------------------------------------------------
+-- Preset/History Display Helpers
+------------------------------------------------------------
+local json = (function()
+  local j = {}
+  local function skip_ws(s, i)
+    local _, j = s:find("^[ \n\r\t]*", i)
+    return (j or i - 1) + 1
+  end
+  local function parse_value(s, i)
+    i = skip_ws(s, i)
+    local c = s:sub(i, i)
+    if c == "{" then
+      local obj = {}
+      i = i + 1
+      i = skip_ws(s, i)
+      if s:sub(i, i) == "}" then return obj, i + 1 end
+      while true do
+        local k
+        k, i = parse_value(s, i)
+        if type(k) ~= "string" then error("JSON key error") end
+        i = skip_ws(s, i)
+        if s:sub(i, i) ~= ":" then error("JSON :") end
+        i = i + 1
+        local v
+        v, i = parse_value(s, i)
+        obj[k] = v
+        i = skip_ws(s, i)
+        local ch = s:sub(i, i)
+        if ch == "}" then return obj, i + 1 end
+        if ch ~= "," then error("JSON ,}") end
+        i = i + 1
+      end
+    elseif c == "[" then
+      local arr = {}
+      i = i + 1
+      i = skip_ws(s, i)
+      if s:sub(i, i) == "]" then return arr, i + 1 end
+      while true do
+        local v
+        v, i = parse_value(s, i)
+        arr[#arr + 1] = v
+        i = skip_ws(s, i)
+        local ch = s:sub(i, i)
+        if ch == "]" then return arr, i + 1 end
+        if ch ~= "," then error("JSON ,]") end
+        i = i + 1
+      end
+    elseif c == '"' then
+      local j1 = i + 1
+      local out = {}
+      while true do
+        local ch = s:sub(j1, j1)
+        if ch == "" then error("JSON string") end
+        if ch == '"' then return table.concat(out), j1 + 1 end
+        if ch == "\\" then
+          local e = s:sub(j1 + 1, j1 + 1)
+          if e == "u" then
+            local hex = s:sub(j1 + 2, j1 + 5)
+            out[#out + 1] = utf8.char(tonumber(hex, 16))
+            j1 = j1 + 6
+          else
+            local m = { b = "\b", f = "\f", n = "\n", r = "\r", t = "\t", ['"'] = '"', ['\\'] = "\\", ['/'] = "/" }
+            out[#out + 1] = m[e] or e
+            j1 = j1 + 2
+          end
+        else
+          out[#out + 1] = ch
+          j1 = j1 + 1
+        end
+      end
+    else
+      local lit = s:match("^true", i)
+      if lit then return true, i + 4 end
+      lit = s:match("^false", i)
+      if lit then return false, i + 5 end
+      lit = s:match("^null", i)
+      if lit then return nil, i + 4 end
+      local num = s:match("^%-?%d+%.?%d*[eE]?[%+%-]?%d*", i)
+      if num and #num > 0 then return tonumber(num), i + #num end
+      error("JSON unexpected")
+    end
+  end
+  function j.decode(s)
+    local ok, res = pcall(function()
+      local v = select(1, parse_value(s, 1))
+      return v
+    end)
+    return ok and res or nil
+  end
+  return j
+end)()
+
+local function read_file(path)
+  local f = io.open(path, "rb")
+  if not f then return nil end
+  local s = f:read("*a")
+  f:close()
+  return s
+end
+
+local fx_alias_cache = {
+  loaded = false,
+  data = {},
+  path = "",
+}
+
+local function parse_fx_label(raw)
+  raw = tostring(raw or "")
+  local typ, rest = raw:match("^([%w%+%._-]+):%s*(.+)$")
+  rest = rest or raw
+  local core, vendor = rest, ""
+  local core_only, v = rest:match("^(.-)%s*%(([^%(%)]+)%)%s*$")
+  if core_only then
+    core = core_only
+    vendor = v or ""
+  end
+  return trim(typ), trim(core), trim(vendor)
+end
+
+local function normalize_token(s)
+  return (tostring(s or ""):gsub("[^%w]+", "")):lower()
+end
+
+local function make_fingerprint(raw_label)
+  local typ, core, vendor = parse_fx_label(raw_label)
+  local t = normalize_token(typ)
+  local c = normalize_token(core)
+  local v = normalize_token(vendor)
+  return table.concat({ t, c, v }, "|")
+end
+
+local function get_fx_alias_db()
+  if fx_alias_cache.loaded then return fx_alias_cache.data end
+  fx_alias_cache.path = RES_PATH .. "/Scripts/hsuanice Scripts/Settings/fx_alias.json"
+  local raw = read_file(fx_alias_cache.path)
+  local decoded = raw and raw ~= "" and json.decode(raw) or nil
+  if type(decoded) == "table" then
+    fx_alias_cache.data = decoded
+  else
+    fx_alias_cache.data = {}
+  end
+  fx_alias_cache.loaded = true
+  return fx_alias_cache.data
+end
+
+local function get_fx_alias_record(raw_label, use_alias)
+  if not use_alias then return nil end
+  local db = get_fx_alias_db()
+  local fp = make_fingerprint(raw_label)
+  local rec = db and db[fp]
+  return rec
+end
+
+local function pick_alias_type(parsed_type, seen_types)
+  if type(seen_types) == "table" then
+    if parsed_type and parsed_type ~= "" then
+      for _, t in ipairs(seen_types) do
+        if t == parsed_type then
+          return parsed_type
+        end
+      end
+    end
+    return seen_types[1] or ""
+  end
+  return parsed_type or ""
+end
+
+-- Unified FX label formatting function
+-- context: "button", "tooltip", "status", "fxlist"
+local function format_fx_label(raw_label, context)
+  local typ, core, vendor = parse_fx_label(raw_label)
+  if core == "" then return raw_label end
+
+  -- Get settings based on context
+  local show_type, show_vendor, use_alias
+  if context == "button" then
+    show_type = gui.button_show_type
+    show_vendor = gui.button_show_vendor
+    use_alias = gui.button_use_alias
+  elseif context == "tooltip" then
+    show_type = gui.tooltip_show_type
+    show_vendor = gui.tooltip_show_vendor
+    use_alias = gui.tooltip_use_alias
+  elseif context == "status" then
+    show_type = gui.status_show_type
+    show_vendor = gui.status_show_vendor
+    use_alias = gui.status_use_alias
+  elseif context == "fxlist" then
+    show_type = gui.fxlist_show_type
+    show_vendor = gui.fxlist_show_vendor
+    use_alias = gui.fxlist_use_alias
+  else
+    -- Fallback to button settings
+    show_type = gui.button_show_type
+    show_vendor = gui.button_show_vendor
+    use_alias = gui.button_use_alias
+  end
+
+  local display_type = typ
+  local display_vendor = vendor
+  local display_core = core
+
+  -- Apply alias if enabled
+  local rec = get_fx_alias_record(raw_label, use_alias)
+  if rec then
+    display_type = pick_alias_type(typ, rec.seen_types)
+    display_vendor = rec.normalized_vendor or ""
+    display_core = (rec.alias and rec.alias ~= "") and rec.alias or (rec.normalized_core or display_core)
+  end
+
+  -- Build display name
+  local name = display_core
+  if show_vendor and display_vendor ~= "" then
+    name = string.format("%s (%s)", display_core, display_vendor)
+  end
+  if show_type and display_type ~= "" then
+    name = string.format("%s: %s", display_type, name)
+  end
+  return name
+end
+
+-- Legacy functions for backward compatibility
+local function format_fx_label_for_preset(raw_label)
+  return format_fx_label(raw_label, "button")
+end
+
+local function format_fx_label_for_status(raw_label)
+  return format_fx_label(raw_label, "status")
+end
+
+-- Extract core FX name only (no type, no vendor) for rename dialog
+-- If button uses alias, return alias; otherwise return core name
+local function get_fx_core_name(raw_label)
+  -- Check if button display uses alias
+  if gui.button_use_alias then
+    local rec = get_fx_alias_record(raw_label, true)
+    if rec and rec.alias and rec.alias ~= "" then
+      return rec.alias  -- Return alias if available
+    end
+    -- Fallback to normalized_core if alias is empty
+    if rec and rec.normalized_core and rec.normalized_core ~= "" then
+      return rec.normalized_core
+    end
+  end
+
+  -- Default: return parsed core name
+  local _, core, _ = parse_fx_label(raw_label)
+  return core
+end
+
+-- Format FX label using custom name but preserving type/vendor from original
+-- Used for displaying custom-named presets with type/vendor toggle support
+local function format_fx_label_with_custom_name(original_fx_name, custom_name, context)
+  -- Parse original FX name to extract type and vendor
+  local typ, _, vendor = parse_fx_label(original_fx_name)
+
+  -- Get display settings based on context
+  local show_type, show_vendor, use_alias
+  if context == "button" then
+    show_type = gui.button_show_type
+    show_vendor = gui.button_show_vendor
+    use_alias = gui.button_use_alias
+  elseif context == "tooltip" then
+    show_type = gui.tooltip_show_type
+    show_vendor = gui.tooltip_show_vendor
+    use_alias = gui.tooltip_use_alias
+  elseif context == "status" then
+    show_type = gui.status_show_type
+    show_vendor = gui.status_show_vendor
+    use_alias = gui.status_use_alias
+  elseif context == "fxlist" then
+    show_type = gui.fxlist_show_type
+    show_vendor = gui.fxlist_show_vendor
+    use_alias = gui.fxlist_use_alias
+  else
+    -- Fallback to button settings
+    show_type = gui.button_show_type
+    show_vendor = gui.button_show_vendor
+    use_alias = gui.button_use_alias
+  end
+
+  -- Build display name with custom core but original type/vendor
+  local display_name = custom_name
+  if show_vendor and vendor ~= "" then
+    display_name = string.format("%s (%s)", custom_name, vendor)
+  end
+  if show_type and typ ~= "" then
+    display_name = string.format("%s: %s", typ, display_name)
+  end
+
+  return display_name
 end
 
 local function check_bwfmetaedit(force)
@@ -669,6 +1298,47 @@ local function rename_saved_chain(idx, new_custom_name)
   end
 end
 
+local function rename_history_item(idx, new_custom_name)
+  if gui.history[idx] then
+    local item = gui.history[idx]
+    item.custom_name = (new_custom_name and new_custom_name ~= "") and new_custom_name or nil
+    if gui.debug then
+      r.ShowConsoleMsg(string.format("[AudioSweet] Rename history #%d: custom_name='%s', mode='%s'\n",
+        idx, tostring(item.custom_name or "nil"), item.mode or "chain"))
+    end
+
+    -- Sync rename to saved presets that match this history item
+    -- Match by: track_guid + mode + (fx_index for focused, name for chain)
+    for _, chain in ipairs(gui.saved_chains) do
+      if chain.track_guid == item.track_guid and chain.mode == item.mode then
+        if item.mode == "focused" then
+          -- For focused mode: match by fx_index
+          if chain.fx_index == item.fx_index then
+            chain.custom_name = item.custom_name
+          end
+        else
+          -- For chain mode: match by name (original internal name)
+          if chain.name == item.name then
+            chain.custom_name = item.custom_name
+          end
+        end
+      end
+    end
+
+    -- Save updated history to ExtState
+    for i = 0, gui.max_history - 1 do
+      r.SetProjExtState(0, HISTORY_NAMESPACE, "hist_" .. i, "")
+    end
+    for i, hist in ipairs(gui.history) do
+      local data = string.format("%s|%s|%s|%s|%d|%s", hist.name, hist.track_guid, hist.track_name, hist.mode, hist.fx_index, hist.custom_name or "")
+      r.SetProjExtState(0, HISTORY_NAMESPACE, "hist_" .. (i - 1), data)
+    end
+
+    -- Save updated presets
+    save_chains_to_extstate()
+  end
+end
+
 local function find_track_by_guid(guid)
   if not guid or guid == "" then return nil end
   for i = 0, r.CountTracks(0) - 1 do
@@ -678,6 +1348,38 @@ local function find_track_by_guid(guid)
     end
   end
   return nil
+end
+
+-- Find FX on track by index (with verification) or name (fallback)
+-- Returns: fx_index (number or nil), fx_name (string or nil), status (string)
+-- Status: "found_by_index", "found_by_name", "invalid_track", "no_fx", "not_found"
+local function find_fx_on_track(track, saved_fx_index, saved_fx_name)
+  if not track or not r.ValidatePtr2(0, track, "MediaTrack*") then
+    return nil, nil, "invalid_track"
+  end
+
+  local fx_count = r.TrackFX_GetCount(track)
+  if fx_count == 0 then
+    return nil, nil, "no_fx"
+  end
+
+  -- Method 1: Try saved index first (with name verification)
+  if saved_fx_index and saved_fx_index < fx_count then
+    local _, fx_name = r.TrackFX_GetFXName(track, saved_fx_index, "")
+    if fx_name == saved_fx_name then
+      return saved_fx_index, fx_name, "found_by_index"
+    end
+  end
+
+  -- Method 2: Search by exact name
+  for i = 0, fx_count - 1 do
+    local _, fx_name = r.TrackFX_GetFXName(track, i, "")
+    if fx_name == saved_fx_name then
+      return i, fx_name, "found_by_name"
+    end
+  end
+
+  return nil, nil, "not_found"
 end
 
 -- Get display name and current info for a saved chain
@@ -705,34 +1407,7 @@ local function get_chain_display_info(chain)
     -- Build FX info based on mode
     if chain.mode == "focused" then
       -- For focused FX: show entire FX chain, mark the saved FX
-      local found_fx_idx = nil
-
-      -- Method 1: Try to use saved fx_index if available
-      if chain.fx_index then
-        local fx_count = r.TrackFX_GetCount(tr)
-        if chain.fx_index < fx_count then
-          local _, fx_name = r.TrackFX_GetFXName(tr, chain.fx_index, "")
-          -- Verify this is still the same FX (name should match or contain saved name)
-          if fx_name and (fx_name == chain.name or fx_name:find(chain.name, 1, true)) then
-            found_fx_name = fx_name
-            found_fx_idx = chain.fx_index
-          end
-        end
-      end
-
-      -- Method 2: If index didn't work, search by exact name match
-      if not found_fx_name then
-        local fx_count = r.TrackFX_GetCount(tr)
-        for i = 0, fx_count - 1 do
-          local _, fx_name = r.TrackFX_GetFXName(tr, i, "")
-          -- Only exact match to avoid matching wrong FX
-          if fx_name == chain.name then
-            found_fx_name = fx_name
-            found_fx_idx = i
-            break
-          end
-        end
-      end
+      local found_fx_idx, found_fx_name, status = find_fx_on_track(tr, chain.fx_index, chain.name)
 
       -- Build full FX chain list, same as chain mode
       saved_fx_index = found_fx_idx  -- Store for tooltip coloring
@@ -741,7 +1416,7 @@ local function get_chain_display_info(chain)
         local fx_lines = {}
         for i = 0, fx_count - 1 do
           local _, fx_name = r.TrackFX_GetFXName(tr, i, "")
-          table.insert(fx_lines, string.format("%d. %s", i + 1, fx_name))
+          table.insert(fx_lines, string.format("%d. %s", i + 1, format_fx_label_for_preset(fx_name)))
         end
         fx_info = table.concat(fx_lines, "\n")
       else
@@ -757,7 +1432,7 @@ local function get_chain_display_info(chain)
           -- fx_name format: "VST3: Pro-Q 4 (FabFilter)" or "JS: ReaEQ"
           -- Keep the full name including plugin type
           -- Format: "1. [Plugin Type]: FX Name"
-          table.insert(fx_lines, string.format("%d. %s", i + 1, fx_name))
+          table.insert(fx_lines, string.format("%d. %s", i + 1, format_fx_label_for_preset(fx_name)))
         end
         fx_info = table.concat(fx_lines, "\n")
       else
@@ -773,10 +1448,11 @@ local function get_chain_display_info(chain)
   if chain.mode == "focused" then
     -- Focused FX mode: use custom name OR current FX name from track (real-time)
     if chain.custom_name and chain.custom_name ~= "" then
-      display_name = chain.custom_name
+      -- Use custom name but preserve type/vendor from original FX
+      display_name = format_fx_label_with_custom_name(chain.name, chain.custom_name, "button")
     else
       -- Use current FX name from track, fallback to saved name
-      display_name = found_fx_name or chain.name
+      display_name = format_fx_label_for_preset(found_fx_name or chain.name)
     end
   else
     -- Chain mode: use custom name OR current track name OR saved track name
@@ -812,12 +1488,16 @@ local function get_history_display_name(hist_item)
     local _, track_name = r.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
 
     if hist_item.mode == "focused" then
-      -- Focused mode: use custom name OR FX name (no track# prefix)
+      -- Focused mode: use custom name OR current FX name from track (real-time)
       if hist_item.custom_name and hist_item.custom_name ~= "" then
-        display_name = hist_item.custom_name
+        -- Use custom name but preserve type/vendor from original FX
+        display_name = format_fx_label_with_custom_name(hist_item.name, hist_item.custom_name, "button")
       else
-        -- Use the saved FX name (hist_item.name already contains full FX name)
-        display_name = hist_item.name
+        -- Find FX on track to get CURRENT name (handles FX reordering)
+        local found_fx_idx, found_fx_name, status = find_fx_on_track(tr, hist_item.fx_index, hist_item.name)
+
+        -- Use current FX name from track, fallback to saved name
+        display_name = format_fx_label_for_preset(found_fx_name or hist_item.name)
       end
     else
       -- Chain mode: use custom name OR current track name
@@ -860,17 +1540,33 @@ local function show_preset_tooltip(item)
 
   if item.mode == "focused" then
     -- For focused mode: show entire FX chain, mark the saved FX in GREEN
+    -- Find actual FX position (handles FX reordering)
+    local actual_fx_idx, actual_fx_name, status = find_fx_on_track(tr, item.fx_index, item.name)
+
+    -- Log FX movement only once (cache key: track_guid|fx_name|saved_idx|actual_idx)
+    if gui.debug and actual_fx_idx and status == "found_by_name" then
+      local log_key = string.format("%s|%s|%d|%d", item.track_guid, item.name, item.fx_index or -1, actual_fx_idx)
+      if not gui.fx_move_logged[log_key] then
+        r.ShowConsoleMsg(string.format(
+          "[AudioSweet] Tooltip: FX '%s' moved from saved_index=%d to actual_index=%d\n",
+          item.name, item.fx_index or -1, actual_fx_idx
+        ))
+        gui.fx_move_logged[log_key] = true
+      end
+    end
+
     ImGui.BeginTooltip(ctx)
     ImGui.Text(ctx, track_info_line)
     for fx_idx = 0, fx_count - 1 do
       local _, fx_name = r.TrackFX_GetFXName(tr, fx_idx, "")
-      if fx_idx == (item.fx_index or 0) then
-        -- This is the saved FX - color it green
+      local display_name = format_fx_label(fx_name, "tooltip")
+      if fx_idx == actual_fx_idx then
+        -- This is the actual FX - color it green
         ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0x00FF00FF)
-        ImGui.Text(ctx, string.format("%d. %s", fx_idx + 1, fx_name))
+        ImGui.Text(ctx, string.format("%d. %s", fx_idx + 1, display_name))
         ImGui.PopStyleColor(ctx)
       else
-        ImGui.Text(ctx, string.format("%d. %s", fx_idx + 1, fx_name))
+        ImGui.Text(ctx, string.format("%d. %s", fx_idx + 1, display_name))
       end
     end
     ImGui.EndTooltip(ctx)
@@ -879,7 +1575,7 @@ local function show_preset_tooltip(item)
     local fx_lines = {}
     for fx_idx = 0, fx_count - 1 do
       local _, fx_name = r.TrackFX_GetFXName(tr, fx_idx, "")
-      table.insert(fx_lines, string.format("%d. %s", fx_idx + 1, fx_name))
+      table.insert(fx_lines, string.format("%d. %s", fx_idx + 1, format_fx_label(fx_name, "tooltip")))
     end
     local fx_info = table.concat(fx_lines, "\n")
     ImGui.BeginTooltip(ctx)
@@ -1372,15 +2068,28 @@ end
 
 local function run_focused_fx_copy_mode(tr, fx_name, fx_idx, item_count)
   if gui.debug then
-    r.ShowConsoleMsg(string.format("[AS GUI] Focused FX copy: '%s' (fx_idx=%d, items=%d)\n", fx_name, fx_idx, item_count))
+    r.ShowConsoleMsg(string.format("[AS GUI] Focused FX copy: '%s' (saved_fx_idx=%d, items=%d)\n", fx_name, fx_idx, item_count))
   end
 
-  local fx_count = r.TrackFX_GetCount(tr)
-  if fx_idx >= fx_count then
-    gui.last_result = string.format("Error: FX #%d not found", fx_idx + 1)
+  -- Find FX on track (handles FX reordering)
+  local actual_fx_idx, actual_fx_name, status = find_fx_on_track(tr, fx_idx, fx_name)
+
+  if not actual_fx_idx then
+    gui.last_result = string.format("Error: FX '%s' not found on track", fx_name)
     gui.is_running = false
     return
   end
+
+  if gui.debug and status == "found_by_name" then
+    r.ShowConsoleMsg(string.format(
+      "[AS GUI] Focused FX copy: FX moved from index %d to %d\n",
+      fx_idx, actual_fx_idx
+    ))
+  end
+
+  -- Use actual index and name for all subsequent operations
+  fx_idx = actual_fx_idx
+  fx_name = actual_fx_name
 
   local scope_names = { "active", "all_takes" }
   local pos_names = { "tail", "head" }
@@ -1422,7 +2131,7 @@ local function run_focused_fx_copy_mode(tr, fx_name, fx_idx, item_count)
     r.ShowConsoleMsg(string.format("[AS GUI] Focused FX copy completed: %d operations\n", ops))
   end
 
-  gui.last_result = string.format("Success! [%s] Copy (%d ops)", fx_name, ops)
+  gui.last_result = string.format("Success! [%s] Copy (%d ops)", format_fx_label_for_status(fx_name), ops)
   gui.is_running = false
 end
 
@@ -1605,40 +2314,18 @@ local function open_saved_chain_fx(chain_idx)
   -- Determine window type based on how it was saved
   if chain.mode == "focused" then
     -- Focused FX preset: toggle floating window for the specific FX
-    local fx_idx = nil
-    local found_fx_name = nil
+    local fx_idx, found_fx_name, status = find_fx_on_track(tr, chain.fx_index, chain.name)
 
-    -- Method 1: Try saved fx_index first
-    if chain.fx_index and chain.fx_index < fx_count then
-      local _, fx_name = r.TrackFX_GetFXName(tr, chain.fx_index, "")
-      -- Verify this is still the same FX
-      if fx_name == chain.name then
-        fx_idx = chain.fx_index
-        found_fx_name = fx_name
-      end
-    end
-
-    -- Method 2: If index didn't match, search by name
-    if not fx_idx then
-      for i = 0, fx_count - 1 do
-        local _, fx_name = r.TrackFX_GetFXName(tr, i, "")
-        if fx_name == chain.name then
-          fx_idx = i
-          found_fx_name = fx_name
-          break
-        end
-      end
-    end
-
-    -- Check if FX was found
     if not fx_idx then
       gui.last_result = string.format("Error: FX '%s' not found on track", chain.name)
       return
     end
 
     if gui.debug then
-      r.ShowConsoleMsg(string.format("[AudioSweet] Open preset: saved_name='%s', saved_index=%s, actual_index=%d, actual_name='%s'\n",
-        chain.name, tostring(chain.fx_index or "nil"), fx_idx, found_fx_name))
+      r.ShowConsoleMsg(string.format(
+        "[AudioSweet] Open preset: saved_name='%s', saved_index=%s, actual_index=%d, status=%s\n",
+        chain.name, tostring(chain.fx_index or "nil"), fx_idx, status
+      ))
     end
 
     local is_open = r.TrackFX_GetOpen(tr, fx_idx)
@@ -1647,7 +2334,7 @@ local function open_saved_chain_fx(chain_idx)
     else
       r.TrackFX_Show(tr, fx_idx, 3)  -- Show floating window
     end
-    gui.last_result = string.format("Toggled FX #%d: %s", fx_idx + 1, found_fx_name)
+    gui.last_result = string.format("Toggled FX #%d: %s", fx_idx + 1, format_fx_label_for_status(found_fx_name))
   else
     -- Chain preset: toggle FX chain window
     local chain_visible = r.TrackFX_GetChainVisible(tr)
@@ -1701,7 +2388,7 @@ local function open_history_fx(hist_idx)
     else
       r.TrackFX_Show(tr, fx_idx, 3)  -- Show floating window
     end
-    gui.last_result = string.format("Toggled FX: %s (FX #%d)", hist_item.name, fx_idx + 1)
+    gui.last_result = string.format("Toggled FX: %s (FX #%d)", format_fx_label_for_status(hist_item.name), fx_idx + 1)
   else
     -- For chain mode, toggle FX chain window (chain mode uses entire FX chain)
     local chain_visible = r.TrackFX_GetChainVisible(tr)
@@ -1724,16 +2411,28 @@ end
 
 local function run_history_focused_apply(tr, fx_name, fx_idx, item_count)
   if gui.debug then
-    r.ShowConsoleMsg(string.format("[AS GUI] History focused apply: '%s' (fx_idx=%d, items=%d)\n", fx_name, fx_idx, item_count))
+    r.ShowConsoleMsg(string.format("[AS GUI] History focused apply: '%s' (saved_fx_idx=%d, items=%d)\n", fx_name, fx_idx, item_count))
   end
 
-  -- Validate FX still exists at this index
-  local fx_count = r.TrackFX_GetCount(tr)
-  if fx_idx >= fx_count then
-    gui.last_result = string.format("Error: FX #%d not found (track only has %d FX)", fx_idx + 1, fx_count)
+  -- Find FX on track (handles FX reordering)
+  local actual_fx_idx, actual_fx_name, status = find_fx_on_track(tr, fx_idx, fx_name)
+
+  if not actual_fx_idx then
+    gui.last_result = string.format("Error: FX '%s' not found on track", fx_name)
     gui.is_running = false
     return
   end
+
+  if gui.debug and status == "found_by_name" then
+    r.ShowConsoleMsg(string.format(
+      "[AS GUI] History focused apply: FX moved from index %d to %d\n",
+      fx_idx, actual_fx_idx
+    ))
+  end
+
+  -- Use actual index and name for all subsequent operations
+  fx_idx = actual_fx_idx
+  fx_name = actual_fx_name
 
   -- Set track as last touched (without changing selection)
   -- Note: We don't call SetOnlyTrackSelected() to preserve item selection
@@ -1781,7 +2480,7 @@ local function run_history_focused_apply(tr, fx_name, fx_idx, item_count)
     if gui.debug then
       r.ShowConsoleMsg("[AS GUI] Execution completed successfully\n")
     end
-    gui.last_result = string.format("Success! [%s] Apply (%d items)", fx_name, item_count)
+    gui.last_result = string.format("Success! [%s] Apply (%d items)", format_fx_label_for_status(fx_name), item_count)
   else
     if gui.debug then
       r.ShowConsoleMsg(string.format("[AS GUI] ERROR: %s\n", tostring(err)))
@@ -1964,27 +2663,6 @@ local function draw_gui()
 
   -- Menu Bar
   if ImGui.BeginMenuBar(ctx) then
-    if ImGui.BeginMenu(ctx, 'Presets') then
-      if ImGui.MenuItem(ctx, 'Focused Apply', nil, false, true) then
-        gui.mode = 0; gui.action = 0
-        save_gui_settings()
-      end
-      if ImGui.MenuItem(ctx, 'Focused Copy', nil, false, true) then
-        gui.mode = 0; gui.action = 1; gui.copy_scope = 0; gui.copy_pos = 0
-        save_gui_settings()
-      end
-      ImGui.Separator(ctx)
-      if ImGui.MenuItem(ctx, 'Chain Apply', nil, false, true) then
-        gui.mode = 1; gui.action = 0
-        save_gui_settings()
-      end
-      if ImGui.MenuItem(ctx, 'Chain Copy', nil, false, true) then
-        gui.mode = 1; gui.action = 1; gui.copy_scope = 0; gui.copy_pos = 0
-        save_gui_settings()
-      end
-      ImGui.EndMenu(ctx)
-    end
-
     if ImGui.BeginMenu(ctx, 'Debug') then
       local rv, new_val = ImGui.MenuItem(ctx, 'Enable Debug Mode', nil, gui.debug, true)
       if rv then
@@ -2003,22 +2681,12 @@ local function draw_gui()
       end
       ImGui.Separator(ctx)
 
-      if ImGui.MenuItem(ctx, 'Preview Settings...', nil, false, true) then
-        gui.show_preview_settings = true
+      -- Unified Settings Window
+      if ImGui.MenuItem(ctx, 'Settings...', nil, false, true) then
+        gui.show_unified_settings = true
       end
       ImGui.Separator(ctx)
-      if ImGui.MenuItem(ctx, 'History Settings...', nil, false, gui.enable_history) then
-        gui.show_settings_popup = true
-      end
-      ImGui.Separator(ctx)
-      if ImGui.MenuItem(ctx, 'File Naming Settings...', nil, false, true) then
-        gui.show_naming_popup = true
-      end
-      ImGui.Separator(ctx)
-      if ImGui.MenuItem(ctx, 'Timecode Embed Settings...', nil, false, true) then
-        gui.show_tc_embed_popup = true
-      end
-      ImGui.Separator(ctx)
+
       if ImGui.BeginMenu(ctx, 'FX Alias Tools') then
         if ImGui.MenuItem(ctx, 'Build FX Alias Database', nil, false, true) then
           local script_path = r.GetResourcePath() .. "/Scripts/hsuanice Scripts/Tools/hsuanice_FX Alias Build.lua"
@@ -2053,32 +2721,20 @@ local function draw_gui()
     end
 
     if ImGui.BeginMenu(ctx, 'Help') then
+      if ImGui.MenuItem(ctx, 'User Manual', nil, false, true) then
+        gui.show_help_window = true
+      end
       if ImGui.MenuItem(ctx, 'About', nil, false, true) then
         r.ShowConsoleMsg(
           "=================================================\n" ..
           "AudioSweet ReaImGui - ImGui Interface for AudioSweet\n" ..
           "=================================================\n" ..
-          "Version: 0.1.1 (251218)\n" ..
+          "Version: 0.1.14 (251220.0802)\n" ..
           "Author: hsuanice\n\n" ..
-
-          "Quick Start:\n" ..
-          "  1. Select a track with FX or focus an FX window\n" ..
-          "  2. Choose mode: Focused (single FX) or Chain (full track)\n" ..
-          "  3. Click Apply to audition or Copy to prepare\n" ..
-          "  4. Click Save to store presets for later use\n\n" ..
-
-          "Key Features:\n" ..
-          "  - Focused/Chain modes with real-time FX display\n" ..
-          "  - Preset library with custom naming and rename sync\n" ..
-          "  - Auto-tracked history (up to 50 operations)\n" ..
-          "  - Keyboard shortcuts (Space=Play/Stop, S=Solo)\n" ..
-          "  - Comprehensive file naming settings with FX Alias\n" ..
-          "  - Debug mode with detailed console logging\n\n" ..
-
 
           "Reference:\n" ..
           "  Inspired by AudioSuite-like Script by Tim Chimes\n" ..
-          "  'AudioSweet' is a name originally given by Tim Chimes.  \n" ..
+          "  'AudioSweet' is a name originally given by Tim Chimes.\n" ..
           "  This project continues to use the name in reference to his original work.\n\n" ..
           "  Original: Renders selected plugin to selected media item\n" ..
           "  Written for REAPER 5.1 with Lua\n" ..
@@ -2099,6 +2755,348 @@ end
 
   draw_bwfmetaedit_warning_banner()
 
+  -- ====================================================================
+  -- Unified Settings Window with Tabs
+  -- ====================================================================
+  if gui.show_unified_settings then
+    local mouse_x, mouse_y = r.GetMousePosition()
+    ImGui.SetNextWindowPos(ctx, mouse_x, mouse_y, ImGui.Cond_Appearing)
+    ImGui.SetNextWindowSize(ctx, 600, 500, ImGui.Cond_Appearing)
+    ImGui.OpenPopup(ctx, 'AudioSweet Settings')
+    gui.show_unified_settings = false
+  end
+
+  if ImGui.BeginPopupModal(ctx, 'AudioSweet Settings', true, ImGui.WindowFlags_None) then
+    -- ESC key handling
+    if ImGui.IsWindowFocused(ctx) and ImGui.IsKeyPressed(ctx, ImGui.Key_Escape, false) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    -- Tab Bar
+    if ImGui.BeginTabBar(ctx, 'SettingsTabs', ImGui.TabBarFlags_None) then
+
+      -- ============================================================
+      -- Tab 1: FX Display Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'FX Display') then
+        local changed = false
+        local rv
+
+        ImGui.Text(ctx, "FX Display Settings")
+        ImGui.TextDisabled(ctx, "Configure how FX names appear in different contexts")
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Button Display Section
+        ImGui.Text(ctx, "1. Button Display (Preset/History Buttons)")
+        ImGui.Indent(ctx)
+        rv, gui.button_show_type = ImGui.Checkbox(ctx, "Show Type##button", gui.button_show_type)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.button_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##button", gui.button_show_vendor)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.button_use_alias = ImGui.Checkbox(ctx, "Use Alias##button", gui.button_use_alias)
+        if rv then
+          fx_alias_cache.loaded = false
+          changed = true
+        end
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Tooltip Display Section
+        ImGui.Text(ctx, "2. Tooltip Display (Hover Info)")
+        ImGui.Indent(ctx)
+        rv, gui.tooltip_show_type = ImGui.Checkbox(ctx, "Show Type##tooltip", gui.tooltip_show_type)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.tooltip_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##tooltip", gui.tooltip_show_vendor)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.tooltip_use_alias = ImGui.Checkbox(ctx, "Use Alias##tooltip", gui.tooltip_use_alias)
+        if rv then
+          fx_alias_cache.loaded = false
+          changed = true
+        end
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Status Display Section
+        ImGui.Text(ctx, "3. Status Display (Bottom Bar)")
+        ImGui.Indent(ctx)
+        rv, gui.status_show_type = ImGui.Checkbox(ctx, "Show Type##status", gui.status_show_type)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.status_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##status", gui.status_show_vendor)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.status_use_alias = ImGui.Checkbox(ctx, "Use Alias##status", gui.status_use_alias)
+        if rv then
+          fx_alias_cache.loaded = false
+          changed = true
+        end
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        -- FX List Display Section
+        ImGui.Text(ctx, "4. FX Chain List Display (Chain Mode)")
+        ImGui.Indent(ctx)
+        rv, gui.fxlist_show_type = ImGui.Checkbox(ctx, "Show Type##fxlist", gui.fxlist_show_type)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.fxlist_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##fxlist", gui.fxlist_show_vendor)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        rv, gui.fxlist_use_alias = ImGui.Checkbox(ctx, "Use Alias##fxlist", gui.fxlist_use_alias)
+        if rv then
+          fx_alias_cache.loaded = false
+          changed = true
+        end
+        ImGui.Unindent(ctx)
+
+        if changed then
+          save_gui_settings()
+        end
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 2: File Naming Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'File Naming') then
+        local changed = false
+        local rv
+
+        -- === Global FX Name Settings (applies to Focused & Chain modes) ===
+        ImGui.Text(ctx, "Global FX Name Settings:")
+        ImGui.TextDisabled(ctx, "(applies to both Focused and Chain modes)")
+        ImGui.Separator(ctx)
+
+        rv, gui.fxname_show_type = ImGui.Checkbox(ctx, "Show Plugin Type (CLAP:, VST3:, AU:, VST:)", gui.fxname_show_type)
+        if rv then changed = true end
+
+        rv, gui.fxname_show_vendor = ImGui.Checkbox(ctx, "Show Vendor Name (FabFilter)", gui.fxname_show_vendor)
+        if rv then changed = true end
+
+        rv, gui.fxname_strip_symbol = ImGui.Checkbox(ctx, "Strip Spaces & Symbols (ProQ4 vs Pro-Q 4)", gui.fxname_strip_symbol)
+        if rv then changed = true end
+
+        rv, gui.use_alias = ImGui.Checkbox(ctx, "Use FX Alias for file naming", gui.use_alias)
+        if rv then changed = true end
+
+        ImGui.Text(ctx, "Max FX Tokens:")
+        ImGui.SameLine(ctx)
+        ImGui.SetNextItemWidth(ctx, 80)
+        rv, gui.max_fx_tokens = ImGui.InputInt(ctx, "##max_tokens", gui.max_fx_tokens)
+        if rv then
+          gui.max_fx_tokens = math.max(1, math.min(10, gui.max_fx_tokens))
+          changed = true
+        end
+        ImGui.SameLine(ctx)
+        ImGui.TextDisabled(ctx, "(FIFO limit, 1-10)")
+
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- === Chain Mode Specific Settings ===
+        ImGui.Text(ctx, "Chain Mode Specific Settings:")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Chain Token Source:")
+        if ImGui.RadioButton(ctx, "Track Name", gui.chain_token_source == 0) then
+          gui.chain_token_source = 0
+          changed = true
+        end
+        ImGui.SameLine(ctx)
+        if ImGui.RadioButton(ctx, "FX Aliases", gui.chain_token_source == 1) then
+          gui.chain_token_source = 1
+          changed = true
+        end
+        ImGui.SameLine(ctx)
+        if ImGui.RadioButton(ctx, "FXChain", gui.chain_token_source == 2) then
+          gui.chain_token_source = 2
+          changed = true
+        end
+
+        -- Chain Alias Joiner (only when using aliases)
+        if gui.chain_token_source == 1 then
+          ImGui.Text(ctx, "Alias Joiner:")
+          ImGui.SameLine(ctx)
+          ImGui.SetNextItemWidth(ctx, 100)
+          rv, gui.chain_alias_joiner = ImGui.InputText(ctx, "##chain_joiner", gui.chain_alias_joiner)
+          if rv then changed = true end
+          ImGui.SameLine(ctx)
+          ImGui.TextDisabled(ctx, "(separator between aliases)")
+        end
+
+        rv, gui.trackname_strip_symbols = ImGui.Checkbox(ctx, "Strip Symbols from Track Names", gui.trackname_strip_symbols)
+        if rv then changed = true end
+
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- === File Safety Section ===
+        ImGui.Text(ctx, "File Name Safety:")
+        ImGui.Separator(ctx)
+
+        rv, gui.sanitize_token = ImGui.Checkbox(ctx, "Sanitize tokens for safe filenames", gui.sanitize_token)
+        if rv then changed = true end
+        ImGui.SameLine(ctx)
+        ImGui.TextDisabled(ctx, "(?)")
+        if ImGui.IsItemHovered(ctx) then
+          ImGui.SetTooltip(ctx, "Replace unsafe characters with underscores")
+        end
+
+        if changed then
+          save_gui_settings()
+        end
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 3: Preview Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Preview') then
+        ImGui.Text(ctx, "Target Track Name:")
+        ImGui.SetNextItemWidth(ctx, 200)
+        local rv, new_name = ImGui.InputText(ctx, "##preview_target", gui.preview_target_track)
+        if rv then
+          gui.preview_target_track = new_name
+          save_gui_settings()
+        end
+        ImGui.TextWrapped(ctx, "The track where preview will be applied")
+
+        ImGui.Separator(ctx)
+        ImGui.Text(ctx, "Solo Scope:")
+        local changed_scope = false
+        if ImGui.RadioButton(ctx, "Track Solo (40281)", gui.preview_solo_scope == 0) then
+          gui.preview_solo_scope = 0
+          changed_scope = true
+        end
+        ImGui.SameLine(ctx)
+        if ImGui.RadioButton(ctx, "Item Solo (41561)", gui.preview_solo_scope == 1) then
+          gui.preview_solo_scope = 1
+          changed_scope = true
+        end
+        if changed_scope then
+          save_gui_settings()
+        end
+
+        -- Warning for Item Solo lag
+        if gui.preview_solo_scope == 1 then
+          ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFFAA00FF)  -- Orange color
+          ImGui.TextWrapped(ctx, "Note: Item Solo may have a slight lag when toggling, not as responsive as Track Solo.")
+          ImGui.PopStyleColor(ctx)
+        end
+
+        ImGui.Separator(ctx)
+        ImGui.Text(ctx, "Restore Mode:")
+        local changed_restore = false
+        if ImGui.RadioButton(ctx, "Time Selection", gui.preview_restore_mode == 0) then
+          gui.preview_restore_mode = 0
+          changed_restore = true
+        end
+        ImGui.SameLine(ctx)
+        if ImGui.RadioButton(ctx, "GUID", gui.preview_restore_mode == 1) then
+          gui.preview_restore_mode = 1
+          changed_restore = true
+        end
+        if changed_restore then
+          save_gui_settings()
+        end
+
+        ImGui.Separator(ctx)
+        ImGui.TextWrapped(ctx,
+          "Time Selection: Restores original FX state when leaving time selection.\n" ..
+          "GUID: Restores FX state when the preview track GUID changes (switching projects).")
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 4: History Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'History') then
+        ImGui.Text(ctx, "Maximum History Items:")
+        ImGui.SetNextItemWidth(ctx, 120)
+        local rv, new_val = ImGui.InputInt(ctx, "##max_history", gui.max_history)
+        if rv then
+          gui.max_history = math.max(1, math.min(50, new_val))  -- Limit 1-50
+          save_gui_settings()
+          -- Trim history if needed
+          while #gui.history > gui.max_history do
+            table.remove(gui.history)
+          end
+        end
+
+        ImGui.Separator(ctx)
+        ImGui.Text(ctx, "Range: 1-50 items")
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 5: Timecode Embed Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Timecode') then
+        if bwf_cli.available then
+          ImGui.TextColored(ctx, 0x55FF55FF, ("CLI detected: %s"):format(bwf_cli.resolved_path))
+          if bwf_cli.last_source ~= "" then
+            ImGui.TextDisabled(ctx, ("Source: %s"):format(bwf_cli.last_source))
+          end
+        else
+          ImGui.TextColored(ctx, 0xFF6666FF, "bwfmetaedit CLI not detected – Timecode embedding stays disabled.")
+          if bwf_cli.message ~= "" then
+            ImGui.TextWrapped(ctx, bwf_cli.message)
+          end
+        end
+
+        ImGui.Separator(ctx)
+        ImGui.Text(ctx, "Custom CLI Path (optional):")
+        ImGui.SetNextItemWidth(ctx, 360)
+        local rv_path, new_path = ImGui.InputText(ctx, "##as_bwf_path", gui.bwfmetaedit_custom_path or "")
+        if rv_path then
+          gui.bwfmetaedit_custom_path = new_path
+          save_gui_settings()
+        end
+        ImGui.TextDisabled(ctx, "Leave blank to search PATH. Provide full path incl. .exe on Windows.")
+
+        ImGui.Separator(ctx)
+        if ImGui.Button(ctx, "Re-check CLI##as_settings") then
+          check_bwfmetaedit(true)
+        end
+        ImGui.SameLine(ctx)
+        if ImGui.Button(ctx, "Install Guide##as_settings") then
+          gui.open_bwf_install_popup = true
+        end
+
+        ImGui.Spacing(ctx)
+        ImGui.TextWrapped(ctx,
+          "AudioSweet uses bwfmetaedit after renders to embed BWF TimeReference so downstream apps read the correct TC.\n" ..
+          "If you skip installation, rendering still works but the embed step is skipped.")
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      ImGui.EndTabBar(ctx)
+    end
+
+    -- Close Button
+    ImGui.Separator(ctx)
+    if ImGui.Button(ctx, 'Close', 120, 0) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+
+  -- ====================================================================
+  -- Legacy Individual Settings Popups (kept for backward compatibility)
+  -- ====================================================================
   -- Settings Popup
   if gui.show_settings_popup then
     -- Position popup near mouse cursor
@@ -2236,6 +3234,373 @@ end
     ImGui.TextDisabled(ctx, "(?)")
     if ImGui.IsItemHovered(ctx) then
       ImGui.SetTooltip(ctx, "Replace unsafe characters with underscores")
+    end
+
+    if changed then
+      save_gui_settings()
+    end
+
+    ImGui.Spacing(ctx)
+    ImGui.Separator(ctx)
+    if ImGui.Button(ctx, 'Close', 120, 0) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+
+  -- ====================================================================
+  -- Help / User Manual Window
+  -- ====================================================================
+  if gui.show_help_window then
+    ImGui.SetNextWindowSize(ctx, 700, 600, ImGui.Cond_Appearing)
+    ImGui.OpenPopup(ctx, 'AudioSweet User Manual')
+    gui.show_help_window = false
+  end
+
+  if ImGui.BeginPopupModal(ctx, 'AudioSweet User Manual', true, ImGui.WindowFlags_None) then
+    -- ESC key handling
+    if ImGui.IsWindowFocused(ctx) and ImGui.IsKeyPressed(ctx, ImGui.Key_Escape, false) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    -- Tab Bar for different manual sections
+    if ImGui.BeginTabBar(ctx, 'HelpTabs', ImGui.TabBarFlags_None) then
+
+      -- ============================================================
+      -- Tab 1: Getting Started
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Getting Started') then
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Overview")
+        ImGui.Separator(ctx)
+        ImGui.TextWrapped(ctx, "Complete AudioSweet control center with ImGui interface for managing FX chains and presets.")
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Core Features")
+        ImGui.Separator(ctx)
+        ImGui.BulletText(ctx, "Two operation modes: Focused FX and Full Chain")
+        ImGui.BulletText(ctx, "Apply/Copy FX chains to AudioSweet Preview track")
+        ImGui.BulletText(ctx, "Save and manage FX presets with custom naming")
+        ImGui.BulletText(ctx, "Automatic operation history tracking")
+        ImGui.BulletText(ctx, "Real-time FX chain visualization")
+        ImGui.BulletText(ctx, "Built-in keyboard shortcuts")
+        ImGui.BulletText(ctx, "Persistent settings across sessions")
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Operation Modes")
+        ImGui.Separator(ctx)
+        ImGui.Text(ctx, "Focused Mode (Single FX)")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Works with the currently focused FX window")
+        ImGui.BulletText(ctx, "Click on any FX window to focus it")
+        ImGui.BulletText(ctx, "Saves/applies only the selected FX")
+        ImGui.BulletText(ctx, "Display shows: FX name only (e.g., 'VST3: Pro-Q 4')")
+        ImGui.BulletText(ctx, "Supports CLAP and VST3 plugins")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Chain Mode (Full FX Chain)")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Works with the entire FX chain of selected track")
+        ImGui.BulletText(ctx, "Saves/applies all FX on the track")
+        ImGui.BulletText(ctx, "Display shows: '#N Track Name' format")
+        ImGui.BulletText(ctx, "Shows complete FX list in tooltips")
+        ImGui.Unindent(ctx)
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 2: Actions & Presets
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Actions & Presets') then
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Main Actions")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Apply")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Copies FX to Preview track AND enables it")
+        ImGui.BulletText(ctx, "Removes all existing FX on Preview track first")
+        ImGui.BulletText(ctx, "Use when you want to audition the FX immediately")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Copy")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Copies FX to Preview track but keeps it bypassed")
+        ImGui.BulletText(ctx, "Removes all existing FX on Preview track first")
+        ImGui.BulletText(ctx, "Use when you want to prepare FX without hearing it yet")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Open")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Opens the saved FX window(s)")
+        ImGui.BulletText(ctx, "Focused mode: Opens the specific FX window")
+        ImGui.BulletText(ctx, "Chain mode: Opens all FX windows in the chain")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Preset System")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Saving Presets")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "1. Click the 'Save' button (in main controls or history section)")
+        ImGui.BulletText(ctx, "2. Enter a custom name, or leave empty to use default:")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Focused mode default: FX name")
+        ImGui.BulletText(ctx, "Chain mode default: Track name")
+        ImGui.Unindent(ctx)
+        ImGui.BulletText(ctx, "3. Preset is saved and appears in the 'Saved' section")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Managing Presets")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Open: Opens the FX window(s) without applying")
+        ImGui.BulletText(ctx, "Name: Rename the preset (custom name or revert to default)")
+        ImGui.BulletText(ctx, "Save: Save current FX as a new preset")
+        ImGui.BulletText(ctx, "Delete (X button): Remove the preset permanently")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Preset Display Names")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Custom name: Shows your custom name")
+        ImGui.BulletText(ctx, "Default name (Focused): Shows current FX name from track")
+        ImGui.BulletText(ctx, "Default name (Chain): Shows '#N Current Track Name'")
+        ImGui.BulletText(ctx, "Hover tooltip: Shows full FX chain with track info")
+        ImGui.Unindent(ctx)
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 3: History & Workflows
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'History & Workflows') then
+        ImGui.TextColored(ctx, 0xFFAA55FF, "History System")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Automatic Tracking")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Every Apply/Copy operation is automatically logged")
+        ImGui.BulletText(ctx, "History stores up to 50 recent operations")
+        ImGui.BulletText(ctx, "Newest operations appear at the top")
+        ImGui.BulletText(ctx, "Duplicates are automatically removed")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "History Actions")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Open: Opens the FX window(s) from this history entry")
+        ImGui.BulletText(ctx, "Name: Rename this history entry (becomes a custom name)")
+        ImGui.BulletText(ctx, "Save: Convert this history entry into a saved preset")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Workflow Examples")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Workflow 1: Quick FX Auditioning")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "1. Select track with FX chain")
+        ImGui.BulletText(ctx, "2. Switch to Chain mode")
+        ImGui.BulletText(ctx, "3. Click 'Apply' to audition the full chain")
+        ImGui.BulletText(ctx, "4. Click 'Save' if you like it")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Workflow 2: Building FX Library")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "1. Focus on individual FX window")
+        ImGui.BulletText(ctx, "2. Switch to Focused mode")
+        ImGui.BulletText(ctx, "3. Click 'Save' and name it (e.g., 'Vocal EQ Bright')")
+        ImGui.BulletText(ctx, "4. Repeat for different FX")
+        ImGui.BulletText(ctx, "5. Access your library from 'Saved' section anytime")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Workflow 3: Using History")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "1. Experiment with different FX chains using Apply")
+        ImGui.BulletText(ctx, "2. All attempts are logged in History")
+        ImGui.BulletText(ctx, "3. Go back to History and click 'Open' on any entry to review")
+        ImGui.BulletText(ctx, "4. Click 'Save' on the one you like to make it permanent")
+        ImGui.Unindent(ctx)
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 4: Tips & Troubleshooting
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Tips & Troubleshooting') then
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Tips & Tricks")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "Name Management")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Leave name empty when saving = dynamic name (updates with track/FX renames)")
+        ImGui.BulletText(ctx, "Enter custom name = static name (never changes)")
+        ImGui.BulletText(ctx, "You can always rename later using the 'Name' button")
+        ImGui.BulletText(ctx, "Renaming a preset automatically updates all matching history entries")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "FX Chain Tooltips")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Hover over any preset/history item to see full FX chain")
+        ImGui.BulletText(ctx, "Focused mode: Saved FX is highlighted in GREEN")
+        ImGui.BulletText(ctx, "Shows track number and current track name")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Keyboard Shortcuts")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Space: Play/Stop transport")
+        ImGui.BulletText(ctx, "S: Toggle solo on Preview track")
+        ImGui.BulletText(ctx, "Esc: Close dialogs")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Troubleshooting")
+        ImGui.Separator(ctx)
+
+        ImGui.Text(ctx, "'No focused FX' in Focused Mode")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "Click on any FX window to focus it")
+        ImGui.BulletText(ctx, "Make sure the FX window is open (not just in FX chain list)")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.Text(ctx, "Preset Opens Wrong FX")
+        ImGui.Indent(ctx)
+        ImGui.BulletText(ctx, "This can happen if you reordered FX after saving")
+        ImGui.BulletText(ctx, "The script tries to match by name as fallback")
+        ImGui.BulletText(ctx, "Enable Debug mode to see index matching details")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        ImGui.TextColored(ctx, 0xFFAA55FF, "Technical Notes")
+        ImGui.Separator(ctx)
+        ImGui.BulletText(ctx, "All presets saved in REAPER project ExtState (persistent per project)")
+        ImGui.BulletText(ctx, "History limited to 50 entries (configurable in Settings)")
+        ImGui.BulletText(ctx, "Supports CLAP, VST3, VST2, AU, and JS plugins")
+        ImGui.BulletText(ctx, "FX matching uses both index and name for reliability")
+        ImGui.BulletText(ctx, "Track identification uses GUID (survives track reordering)")
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      ImGui.EndTabBar(ctx)
+    end
+
+    -- Close Button
+    ImGui.Separator(ctx)
+    if ImGui.Button(ctx, 'Close', 120, 0) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+
+  -- Preset/History Display Settings Popup
+  if gui.show_preset_display_popup then
+    local mouse_x, mouse_y = r.GetMousePosition()
+    ImGui.SetNextWindowPos(ctx, mouse_x, mouse_y, ImGui.Cond_Appearing)
+    ImGui.OpenPopup(ctx, 'Preset/History Display')
+    gui.show_preset_display_popup = false
+  end
+
+  if ImGui.BeginPopupModal(ctx, 'Preset/History Display', true, ImGui.WindowFlags_AlwaysAutoResize) then
+    if ImGui.IsWindowFocused(ctx) and ImGui.IsKeyPressed(ctx, ImGui.Key_Escape, false) then
+      ImGui.CloseCurrentPopup(ctx)
+    end
+
+    local changed = false
+    local rv
+
+    ImGui.Text(ctx, "FX Display Settings")
+    ImGui.TextDisabled(ctx, "Configure how FX names appear in different contexts")
+    ImGui.Separator(ctx)
+    ImGui.Spacing(ctx)
+
+    -- Button Display Section
+    ImGui.Text(ctx, "1. Button Display (Preset/History Buttons)")
+    ImGui.Indent(ctx)
+    rv, gui.button_show_type = ImGui.Checkbox(ctx, "Show Type##button", gui.button_show_type)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.button_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##button", gui.button_show_vendor)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.button_use_alias = ImGui.Checkbox(ctx, "Use Alias##button", gui.button_use_alias)
+    if rv then
+      fx_alias_cache.loaded = false
+      changed = true
+    end
+    ImGui.Unindent(ctx)
+    ImGui.Spacing(ctx)
+
+    -- Tooltip Display Section
+    ImGui.Text(ctx, "2. Tooltip Display (Hover Info)")
+    ImGui.Indent(ctx)
+    rv, gui.tooltip_show_type = ImGui.Checkbox(ctx, "Show Type##tooltip", gui.tooltip_show_type)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.tooltip_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##tooltip", gui.tooltip_show_vendor)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.tooltip_use_alias = ImGui.Checkbox(ctx, "Use Alias##tooltip", gui.tooltip_use_alias)
+    if rv then
+      fx_alias_cache.loaded = false
+      changed = true
+    end
+    ImGui.Unindent(ctx)
+    ImGui.Spacing(ctx)
+
+    -- Status Display Section
+    ImGui.Text(ctx, "3. Status Display (Bottom Bar)")
+    ImGui.Indent(ctx)
+    rv, gui.status_show_type = ImGui.Checkbox(ctx, "Show Type##status", gui.status_show_type)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.status_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##status", gui.status_show_vendor)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.status_use_alias = ImGui.Checkbox(ctx, "Use Alias##status", gui.status_use_alias)
+    if rv then
+      fx_alias_cache.loaded = false
+      changed = true
+    end
+    ImGui.Unindent(ctx)
+    ImGui.Spacing(ctx)
+
+    -- FX List Display Section
+    ImGui.Text(ctx, "4. FX Chain List Display (Chain Mode)")
+    ImGui.Indent(ctx)
+    rv, gui.fxlist_show_type = ImGui.Checkbox(ctx, "Show Type##fxlist", gui.fxlist_show_type)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.fxlist_show_vendor = ImGui.Checkbox(ctx, "Show Vendor##fxlist", gui.fxlist_show_vendor)
+    if rv then changed = true end
+    ImGui.SameLine(ctx)
+    rv, gui.fxlist_use_alias = ImGui.Checkbox(ctx, "Use Alias##fxlist", gui.fxlist_use_alias)
+    if rv then
+      fx_alias_cache.loaded = false
+      changed = true
+    end
+    ImGui.Unindent(ctx)
+
+    -- Alias warning
+    local alias_path = RES_PATH .. "/Scripts/hsuanice Scripts/Settings/fx_alias.json"
+    if (gui.button_use_alias or gui.tooltip_use_alias or gui.status_use_alias or gui.fxlist_use_alias) and not file_exists(alias_path) then
+      ImGui.Spacing(ctx)
+      ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFFAA00FF)
+      ImGui.TextWrapped(ctx, "FX Alias database not found. Build it via Settings -> FX Alias Tools.")
+      ImGui.PopStyleColor(ctx)
     end
 
     if changed then
@@ -2445,18 +3810,6 @@ end
       save_gui_settings()
     end
   else
-    -- Handle seconds
-    ImGui.Text(ctx, "Handle:")
-    ImGui.SameLine(ctx)
-    ImGui.SetNextItemWidth(ctx, 80)
-    local rv, new_val = ImGui.InputDouble(ctx, "##handle_seconds", gui.handle_seconds, 0, 0, "%.1f")
-    if rv then
-      gui.handle_seconds = math.max(0, new_val)
-      save_gui_settings()
-    end
-    ImGui.SameLine(ctx)
-    ImGui.Text(ctx, "seconds")
-
     -- Channel Mode
     ImGui.Text(ctx, "Channel:")
     ImGui.SameLine(ctx)
@@ -2474,6 +3827,19 @@ end
       gui.channel_mode = 2
       save_gui_settings()
     end
+
+    ImGui.SameLine(ctx, 0, 20)
+    -- Handle seconds
+    ImGui.Text(ctx, "Handle:")
+    ImGui.SameLine(ctx)
+    ImGui.SetNextItemWidth(ctx, 80)
+    local rv, new_val = ImGui.InputDouble(ctx, "##handle_seconds", gui.handle_seconds, 0, 0, "%.1f")
+    if rv then
+      gui.handle_seconds = math.max(0, new_val)
+      save_gui_settings()
+    end
+    ImGui.SameLine(ctx)
+    ImGui.Text(ctx, "seconds")
   end
 
   ImGui.Separator(ctx)
@@ -2579,151 +3945,228 @@ end
 
   -- === QUICK PROCESS (Saved + History, side by side) ===
   if gui.enable_saved_chains or gui.enable_history then
-    -- Show FX on recall checkbox
     local changed
-    changed, gui.show_fx_on_recall = ImGui.Checkbox(ctx, "Show FX window on recall", gui.show_fx_on_recall)
+    local line_y = ImGui.GetCursorPosY(ctx)
+    changed, gui.show_presets_history = ImGui.Checkbox(ctx, "Show Presets/History", gui.show_presets_history)
     if changed then save_gui_settings() end
 
-    -- Only show if at least one feature is enabled and has content
-    if (gui.enable_saved_chains and #gui.saved_chains > 0) or (gui.enable_history and #gui.history > 0) then
-      local avail_w = ImGui.GetContentRegionAvail(ctx)
-      local col1_w = avail_w * 0.5 - 5
+    local recall_label = "Show FX window on recall"
+    local label_w = ImGui.CalcTextSize(ctx, recall_label)
+    local inner_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
+    local inner_spacing_x = inner_x
+    if type(inner_x) == "number" then
+      inner_spacing_x = inner_x
+    elseif type(inner_x) == "table" then
+      inner_spacing_x = inner_x[1] or 0
+    end
+    local checkbox_w = ImGui.GetFrameHeight(ctx) + inner_spacing_x + label_w
+    local right_edge = ImGui.GetCursorPosX(ctx) + ImGui.GetContentRegionAvail(ctx)
+    ImGui.SetCursorPosY(ctx, line_y)
+    ImGui.SetCursorPosX(ctx, right_edge - checkbox_w)
+    changed, gui.show_fx_on_recall = ImGui.Checkbox(ctx, recall_label, gui.show_fx_on_recall)
+    if changed then save_gui_settings() end
 
-      -- Left: Saved FX Preset
-      if gui.enable_saved_chains and #gui.saved_chains > 0 then
-        if ImGui.BeginChild(ctx, "SavedCol", col1_w, 200) then
-          ImGui.Text(ctx, "SAVED FX PRESET")
-          ImGui.Separator(ctx)
-          local to_delete = nil
-          for i, chain in ipairs(gui.saved_chains) do
-            ImGui.PushID(ctx, i)
+    if gui.show_presets_history then
 
-            -- Get display info
-            local display_name, track_info_line, fx_info, saved_fx_index = get_chain_display_info(chain)
+      -- Only show if at least one feature is enabled and has content
+      if (gui.enable_saved_chains and #gui.saved_chains > 0) or (gui.enable_history and #gui.history > 0) then
+        local avail_w = ImGui.GetContentRegionAvail(ctx)
+        local col1_w = avail_w * 0.5 - 5
 
-            -- "Open" button (small, on the left)
-            if ImGui.SmallButton(ctx, "Open") then
-              open_saved_chain_fx(i)
-            end
-            ImGui.SameLine(ctx)
-
-            -- Chain name button (executes AudioSweet) - use available width minus Delete button
-            local avail_width = ImGui.GetContentRegionAvail(ctx) - 25  -- Space for "X" button
-            if ImGui.Button(ctx, display_name, avail_width, 0) then
-              run_saved_chain(i)
-            end
-
-            -- Hover tooltip showing track and FX info
-            if ImGui.IsItemHovered(ctx) then
-              show_preset_tooltip(chain)
-            end
-
-            -- Right-click context menu for renaming
-            if ImGui.BeginPopupContextItem(ctx, "chain_context_" .. i) then
-              if ImGui.MenuItem(ctx, "Rename") then
-                gui.show_rename_popup = true
-                gui.rename_chain_idx = i
-                -- Pre-fill with current custom name, or use display name (without track# prefix for chains)
-                if chain.custom_name and chain.custom_name ~= "" then
-                  gui.rename_chain_name = chain.custom_name
-                else
-                  -- Use the base name without track# prefix
-                  if chain.mode == "focused" then
-                    gui.rename_chain_name = chain.name  -- FX name for focused mode
-                  else
-                    -- For chain mode, extract track name from track_info_line (#N: name)
-                    local extracted_name = track_info_line:match("^#%d+: (.+)$")
-                    gui.rename_chain_name = extracted_name or chain.track_name or ""
-                  end
-                end
-              end
-              ImGui.EndPopup(ctx)
-            end
-
-            ImGui.SameLine(ctx)
-            -- Delete button
-            if ImGui.Button(ctx, "X", 20, 0) then
-              to_delete = i
-            end
-            ImGui.PopID(ctx)
-          end
-          if to_delete then delete_saved_chain(to_delete) end
-          ImGui.EndChild(ctx)
+        local function calc_list_height(item_count)
+          local _, spacing_y = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
+          local frame_h = ImGui.GetFrameHeight(ctx)
+          local text_h = ImGui.GetTextLineHeight(ctx)
+          local header_line_h = math.max(frame_h, text_h)
+          local separator_h = 1
+          local header_height = header_line_h + spacing_y + separator_h + spacing_y
+          local items_height = item_count * frame_h + math.max(0, item_count - 1) * spacing_y
+          return math.min(header_height + items_height, 200)
         end
 
-        ImGui.SameLine(ctx)
-      end
+        -- Left: Saved FX Preset
+        if gui.enable_saved_chains and #gui.saved_chains > 0 then
+          local saved_height = calc_list_height(#gui.saved_chains)
+          if ImGui.BeginChild(ctx, "SavedCol", col1_w, saved_height) then
+            ImGui.Text(ctx, "SAVED FX PRESET")
+            ImGui.Separator(ctx)
+            local to_delete = nil
+            for i, chain in ipairs(gui.saved_chains) do
+              ImGui.PushID(ctx, i)
 
-      -- Right: History (auto-resizes based on content)
-      if gui.enable_history and #gui.history > 0 then
-        -- Calculate height based on number of history items (each item ~25px, header ~40px)
-        local history_height = math.min(#gui.history * 25 + 40, 200)  -- Max 200px
-        if ImGui.BeginChild(ctx, "HistoryCol", 0, history_height) then
-          ImGui.Text(ctx, "HISTORY")
-          ImGui.SameLine(ctx)
-          ImGui.SetCursorPosX(ctx, ImGui.GetCursorPosX(ctx) + ImGui.GetContentRegionAvail(ctx) - 45)
-          if ImGui.SmallButton(ctx, "Clear") then
-            gui.history = {}
-            -- Clear from ProjExtState
-            for i = 0, gui.max_history - 1 do
-              r.SetProjExtState(0, HISTORY_NAMESPACE, "hist_" .. i, "")
-            end
-          end
-          ImGui.Separator(ctx)
-          for i, item in ipairs(gui.history) do
-            ImGui.PushID(ctx, 1000 + i)
-            -- "Open" button (small, on the left)
-            if ImGui.SmallButton(ctx, "Open") then
-              open_history_fx(i)
-            end
-            ImGui.SameLine(ctx)
-            -- History item name button (executes AudioSweet) - use available width minus Save button
-            local avail_width = ImGui.GetContentRegionAvail(ctx) - 45  -- Space for "Save" button
-            local display_name = get_history_display_name(item)
-            if ImGui.Button(ctx, display_name, avail_width, 0) then
-              run_history_item(i)
-            end
+              -- Get display info
+              local display_name, track_info_line, fx_info, saved_fx_index = get_chain_display_info(chain)
 
-            -- Hover tooltip showing track and FX info
-            if ImGui.IsItemHovered(ctx) then
-              show_preset_tooltip(item)
-            end
+              -- "Open" button (small, on the left)
+              if ImGui.SmallButton(ctx, "Open") then
+                open_saved_chain_fx(i)
+              end
+              ImGui.SameLine(ctx)
 
-            ImGui.SameLine(ctx)
-            -- "Save" button to save this history item as a saved preset
-            if ImGui.Button(ctx, "Save", 40, 0) then
-              -- Check if this exact preset already exists in saved_chains
-              local already_saved = false
-              for _, chain in ipairs(gui.saved_chains) do
-                if chain.track_guid == item.track_guid and chain.mode == item.mode then
-                  if item.mode == "focused" then
-                    -- For focused mode: check fx_index
-                    if chain.fx_index == item.fx_index then
-                      already_saved = true
-                      break
-                    end
+              -- Chain name button (executes AudioSweet) - use available width minus Delete button
+              local avail_width = ImGui.GetContentRegionAvail(ctx) - 25  -- Space for "X" button
+              if ImGui.Button(ctx, display_name, avail_width, 0) then
+                run_saved_chain(i)
+              end
+
+              -- Hover tooltip showing track and FX info
+              if ImGui.IsItemHovered(ctx) then
+                show_preset_tooltip(chain)
+              end
+
+              -- Right-click context menu for renaming
+              if ImGui.BeginPopupContextItem(ctx, "chain_context_" .. i) then
+                if ImGui.MenuItem(ctx, "Rename") then
+                  gui.show_rename_popup = true
+                  gui.rename_chain_idx = i
+                  gui.rename_is_history = false  -- Mark as preset rename
+                  -- Pre-fill with current custom name, or use core name only (for focused mode)
+                  if chain.custom_name and chain.custom_name ~= "" then
+                    gui.rename_chain_name = chain.custom_name
                   else
-                    -- For chain mode: check if same chain (by name)
-                    if chain.name == item.name then
-                      already_saved = true
-                      break
+                    -- Use the base name without track# prefix
+                    if chain.mode == "focused" then
+                      -- For focused mode: use CORE name only (no type/vendor)
+                      -- This preserves type and vendor info in the original chain.name
+                      local tr = find_track_by_guid(chain.track_guid)
+                      local found_fx_name = nil
+                      if tr and r.ValidatePtr2(0, tr, "MediaTrack*") then
+                        if chain.fx_index then
+                          local fx_count = r.TrackFX_GetCount(tr)
+                          if chain.fx_index < fx_count then
+                            local _, fx_name = r.TrackFX_GetFXName(tr, chain.fx_index, "")
+                            if fx_name and (fx_name == chain.name or fx_name:find(chain.name, 1, true)) then
+                              found_fx_name = fx_name
+                            end
+                          end
+                        end
+                      end
+                      -- Extract only core name (no type, no vendor)
+                      gui.rename_chain_name = get_fx_core_name(found_fx_name or chain.name)
+                    else
+                      -- For chain mode, extract track name from track_info_line (#N: name)
+                      local extracted_name = track_info_line:match("^#%d+: (.+)$")
+                      gui.rename_chain_name = extracted_name or chain.track_name or ""
                     end
                   end
                 end
+                ImGui.EndPopup(ctx)
               end
 
-              if already_saved then
-                gui.last_result = "Info: This preset is already saved"
-              else
-                -- Add to saved_chains
-                add_saved_chain(item.name, item.track_guid, item.track_name, nil, item.mode, item.fx_index)
-                gui.last_result = "Success: History item saved to presets"
+              ImGui.SameLine(ctx)
+              -- Delete button
+              if ImGui.Button(ctx, "X", 20, 0) then
+                to_delete = i
+              end
+              ImGui.PopID(ctx)
+            end
+            if to_delete then delete_saved_chain(to_delete) end
+            ImGui.EndChild(ctx)
+          end
+
+          ImGui.SameLine(ctx)
+        end
+
+        -- Right: History (auto-resizes based on content)
+        if gui.enable_history and #gui.history > 0 then
+          -- Calculate height based on number of history items (each item ~25px, header ~40px)
+          local history_height = calc_list_height(#gui.history)
+          if ImGui.BeginChild(ctx, "HistoryCol", 0, history_height) then
+            ImGui.Text(ctx, "HISTORY")
+            ImGui.SameLine(ctx)
+            ImGui.SetCursorPosX(ctx, ImGui.GetCursorPosX(ctx) + ImGui.GetContentRegionAvail(ctx) - 45)
+            if ImGui.SmallButton(ctx, "Clear") then
+              gui.history = {}
+              -- Clear from ProjExtState
+              for i = 0, gui.max_history - 1 do
+                r.SetProjExtState(0, HISTORY_NAMESPACE, "hist_" .. i, "")
               end
             end
+            ImGui.Separator(ctx)
+            for i, item in ipairs(gui.history) do
+              ImGui.PushID(ctx, 1000 + i)
+              -- "Open" button (small, on the left)
+              if ImGui.SmallButton(ctx, "Open") then
+                open_history_fx(i)
+              end
+              ImGui.SameLine(ctx)
+              -- History item name button (executes AudioSweet) - use available width minus Save button
+              local avail_width = ImGui.GetContentRegionAvail(ctx) - 45  -- Space for "Save" button
+              local display_name = get_history_display_name(item)
+              if ImGui.Button(ctx, display_name, avail_width, 0) then
+                run_history_item(i)
+              end
 
-            ImGui.PopID(ctx)
+              -- Hover tooltip showing track and FX info
+              if ImGui.IsItemHovered(ctx) then
+                show_preset_tooltip(item)
+              end
+
+              -- Right-click context menu for renaming
+              if ImGui.BeginPopupContextItem(ctx, "history_context_" .. i) then
+                if ImGui.MenuItem(ctx, "Rename") then
+                  gui.show_rename_popup = true
+                  gui.rename_chain_idx = i
+                  gui.rename_is_history = true  -- Mark as history rename
+                  -- Pre-fill with current custom name, or use core name only (for focused mode)
+                  if item.custom_name and item.custom_name ~= "" then
+                    gui.rename_chain_name = item.custom_name
+                  else
+                    -- Use core name only (for focused mode, without track# prefix)
+                    if item.mode == "focused" then
+                      -- Extract only core name (no type, no vendor)
+                      gui.rename_chain_name = get_fx_core_name(item.name)
+                    else
+                      -- For chain mode, extract track name
+                      local tr = find_track_by_guid(item.track_guid)
+                      if tr and r.ValidatePtr2(0, tr, "MediaTrack*") then
+                        local _, track_name = r.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+                        gui.rename_chain_name = track_name
+                      else
+                        gui.rename_chain_name = item.track_name or ""
+                      end
+                    end
+                  end
+                end
+                ImGui.EndPopup(ctx)
+              end
+
+              ImGui.SameLine(ctx)
+              -- "Save" button to save this history item as a saved preset
+              if ImGui.Button(ctx, "Save", 40, 0) then
+                -- Check if this exact preset already exists in saved_chains
+                local already_saved = false
+                for _, chain in ipairs(gui.saved_chains) do
+                  if chain.track_guid == item.track_guid and chain.mode == item.mode then
+                    if item.mode == "focused" then
+                      -- For focused mode: check fx_index
+                      if chain.fx_index == item.fx_index then
+                        already_saved = true
+                        break
+                      end
+                    else
+                      -- For chain mode: check if same chain (by name)
+                      if chain.name == item.name then
+                        already_saved = true
+                        break
+                      end
+                    end
+                  end
+                end
+
+                if already_saved then
+                  gui.last_result = "Info: This preset is already saved"
+                else
+                  -- Add to saved_chains
+                  add_saved_chain(item.name, item.track_guid, item.track_name, nil, item.mode, item.fx_index)
+                  gui.last_result = "Success: History item saved to presets"
+                end
+              end
+
+              ImGui.PopID(ctx)
+            end
+            ImGui.EndChild(ctx)
           end
-          ImGui.EndChild(ctx)
         end
       end
     end
@@ -2745,7 +4188,7 @@ end
     else
       ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFFFF00FF)
     end
-    ImGui.Text(ctx, gui.last_result)
+    ImGui.TextWrapped(ctx, gui.last_result)
     ImGui.PopStyleColor(ctx)
   end
 
@@ -2757,14 +4200,16 @@ end
   end
 
   if gui.mode == 0 then
-    ImGui.Text(ctx, gui.focused_fx_name)
+    if has_valid_fx then
+      ImGui.Text(ctx, format_fx_label_for_status(gui.focused_fx_name))
+    else
+      ImGui.Text(ctx, gui.focused_fx_name)
+    end
   else
     ImGui.Text(ctx, gui.focused_track_name ~= "" and ("Track: " .. gui.focused_track_name) or "No Track FX")
   end
   ImGui.PopStyleColor(ctx)
-
-  ImGui.SameLine(ctx)
-  ImGui.Text(ctx, string.format(" | Items: %d", item_count))
+  ImGui.Text(ctx, string.format("Items: %d", item_count))
 
   -- Show FX chain in Chain mode (dynamic height, auto-resizes based on content)
   if gui.mode == 1 and #gui.focused_track_fx_list > 0 then
@@ -2777,7 +4222,8 @@ end
     if ImGui.BeginChild(ctx, "FXChainList", 0, calculated_height) then
       for _, fx in ipairs(gui.focused_track_fx_list) do
         local status = fx.offline and "[offline]" or (fx.enabled and "[on]" or "[byp]")
-        ImGui.Text(ctx, string.format("%02d) %s %s", fx.index + 1, fx.name, status))
+        local formatted_name = format_fx_label(fx.name, "fxlist")
+        ImGui.Text(ctx, string.format("%02d) %s %s", fx.index + 1, formatted_name, status))
       end
       ImGui.EndChild(ctx)
     end
@@ -2920,28 +4366,32 @@ end
   if ImGui.BeginPopupModal(ctx, "Rename Preset", true, ImGui.WindowFlags_AlwaysAutoResize) then
     -- Show track# prefix for chain mode (outside input field)
     local hint_text = "(leave empty to use default)"
-    if gui.rename_chain_idx and gui.saved_chains[gui.rename_chain_idx] then
-      local chain = gui.saved_chains[gui.rename_chain_idx]
-      if chain.mode == "chain" then
-        local tr = find_track_by_guid(chain.track_guid)
+    local item_source = gui.rename_is_history and gui.history or gui.saved_chains
+
+    if gui.rename_chain_idx and item_source[gui.rename_chain_idx] then
+      local item = item_source[gui.rename_chain_idx]
+      if item.mode == "chain" then
+        local tr = find_track_by_guid(item.track_guid)
         if tr then
           local track_number = r.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER")
-          ImGui.Text(ctx, string.format("Track #%d - Preset Name:", track_number))
+          ImGui.Text(ctx, string.format("Track #%d - %s Name:", track_number, gui.rename_is_history and "History" or "Preset"))
           -- Show current track name in hint
           local current_track_name, _ = get_track_name_and_number(tr)
           hint_text = string.format("(default: #%.0f - %s)", track_number, current_track_name)
         else
-          ImGui.Text(ctx, "Preset Name:")
+          ImGui.Text(ctx, string.format("%s Name:", gui.rename_is_history and "History" or "Preset"))
         end
       else
-        -- Focused mode: show FX name in hint
-        ImGui.Text(ctx, "Preset Name:")
-        if chain.name then
-          hint_text = string.format("(default: %s)", chain.name)
+        -- Focused mode: show formatted FX name in hint
+        ImGui.Text(ctx, string.format("%s Name:", gui.rename_is_history and "History" or "Preset"))
+        if item.name then
+          -- Use formatted name for hint (consistent with button display)
+          local formatted_name = format_fx_label_for_preset(item.name)
+          hint_text = string.format("(default: %s)", formatted_name)
         end
       end
     else
-      ImGui.Text(ctx, "Preset Name:")
+      ImGui.Text(ctx, string.format("%s Name:", gui.rename_is_history and "History" or "Preset"))
     end
     ImGui.TextDisabled(ctx, hint_text)
     ImGui.Spacing(ctx)
@@ -2952,9 +4402,14 @@ end
     ImGui.Spacing(ctx)
     if ImGui.Button(ctx, "OK", 100, 0) then
       if gui.rename_chain_idx then
-        rename_saved_chain(gui.rename_chain_idx, gui.rename_chain_name)
+        if gui.rename_is_history then
+          rename_history_item(gui.rename_chain_idx, gui.rename_chain_name)
+        else
+          rename_saved_chain(gui.rename_chain_idx, gui.rename_chain_name)
+        end
         gui.rename_chain_idx = nil
         gui.rename_chain_name = ""
+        gui.rename_is_history = false
         ImGui.CloseCurrentPopup(ctx)
       end
     end
@@ -2962,6 +4417,7 @@ end
     if ImGui.Button(ctx, "Cancel", 100, 0) then
       gui.rename_chain_idx = nil
       gui.rename_chain_name = ""
+      gui.rename_is_history = false
       ImGui.CloseCurrentPopup(ctx)
     end
     ImGui.EndPopup(ctx)
@@ -2996,6 +4452,9 @@ local function loop()
       r.ShowConsoleMsg(string.format("  FX Name - Show Vendor: %s\n", gui.fxname_show_vendor and "ON" or "OFF"))
       r.ShowConsoleMsg(string.format("  FX Name - Strip Symbol: %s\n", gui.fxname_strip_symbol and "ON" or "OFF"))
       r.ShowConsoleMsg(string.format("  FX Name - Use Alias: %s\n", gui.use_alias and "ON" or "OFF"))
+      r.ShowConsoleMsg(string.format("  Preset Display - Show Type: %s\n", gui.preset_display_show_type and "ON" or "OFF"))
+      r.ShowConsoleMsg(string.format("  Preset Display - Show Vendor: %s\n", gui.preset_display_show_vendor and "ON" or "OFF"))
+      r.ShowConsoleMsg(string.format("  Preset Display - Use Alias: %s\n", gui.preset_display_use_alias and "ON" or "OFF"))
       r.ShowConsoleMsg(string.format("  Max FX Tokens: %d\n", gui.max_fx_tokens))
       local chain_token_source_names = {"Track Name", "FX Aliases", "FXChain"}
       r.ShowConsoleMsg(string.format("  Chain Token Source: %s\n", chain_token_source_names[gui.chain_token_source + 1]))
