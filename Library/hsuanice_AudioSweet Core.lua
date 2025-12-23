@@ -1,9 +1,8 @@
 --[[
 @description AudioSweet Core - Focused Track FX render via RGWH Core
-@version 0.1.0
+@version 0.2.0
 @author hsuanice
-@provides
-  [main] .
+@noindex
 @notes
 
 Tim Chimes (original), adapted by hsuanice for AudioSweet Core integration.
@@ -13,452 +12,109 @@ Tim Chimes (original), adapted by hsuanice for AudioSweet Core integration.
   http://timchimes.com/scripting-with-reaper-audiosuite/
 
 @changelog
-  0.1.0 (2025-10-30) - Initial Public Beta Release
-    AudioSuite-like workflow with RGWH Core integration featuring:
-    - Focused/Chain modes for Track FX processing
-    - CLAP plugin support with fallback mechanism
-    - Integration with AudioSweet ReaImGui v0.1.0-beta
-    - File naming with FX Alias support
-    - Handle-aware rendering via RGWH Core
+  v0.2.0 (2025-12-23) [internal: v251223.2256]
+    - CHANGED: Version bump to 0.2.0 (public beta)
 
-  Internal Build 251030.1630 - CRITICAL FIX
-    • FIXED: checkSelectedFX() now supports OVERRIDE ExtState mechanism.
-      - Issue: SAVED CHAINS/HISTORY execution showed "Please focus a Track FX" warning
-      - Root cause: checkSelectedFX() only used GetFocusedFX(), which fails for CLAP and unfocused windows
-      - Solution: Check OVERRIDE_TRACK_IDX and OVERRIDE_FX_IDX ExtState before GetFocusedFX()
-      - Location: lines 1172-1191 (checkSelectedFX function)
-      - OVERRIDE values are 0-based, converted to 1-based for internal use
-      - OVERRIDE values cleared after use (single-use mechanism)
-      - Falls back to GetFocusedFX() when OVERRIDE not set
-    • Integration: Required by AudioSweet ReaImGui v251030.1630+ for reliable SAVED CHAINS/HISTORY execution.
-      - GUI sets OVERRIDE ExtState → Core checks OVERRIDE → bypasses focus detection
-      - Enables execution without requiring actual FX window focus
-      - Works with all plugin formats (CLAP, VST3, VST, AU)
+  0v.1.9 (2025-12-23) [internal: v251223.2236]
+    - CHANGED: Copy+Apply now reuses Apply flow, then copies target FX to non-active takes
+      • Single/multi items share the same glue/apply path for stability
+      • Copy+Apply no longer uses a separate glue→copy→render path
+    - CHANGED: Copy+Apply FX copy targets the processed take channel count (min 2)
+    - FIXED: TC embed offset by handle length in Apply flow
+      • Use item-start-based TC (matches RGWH current mode)
+    - DEBUG: Added TC embed logging for current/previous sources
+    - NOTE: Do not override RGWH TC embed mode in Core/GLUE path
 
-  Internal Build 251030.1600
-    • Fixed: Chain mode now works without focused FX (CLAP plugin support).
-      - Issue: Core required GetFocusedFX() to return 1 even in chain mode
-      - Solution: Added fallback to first selected track when focus detection fails in chain mode
-      - Logic: if ret_val ~= 1 AND mode == "chain" then use GetSelectedTrack(0, 0)
-      - Location: lines 1725-1734 (main function)
-      - Works with CLAP, VST3, VST, AU plugins
-    • Integration: Works with AudioSweet GUI v251030.1515 (OVERRIDE ExtState mechanism).
+  v0.1.8 (2025-12-23) [internal: v251223.1924]
+    - ADDED: Copy+Apply flow (copy FX then render) with multi-item glue support
+      • Copy step now enforces identity pin mappings for stable multichannel IO
+      • Render uses track FX to match Apply results, then clears take FX on output
+    - FIXED: Multi-Channel Policy handling for Copy+Apply (source/target policies)
+    - CHANGED: RGWH TimeReference embed forced to "current" during runs
+    - DEBUG: Added take FX IO tracing and safe handling for invalid item pointers
 
-  251030.0845
-    • Changed: All file naming options now read from ExtState instead of hardcoded values.
-      - AS_USE_ALIAS: Now reads from ExtState "hsuanice_AS/USE_ALIAS" (line 711)
-        • Allows GUI to dynamically toggle FX alias usage
-        • Default: false (disabled)
-      - AS_MAX_FX_TOKENS: Now reads from ExtState "hsuanice_AS/AS_MAX_FX_TOKENS" (lines 415-419)
-        • Controls FIFO cap for FX tokens in file names
-        • Default: 3 tokens
-      - AS_CHAIN_TOKEN_SOURCE: Now reads from ExtState "hsuanice_AS/AS_CHAIN_TOKEN_SOURCE" (lines 426-429)
-        • Options: "track" (use track name), "aliases" (use FX aliases), "fxchain" (literal "FXChain")
-        • Default: "track"
-      - AS_CHAIN_ALIAS_JOINER: Now reads from ExtState "hsuanice_AS/AS_CHAIN_ALIAS_JOINER" (lines 433-435)
-        • Separator when using aliases mode
-        • Default: "" (empty, no separator)
-      - SANITIZE_TOKEN_FOR_FILENAME: Now reads from ExtState "hsuanice_AS/SANITIZE_TOKEN_FOR_FILENAME" (lines 439-441)
-        • Strip unsafe filename characters from tokens
-        • Default: false
-      - TRACKNAME_STRIP_SYMBOLS: Now reads from ExtState "hsuanice_AS/TRACKNAME_STRIP_SYMBOLS" (lines 446-449)
-        • Strip all non-alphanumeric chars from track names (FX-like short name)
-        • Default: true
-    • Updated: All functions now call getter functions instead of using global constants.
-      - sanitize_token() uses get_sanitize_token_for_filename() (line 613)
-      - track_name_token() uses get_trackname_strip_symbols() (line 623)
-      - build_chain_token() uses get_chain_token_source() and get_chain_alias_joiner() (lines 1002, 1021)
-      - max_fx_tokens() uses get_max_fx_tokens() (line 1343)
-    • Integration: AudioSweet GUI v251030.0845+ required for new naming settings.
-      - GUI's "File Naming Settings" menu controls all these options
-      - Settings automatically sync between GUI and Core via ExtState
-      - Ensures consistent file naming behavior across all workflows
+  v0.1.7 (2025-12-22) [internal: v251222.1706]
+    - ADDED: External undo control support for single undo operation
+      • External callers (GUI/standalone scripts) can set EXTERNAL_UNDO_CONTROL="1" ExtState
+      • When enabled, Core skips its internal Undo_BeginBlock/EndBlock
+      • Allows GUI and standalone scripts to manage undo as single operation
+      • Default: false (Core manages undo internally for backward compatibility)
+      • Integration: AudioSweet GUI v0.1.24 and Run v0.1.1 both enable external undo control
+    - CHANGED: Unified all processing to use Core/GLUE path (eliminates RGWH Render path)
+      • Single-item units now use Core/GLUE instead of RGWH Render
+      • GLUE mode produces single take (no old take preserved)
+      • Fixes position issues that occurred with RGWH Render path
+      • Multi-Channel Policy already implemented in Core/GLUE path (works immediately)
+      • Consistent behavior across all unit sizes (single/multi-item)
+      • RGWH Core's GLUE_SINGLE_ITEMS flag handles single-item glue correctly
 
-  251029_1930
-    • CRITICAL FIX: Changed all chanmode reads to use GetMediaItemTakeInfo_Value() instead of GetMediaItemInfo_Value()!
-      - Root cause: Channel mode is stored on the TAKE, not the ITEM
-      - Wrong API: GetMediaItemInfo_Value(item, "I_CHANMODE") always returns 0
-      - Correct API: GetMediaItemTakeInfo_Value(take, "I_CHANMODE") returns actual channel mode
-      - This explains why auto mode was always detecting as multi (chanmode was always read as 0=normal)
-    • Updated: get_item_channels() now gets take first, then reads chanmode from take
-    • Updated: All snapshot/debug code now reads from take instead of item
-    • Verified: Now matches RGWH Monitor's channel mode detection logic
+  v0.1.5 (2025-12-22) [internal: v251222.1622]
+    - ADDED: Multi-Channel Policy support for Core/GLUE path (multi-item units)
+      • Core/GLUE path now implements all three Multi-Channel Policy options
+      • SOURCE-PLAYBACK: Match unit's max playback channels
+      • SOURCE-TRACK: Match source track channel count (uses pre-move snapshot)
+      • TARGET-TRACK: Respect FX track's current channel count
+      • Policy applied before calling RGWH Core, via ExtState RGWH_PRESERVE_TRACK_CH
+    - ADDED: RGWH Core integration via ExtState control
+      • Sets RGWH_PRESERVE_TRACK_CH="0" to disable FX track restoration (Multi/Auto mode)
+      • Sets RGWH_PRESERVE_TRACK_CH="1" to enable FX track restoration (Mono mode)
+      • ExtState cleared after RGWH Core execution
+      • Works with RGWH Core v0.1.1+ preserve_track_ch parameter
+    - IMPROVED: RGWH Render path now correctly applies Multi-Channel Policy
+      • Previously: RGWH Core restored FX track channel count, overriding policy
+      • Now: Uses ExtState to tell RGWH Core not to restore when policy is active
+      • Fixes single-item units producing incorrect channel counts
 
-  251029_1330
-    • Fixed: Auto channel mode now correctly preserves item's original chanmode before moving to FX track.
-      - Critical fix: MoveMediaItemToTrack() resets I_CHANMODE to 0 (normal)!
-      - Solution: Snapshot orig_chanmode BEFORE moving, then use it for auto detection
-      - Affects: apply_focused_via_rgwh_render_new_take() and apply_focused_fx_to_item()
-    • Changed: Debug output now shows "orig_chanmode" to clarify it's the pre-move value
-    • Verified: Now correctly detects chanmode=2/3/4 items as mono even after track move
+  v0.1.4 (2025-12-22) [internal: v251222.1122]
+    - FIXED: Core/GLUE path (multi-item units) source track protection
+      • Added source track channel count snapshot BEFORE move to FX track
+      • Added source track restore AFTER move back from FX track
+      • Prevents REAPER auto-adjust from changing source track channel count
+      • Affects per-unit path when unit has ≥2 items (uses Core/GLUE)
+      • Debug log: "snapshot SOURCE track #N I_NCHAN=X (pre-move)"
+      • Debug log: "restored SOURCE track #N I_NCHAN=X (post-move)"
+      • Completes source track protection coverage for all execution paths
 
-  251029_1300
-    • Changed: Auto channel mode now uses item's playback channel count instead of source channel count.
-      - Respects item's channel mode setting (mono/stereo/multichannel)
-      - Handles cases where source is 8ch but item plays only 1ch or 2ch
-      - Example: 8ch source with "left only" item mode → auto detects as mono
-    • Added: get_item_channels() now checks I_CHANMODE to determine actual playback channels
-      - chanmode 2/3/4 (downmix/left/right) → returns 1 (mono)
-      - chanmode 0/1/5+ (normal/reverse/multi) → returns source channels
-    • Added: Detailed debug logging showing source_ch, item_ch, and chanmode for troubleshooting
-    • All paths (RGWH Render, TS-Window, Core/GLUE) now use consistent item-based channel detection
+  v0.1.3 (2025-12-22) [internal: v251222.1103]
+    - FIXED: Multi-unit processing across tracks - SOURCE-TRACK policy now works correctly
+      • TS-WINDOW[GLOBAL] path now snapshots ALL source track channel counts BEFORE glue operation
+      • Previously: second unit read post-glue channel count (incorrect)
+      • Now: all units use pre-glue snapshot (correct)
+      • apply_focused_fx_to_item() accepts optional source_track_nchan_snapshot parameter
+      • When snapshot provided, uses pre-glue value for SOURCE-TRACK policy calculation
+      • Individual track restore skipped when using snapshot (batch restore at end instead)
+      • Renamed variable to avoid confusion with FX track snapshot (main function line 1967)
+      • Added detailed debug logging: "snapshot SOURCE track" vs "SNAPSHOT track" (FX track)
+      • Debug logs now clearly distinguish SOURCE track operations from FX track operations
 
-  251029_1245
-    • Fixed: Channel Mode (mono/multi/auto) from GUI now works correctly across ALL execution paths.
-      - RGWH Render path (single items): Now reads AS_APPLY_FX_MODE ExtState instead of hardcoded "auto"
-      - TS-Window path (TS glue): Now reads AS_APPLY_FX_MODE ExtState to override item channel auto-detection
-      - Core/GLUE path (multiple items): Already working (verified)
-    • Added debug logging to show which channel mode is being used and why
-    • Root cause: apply_focused_via_rgwh_render_new_take() and apply_focused_fx_to_item()
-      were not reading the GUI's AS_APPLY_FX_MODE ExtState setting
+  v0.1.2 (2025-12-22) [internal: v251222.1035]
+    - ADDED: Multi-Channel Policy system with 3 options (Settings → Channel Mode)
+      • SOURCE-PLAYBACK: Match item's actual playback channels (default, current behavior)
+      • SOURCE-TRACK: Match source track channel count (RGWH/Pro Tools style)
+      • TARGET-TRACK: Respect FX track's current channel count (passive mode)
+      • Policy only applies when Channel Mode is explicitly set to "Multi"
+      • Auto/Mono modes use SOURCE-PLAYBACK logic (default behavior)
+      • Implemented in both TS-Window and RGWH Render paths
+      • Reads policy from ExtState: AS_MULTI_CHANNEL_POLICY
+      • Debug logging shows policy selection and resulting channel count
+    - ADDED: Source track channel count protection
+      • Snapshots source track I_NCHAN before moving items to FX track
+      • Restores source track channel count after processing complete
+      • Prevents REAPER auto-adjust from changing source track channel count
+      • Essential for post-production workflows and project interchange (Pro Tools/Nuendo)
+      • Implemented in both TS-Window and RGWH Render paths
+    - ADDED: Debug file logging
+      • All debug output now writes to ~/Desktop/AudioSweet_Core_Debug.log
+      • Prevents console messages from being washed away by RGWH Core output
+      • Helps troubleshooting when multiple cores are running
 
-  251028_2300
-    • Verified: FX name formatting with alias functionality working correctly.
-      - Test results confirm proper ExtState integration:
-        • All options ON: "AU: Pro-Q 4 (FabFilter)" → "AUProQ4FabFilter"
-        • Strip symbol OFF: "AU: Pro-Q 4 (FabFilter)" → "AU: ProQ4"
-        • Console output shows correct formatting in both [AS][STEP] FOCUSED-FX name and [AS][NAME] after
-      - Real-world validation:
-        • First test: name='AUProQ4FabFilter', after='...-AS1-AUProQ4FabFilter' ✓
-        • Second test: name='AU: ProQ4', after='...-AS1-AU: ProQ4' ✓
-      - Confirms that format_fx_label() correctly applies ExtState options even when fx_alias exists.
-    • Status: Ready for production use with AudioSweet GUI v251028_2245.
-
-  251028_2250
-    • Fixed: FX name formatting options now apply even when fx_alias is used.
-      - Previous: If fx_alias.json contained an alias (e.g., "ProQ4" for "Pro-Q 4"),
-        format_fx_label() would return the alias immediately, ignoring ExtState settings
-        for show_type/show_vendor/strip_symbol.
-      - Now: format_fx_label() always respects ExtState formatting options:
-        • FXNAME_SHOW_TYPE=1 → adds plugin type prefix (AU:, CLAP:, VST3:, VST:)
-        • FXNAME_SHOW_VENDOR=1 → adds vendor name in parentheses
-        • FXNAME_STRIP_SYMBOL=1 → removes spaces and symbols
-      - Implementation: Lines 606-635
-        • Gets formatting options first (line 608)
-        • Checks for alias (line 611-612)
-        • Uses alias as base_name if exists, otherwise uses parsed core (line 618)
-        • Applies formatting options to final result (lines 622-633)
-      - Result: With all options enabled, "AU: Pro-Q 4 (FabFilter)" → "AU:ProQ4FabFilter"
-        instead of just "ProQ4"
-    • Integration: Works with AudioSweet GUI → Settings → FX Name Formatting...
-
-  251028_2011
-    • Changed: Naming debug output now controlled by ExtState instead of hardcoded constant.
-      - Removed hardcoded `AS_DEBUG_NAMING = true` (line 354).
-      - `debug_naming_enabled()` now reads from ExtState: `hsuanice_AS/DEBUG`.
-      - When DEBUG="0" or empty: No console output, no window popup.
-      - When DEBUG="1": Shows [AS][NAME] before/after renaming messages.
-    • Integration: Fully compatible with AudioSweet GUI debug toggle.
-    • Impact: Users can now control all console output via single debug switch.
-      - GUI Menu: Debug → Enable Debug Mode
-      - ExtState: `reaper.SetExtState("hsuanice_AS", "DEBUG", "1", false)`
-    • Tech: Lines 352-356 modified for ExtState integration.
-
-  251022_1716
-    • Changed: All Chinese comments replaced with English for public beta release.
-      - Replaced ~70 lines of Chinese inline comments after line 320.
-      - Covers: alias system, FX parsing, main flow, TS-Window, Core/GLUE, RGWH Render logic.
-    • Tech: Ready for public beta distribution with full English documentation.
-
-  251022_1638
-    • Fixed: Function definition order for build_chain_token().
-      - Moved build_chain_token() after format_fx_label() and fx_alias_for_raw_label() definitions.
-      - Resolves "attempt to call a nil value (global 'format_fx_label')" error when using AS_CHAIN_TOKEN_SOURCE = "aliases".
-      - Now all three chain token modes work correctly: "track", "aliases", "fxchain".
-    • Tech: Chain token modes verified with comprehensive testing:
-      - "track" mode: uses track name (e.g., "-AS1-AudioSweet")
-      - "aliases" mode: uses FX alias list (e.g., "-AS1-ProR2ProQ4")
-      - "fxchain" mode: uses literal "FXChain" (e.g., "-AS1-FXChain")
-
-  251021_2145
-    - Fixed: Multi-item glue path now uses new RGWH Core M.core() API instead of deprecated apply()
-    - Changed: Core API detection now looks for M.core() or M.glue_selection() instead of old M.apply()
-    - Changed: Multi-item glue args updated to new API format: {op="glue", channel_mode=..., take_fx=true, track_fx=true}
-    - Tech: Resolves "RGWH.apply not found" error when processing multi-item units (touching/overlapping items)
-    - Note: Single-item path already used M.render_selection() and is unaffected
-
-  251021_2130
-    - Added: Chain mode naming support - take names now reflect the full FX chain or track name.
-    - Added: New user options for chain token generation:
-        • AS_CHAIN_TOKEN_SOURCE: "track" (use track name), "aliases" (list FX aliases), or "fxchain" (literal "FXChain")
-        • AS_CHAIN_ALIAS_JOINER: separator when using aliases mode (default: empty string)
-        • TRACKNAME_STRIP_SYMBOLS: strip non-alphanumeric chars from track names (FX-style short name)
-        • SANITIZE_TOKEN_FOR_FILENAME: sanitize tokens for safe filenames
-    - Added: Helper functions: sanitize_token(), track_name_token(), build_chain_token()
-    - Changed: Main function now determines naming token based on AS_MODE:
-        • Focused mode: uses focused FX name (e.g., "-AS1-ProR2")
-        • Chain mode: uses chain token (e.g., "-AS1-AudioSweet" or "-AS1-ProR2ProQ4ProR2ProQ4")
-    - Changed: All append_fx_to_take_name() calls now use dynamic naming_token instead of static FXName
-    - Tech: Integrated chain token logic from AudioSweet Chain script into Core for unified behavior
-    - Example: Chain mode with track "AudioSweet" → "TakeName-AS1-AudioSweet"
-    - Example: Chain mode with aliases (no joiner) → "TakeName-AS1-ProR2ProQ4ProR2ProQ4"
-
-  251009_2249
-    - Fixed: Single-item (non TS-Window) path no longer forces all FX enabled after render.
-      It now relies solely on snapshot/restore so original bypass/offline states are preserved.
-    - Note: TS-Window paths already used helper-level snapshot/restore and needed no changes.
-
-  251009_2238
-    - Fixed: Restore original Track FX enable/bypass states after both single-item RGWH render and multi-item Core/GLUE paths (snapshot → restore).
-    - Changed: Replaced “enable all FX on exit” with precise state restore to preserve user’s original bypass/offline setup.
-    - Note: No peaks rebuild calls remain in this script (faster post-render).
-
-  251009_2215
-    - Changed: Single-item path now calls RGWH Core via positional API:
-               M.render_selection(1, 1, "auto", "current") to print both Take FX
-               and Track FX into a NEW take (keeps previous takes).
-    - Tech: Module variable renamed to `M` (from `RGWH`) to match Core return value.
-
-  v251009_2000
-    - Changed: In non–TS-Window path, single-item units now use RGWH Render
-               to create a NEW take (keeping previous takes), while multi-item
-               units still use Core/GLUE with handles.
-    - Added: Helper apply_focused_via_rgwh_render_new_take() to move the item
-             to the FX track, isolate the focused FX, call RGWH.render_selection
-             (TAKE_FX=1, TRACK_FX=1, APPLY_MODE=auto, TC=current),
-             rename with AS token, and move back.
-    - Unchanged: TS-Window (GLOBAL/UNIT) keeps the 42432→40361/41993 path
-                 (no handles), preserving the previous UX and behavior.
-    - Notes: Naming, alias, and FIFO token cap remain intact; selection is
-             restored at the end as before.
-
-  v251008_1838 (2025-10-08, GMT+8)
-    - Added: Full FX alias integration with TSV fallback when JSON decoder is missing.
-    - Fixed: Numeric-only FX aliases (e.g., “1176”, “1073”) are now correctly preserved.
-    - Fixed: Sequential same-FX renders now append properly and respect FIFO cap,
-             removing old tokens like “glued-xx” or “render-001”.
-    - Improved: parse_as_tag() now pre-cleans legacy artifacts before tokenization,
-                preventing ghost tokens such as “02” or “001”.
-    - Result: Repeated FX passes stack correctly, e.g.
-              “...-AS3-1073_1073_1073” and mixed passes as
-              “...-AS4-1073_1073_VOXBOX”.
-  v251008_1837 — FX alias integration (JSON-driven short names)
-    - Added: Full FX alias integration via TSV fallback when JSON decoder missing.
-    - Fixed: Numeric-only FX aliases (e.g., “1176”, “1073”) are now preserved.
-    - Fixed: Repeated same-FX passes now correctly append without residual tokens
-             from “glued-xx” or “render-001” suffixes.
-    - Improved: parse_as_tag() pre-cleans legacy artifacts before tokenizing,
-                preventing ghost tokens like “02” or “001”.
-    - Result: Sequential renders correctly stack as “...-AS3-1073_1073_1073” and
-              mixed renders as “...-AS4-1073_1073_VOXBOX”.
-
-  v2510081815 — FX alias integration (JSON-driven short names)
-    - Added: automatic FX short-name alias lookup for take naming.
-    - Source: Settings/fx_alias.json (preferred) or fallback to fx_alias.tsv.
-    - Supports both JSON object ({ fingerprint=alias }) and array forms.
-    - Fallback: if JSON decoder is unavailable or file missing, loads TSV.
-    - Detection: normalized keys "type|core|vendor", "type|core|", "|core|", etc.
-    - Added: alias log tracing (AS_DEBUG_ALIAS) and TSV loader (_alias_map_from_tsv).
-    - Improvement: alias normalization removes non-alphanumeric symbols.
-    - Safety: fails gracefully with clear [ALIAS] console messages; never halts render.
-
-  v2510072312 — FX alias integration (JSON-driven short names)
-    - New: AudioSweet now consults Settings/fx_alias.json for FX short names when composing the “-ASn-...” suffix.
-    - Resolution order: "type|core|vendor" → "type|core|" → "|core|".
-    - Fallback: if no alias is found (or JSON missing/invalid), revert to the existing formatter/options.
-    - Toggle: set AS_USE_ALIAS at the top of the script (true/false).
-    - Behavior: keeps FIFO cap (AS_MAX_FX_TOKENS), preserves order, allows duplicates by design.
-    - Safety: lazy JSON load; gracefully tolerates absent/invalid file; no modal errors.
-    - Logging: keeps [AS][NAME] before/after when AS_DEBUG_NAMING=true; no change to render pipeline.
-
-  v2510071447 — AS naming: allow duplicates, keep order (FIFO cap)
-    - Stop de-duplicating FX tokens; every run appends the new FX to the end.
-    - The AS_MAX_FX_TOKENS cap (user option) still trims from the oldest (FIFO).
-    - Examples (cap=3):
-        CHOU...-AS5-Volcano3_dxRevivePro_Saturn2
-        + Volcano3 → CHOU...-AS6-dxRevivePro_Saturn2_Volcano3
-        + Saturn2  → CHOU...-AS7-ProQ4_Volcano3_Saturn2   (if cap=3)
-
-  v2510071407 — AS naming: user-capped FX list (FIFO)
-    - New user option at top of script: AS_MAX_FX_TOKENS
-      * 0 or nil → unlimited (default)
-      * N>0     → keep only the last N FX names in the “-ASn-...” suffix
-    - Behavior: each run appends the new FX; if over the cap, drop the oldest tokens (FIFO).
-    - Examples (cap=3):
-        Take-AS4-Saturn2_ProQ4_ProR2
-        + ProQ4   → Take-AS5-ProQ4_ProR2_ProQ4
-        + Saturn2 → Take-AS6-ProR2_ProQ4_Saturn2
-
-  v2510062341 — AudioSweet concise AS naming (iteration-safe)
-    - Simplified take-name scheme:
-        BaseName-AS{n}-{FX1}_{FX2}_...
-      (removed redundant “glued/render” suffixes and file extensions)
-    - Automatically increments {n} when re-applying AudioSweet to the same take.
-    - Merges previously appended FX names to avoid duplicate “-ASx-FX...” chains.
-    - Removes legacy “glued-XX” / “render XXX/edX” fragments before composing.
-    - Example:
-        1st pass → TakeName-AS1-ProR2
-        2nd pass → TakeName-AS2-ProR2_Saturn2
-    - Refactored parser to detect and merge nested AS tags (“-ASx-...-ASy-...”)
-      ensuring clean sequential numbering and deduplicated FX tokens.
-    - Fix: strip glue/render artifacts when re-parsing existing AS tags
-        (filters tokens: "glued", "render", pure numbers, "ed###", "dup###").  
-  v2510062315 — AudioSweet take-naming (AS scheme)
-    - Replace long “...glued... render...” suffix with concise scheme:
-      BaseName-AS{n}-{FX1}_{FX2}_...
-    - If the take already has AS-form, increment n and append the new FX.
-    - Strip file extensions and any trailing " - Something".
-    - Remove legacy “glued-XX” / “render XXX/edX” fragments before composing.
-  v2510060238 — FX name scheme (type/vendor toggle, strip symbols)
-    - Added user options (via ExtState) for FX take-name postfix:
-      • FXNAME_SHOW_TYPE=1 → include type prefix (e.g., “CLAP:” / “VST3:”).
-      • FXNAME_SHOW_VENDOR=1 → include vendor in parentheses.
-      • FXNAME_STRIP_SYMBOL=1 → remove spaces and non-alphanumeric symbols from the final label.
-    - Introduced robust parser for REAPER FX labels (“TYPE: Name (Vendor)”), then recomposed per options.
-    - Main now formats the focused FX label once (keeps raw in logs), downstream naming unchanged.
-
-  v2510042157 — TS-Window cross-track print + selection restore
-    - TS-Window (GLOBAL): After 42432, now iterates each glued item **across tracks** and prints the focused FX per-item.
-    - Channel-aware apply: per item chooses 40361 (mono, new take) or 41993 (multichannel); temporarily sets FX track I_NCHAN for ≥2ch and restores afterward.
-    - Name handling: appends the focused FX name to the printed take (forward-declared helper to avoid nil-call errors).
-    - Selection UX: snapshots your original selection at start and restores it at the very end, so you retain what you picked.
-    - Logging: clearer TS-APPLY traces (moved→FX / applied cmd / post-apply selection) and extra dumps around 42432.
-
-    Known issues
-    - Razor selection: not supported yet (planned precedence Razor > Time Selection).
-    - Non–TS-Window path still relies on RGWH Core; plugins with unusual I/O layouts (>2 outs, e.g., 5.0-only) may require manual pin routing.
-
-  v2510042113 — TS-Window cross-track print; forward-declare fix
-    - TS-Window (GLOBAL): After 42432, iterate each glued item across tracks and print the focused FX per-item
-      (handles channel-aware 40361/41993, restores I_NCHAN, renames, and moves back).
-    - Fixed a Lua scoping bug: append_fx_to_take_name is now forward-declared, preventing
-      “attempt to call a nil value (global 'append_fx_to_take_name')”.
-    - Logs: clearer TS-APPLY traces (moved→FX / applied cmd / post-apply selection dump).
-
-    Known issues
-    - Razor selection is not yet supported (planned: Razor > Time Selection precedence).
-    - Non–TS-Window path still relies on RGWH Core; plugin I/O edge cases (>2-out mappers) may require pin tweaks.
-
-  v2510042033 — Harden I_NCHAN read to avoid nil compare
-    - TS-Window (GLOBAL/UNIT): Wrap I_NCHAN reads with tonumber(...) to avoid `attempt to compare nil with number`.
-    - No behavior change other than crash-proofing; logging unchanged.
-
-  v2510041957 — TS-Window channel-aware apply; mono/stereo logic fixed
-    - TS-Window (GLOBAL/UNIT): Per-item channel detection now works for both single-track and mixed material on the same track.
-    - Mono (1ch) sources use 40361 “Apply track FX to items as new take” so a new take is created; track channel count is not changed.
-    - ≥2-channel sources set the FX track I_NCHAN to the nearest even ≥ source channels, then use 41993 (multichannel output).
-    - Restores the FX track channel count after apply and appends the focused FX name to the new take.
-    - Stability: added guards to avoid nil/number comparisons while resolving channel/track fields; clearer logs around 42432 and post-apply.
-
-    Known issues
-    - TS-Window cross-track printing: Printing the focused FX across multiple tracks is not yet supported. Current build can glue across tracks, but the focused-FX print step only runs when the window resolves to a single unit on one track.
-    - Non–TS-Window path still processes only the first unit per run (documented limitation).
-    - Plugins with restricted I/O layouts (e.g., 5.0-only) may still require manual pin/routing adjustments.
-
-  v2510041931 (TS-Window mono path → 40361 as new take)
-    - TS-Window (GLOBAL/UNIT): For mono (1ch) sources, use 40361 “Apply track FX to items as new take” so a new take is created; do not touch I_NCHAN.
-    - TS-Window (GLOBAL/UNIT): For ≥2ch sources, set FX track I_NCHAN to the nearest even ≥ source channels and use 41993 (multichannel output).
-    - Fixes the issue where mono path used 40631 and did not create a new take (name postfix appeared on take #1).
-
-  v2510041808 (unit-wide auto channel for Core glue; fix TS-Window unit n-chan set)
-    - Core/GLUE: Auto channel detection now scans the entire unit and uses the maximum channel count to decide mono/multi; no longer depends on an anchor item.
-    - TS-Window (UNIT): Before 40361, set the FX track I_NCHAN to the desired_nchan derived from the glued source; restore prev_nchan afterwards.
-    - All other behavior and debug output remain unchanged.
-
-  v2510041421 (drop buffered debug; direct console logging)
-    - Removed LOG_BUF/buf_push/buf_dump/buf_step; all debug now prints directly via log_step/dbg_* helpers.
-    - Switched post-move range dump to dbg_track_items_in_range(); removed re-dump step (Core no longer clears console).
-    - Kept all existing debug granularity; behavior unchanged.
-
-  v2510041339 (fix misuse of glue_single_items argument)
-    - Corrected the `glue_single_items` argument in the Core call to `false` for multi-item glue scenarios.
-    - Ensures that when multiple items are selected and glued, they are treated as a single unit rather than individually.
-    - No other changes to functionality or behavior.
-
-  v2510041145  (fix item unit selection after move to FX track)
-    - Non–TS-Window path: preserve full unit selection after moving items to FX track (no longer anchor-only).
-    - Core handoff: keep GLUE_SINGLE_ITEMS=1（unit glue even for single-item）；do not pass glue_single_items in args（avoid ambiguity）.
-    - Logging: clearer unit dumps and pre-apply selection counts to verify unit integrity before Core apply.
-    - Stability: ensure FX-track bypass restore and item return-to-original-track even on partial failures.
-
-  Known limitation
-    - Non–TS-Window mode still processes only the **first** unit per run (guarded by processed_core_once).
-      To process all units, remove the guard that skips subsequent units and the assignment that sets it to true.
-
-  v251002_2223  (stabilize multi-item in TS-Window; single-item in non-TS)
-    - TS-Window (GLOBAL/UNIT) path: added detailed console tracing (pre/post 42432, post 40361, item moves).
-    - Per-unit (Core) path: when not in TS-Window, now processes only the first item (anchor) as single-item glue.
-    - Focused-FX isolation: keep non-focused FX bypassed on the FX track during apply, then restore.
-    - Safety: stronger MediaItem validation when moving items between tracks; clearer error messages.
-    - Logging: unit dumps, selection snapshots, track range scans for easier root-cause analysis.
-
-  Known limitation
-    - In non–TS-Window mode, **multi-item selection (multiple item units)** is **not supported** in this build:
-      only the first item (anchor) is glued/printed via Core; other selected items are ignored.
-
-  v251002_1447  (multi-item glue, TS-window no handles)
-    - Multi-item selection via unit-based grouping (same-track touching/overlap/crossfade merged as one unit).
-    - Unified glue-first pipeline: Unit → GLUE (handles + take FX by Core when TS==unit or no-TS) → Print focused Track FX.
-    - TS-Window mode (TS ≠ unit or TS hits ≥2 units): no handles (Pro Tools behavior) — run 42432 then 40361 per glued item.
-    - Core handoff uses unit scope (SELECTION_SCOPE=unit, GLUE_SINGLE_ITEMS=0) and auto apply_fx_mode by source channels.
-    - Logging toggle via ExtState hsuanice_AS/DEBUG; add [AS][STEP] markers for each phase; early-abort with clear messages.
-    - Peaks rebuild skipped by default to save time (REAPER will background-build as needed).
-    - Note: Multichannel routing (>2-out utilities) unchanged in this build; to be handled in a later pass.
-
-  v20251001_1351  (TS-Window mode with mono/multi auto-detect)
-    - TS-Window behavior refined: strictly treat Time Selection ≠ unit as “window” — no handle content is included.
-    - Strict unit match: replaced loose check with sample-accurate (epsilon = 1 sample) start/end equality.
-    - When TS == unit: removed 41385 padding step; defer entirely to RGWH Core (handles managed by Core).
-    - TS-Window path: keeps 42432 (Glue within TS, silent padding, no handles) → 40361 (print only focused Track FX).
-    - Mono/Multi auto in TS-Window: set FX-track channel count by source take channels before 40361, then restore.
-    - Post-op flow unchanged: in-place rename with “ - <FX raw name>”, move back to original track, 40441 peaks.
-    - Focused FX index handling and isolation maintained (strip 0x1000000; bypass non-focused FX).
-    - Stability: clearer failure messages and early aborts; no fallback paths.
-    Known notes
-    - If the focused plugin does not support all source channels (e.g., 5.0 only), unaffected channels may need routing/pins.
-
-  v20251001_1336  (TS-Window mode with mono/multi auto-detect)
-    - TS-Window mode: when Time Selection ≠ RGWH “item unit”, run 42432 (Glue within TS, silent padding, no handles),
-      then print only the focused Track FX via 40361 as a new take, append FX full name, move back, and rebuild peaks.
-    - Auto channel for TS-Window: before 40361, auto-resolve desired track channels by source take channels
-      (1ch→set track to 2ch; ≥2ch→set track to nearest even ≥ source ch), restore track channel count afterwards.
-    - Unit-matched path unchanged: when TS == unit, keep RGWH Core path (GLUE; handles managed by Core; auto channel via Core).
-    - Focused FX handling: normalized focused index (strip 0x1000000 floating-window flag) and isolate only the focused Track FX.
-    - Post-op flow: reacquire processed item, in-place rename (“ - <FX raw name>”), return to original track, 40441 peaks.
-    - Failure handling: clear modal alerts and early aborts (no fallback) on Core load/apply or TS glue failure.
-
-    Known notes
-    - Multichannel routing that relies on >2-out utility FX (mappers/routers) remains bypassed in focused-only mode;
-      if a plugin is limited to e.g. 5.0 I/O, extra channels may need routing/pin adjustments (to be addressed separately).
-  v20251001_1312  (glue fx with time selection)
-    - Added TS-Window mode (Pro Tools-like): when Time Selection doesn’t match the RGWH “item unit”, the script now
-      1) runs native 42432 “Glue items within time selection” (silent padding, no handles), then
-      2) prints only the focused Track FX via 40361 as a new take, appends FX full name, moves back, and rebuilds peaks.
-    - Kept unit-matched path unchanged: when TS == unit, continue using RGWH Core (GLUE with handles by Core).
-    - Hardened focused FX isolation and consistent index normalization (strip 0x1000000).
-    - Robust post-op selection flow: reacquire the processed item, in-place rename, return to original track, 40441 peaks.
-    - Clear aborts with message boxes on failure; no fallback.
-
-    Known issue
-    - In TS-Window mode, printing with 40361 follows the track’s channel layout and focused FX I/O. This can result in mono/stereo-only output and ignore source channel count (“auto” detection not applied here). Workarounds for now:
-      • Ensure the track channel count matches the source channels before 40361, or
-      • Keep routing utilities (>2-out channel mappers) enabled, or
-      • Use the Core path (TS == unit) where auto channel mode is respected.
-  v20251001_0330
-    - Auto channel mode: resolve "auto" by source channels before calling Core (1ch→mono, ≥2ch→multi); prevents unintended mono downmix in GLUE.
-    - Core integration: write RGWH *project* ExtState for GLUE/RENDER (…_TAKE_FX, …_TRACK_FX, …_APPLY_MODE), with snapshot/restore around apply.
-    - Focused FX targeting: normalize index (strip 0x1000000 floating-window flag); Track FX only.
-    - Post-Core handoff: reacquire processed item, rename in place with " - <FX raw name>", then move back to original track.
-    - Refresh: replace nudge with `Peaks: Rebuild peaks for selected items` (40441) on the processed item.
-    - Error handling: modal alerts for Core load/apply failures; abort without fallback.
-    - Cleanup: removed crop-to-new-take path; reduced global variable leakage; loop hygiene & minor logging polish.
-
-  v20250930_1754
-    - Switched render engine to RGWH Core: call `RGWH.apply()` instead of native 40361.
-    - Pro Tools–like default: GLUE mode with TAKE FX=1 and TRACK FX=1; handles fully managed by Core.
-    - Focused FX targeting hardened: mask floating-window flag (0x1000000); Track FX only.
-    - Post-Core handoff: re-acquire processed item from current selection; rename in place; move back to original track.
-    - Naming: append raw focused FX label to take name (" - <FX raw name>"); avoids trailing dash when FX name is empty.
-    - Refresh: replaced nudge trick with `Peaks: Rebuild peaks for selected items` (40441).
-    - Error handling: message boxes for Core load/apply failures; no fallback path (explicit abort).
-    - Cleanups: removed crop-to-new-take step; reduced global variable leakage; minor loop hygiene.
-    - Config via ExtState (hsuanice_AS): `AS_MODE` (glue|render), `AS_TAKE_FX`, `AS_TRACK_FX`, `AS_APPLY_FX_MODE` (auto|mono|multi).
-
-  v20250929
-    - Initial integration with RGWH Core
-    - FX focus: robust (mask floating flag), Track FX only
-    - Refresh: Peaks → Rebuild peaks for selected items (40441)
-    - Naming: append " - <FX raw name>" after Core’s render naming
+  v0.1.1 (2025-12-21) [internal: v251221.2141]
+    - ADDED: Track channel count restoration after execution
+      • Snapshots track I_NCHAN at execution start (after FXmediaTrack is known)
+      • Restores original channel count at all exit points (copy/apply/TS-window paths)
+      • Prevents REAPER auto-expansion from persisting after processing
+      • Works in both focused and chain modes
+      • Helper function restore_track_nchan() for consistent restoration
 ]]--
 
 -- Debug toggle: set ExtState "hsuanice_AS"/"DEBUG" to "1" to enable, "0" (or empty) to disable
@@ -521,10 +177,19 @@ function debug(message)
 end
 
 -- Step logger: always prints when DEBUG=1; use for deterministic tracing
+local DEBUG_FILE_PATH = (os.getenv("HOME") or "") .. "/Desktop/AudioSweet_Core_Debug.log"
 local function log_step(tag, fmt, ...)
   if not debug_enabled() then return end
   local msg = fmt and string.format(fmt, ...) or ""
-  reaper.ShowConsoleMsg(string.format("[AS][STEP] %s %s\n", tostring(tag or ""), msg))
+  local output = string.format("[AS][STEP] %s %s\n", tostring(tag or ""), msg)
+  reaper.ShowConsoleMsg(output)
+
+  -- Also write to file
+  local f = io.open(DEBUG_FILE_PATH, "a")
+  if f then
+    f:write(output)
+    f:close()
+  end
 end
 
 
@@ -590,7 +255,7 @@ local function AS_merge_args_with_extstate(args)
     if v == "" then return def else return v end
   end
   args.mode       = args.mode       or get_ns("hsuanice_AS","AS_MODE","focused")     -- focused | chain
-  args.action     = args.action     or get_ns("hsuanice_AS","AS_ACTION","apply")      -- apply   | copy
+  args.action     = args.action     or get_ns("hsuanice_AS","AS_ACTION","apply")      -- apply | copy | apply_after_copy
   args.scope      = args.scope      or get_ns("hsuanice_AS","AS_COPY_SCOPE","active") -- active  | all_takes
   args.append_pos = args.append_pos or get_ns("hsuanice_AS","AS_COPY_POS","tail")     -- tail    | head
   args.warn_takefx = (args.warn_takefx ~= false)
@@ -618,6 +283,19 @@ local function AS_copy_focused_fx_to_items(src_track, fx_index, args)
       each_take(function(tk)
         local dest = (args.append_pos == "head") and 0 or (reaper.TakeFX_GetCount(tk) or 0)
         reaper.TrackFX_CopyToTake(src_track, fx_index, tk, dest, false)
+        do
+          local in_ch, out_ch = reaper.TrackFX_GetIOSize(src_track, fx_index)
+          if in_ch and out_ch then
+            for pin = 0, in_ch - 1 do
+              local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx_index, 0, pin)
+              if lo then reaper.TakeFX_SetPinMappings(tk, dest, 0, pin, lo, hi) end
+            end
+            for pin = 0, out_ch - 1 do
+              local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx_index, 1, pin)
+              if lo then reaper.TakeFX_SetPinMappings(tk, dest, 1, pin, lo, hi) end
+            end
+          end
+        end
         copied = copied + 1
       end)
     end
@@ -648,12 +326,38 @@ local function AS_copy_chain_to_items(src_track, args)
         if args.append_pos == "head" then
           for fx = chainN - 1, 0, -1 do
             reaper.TrackFX_CopyToTake(src_track, fx, tk, 0, false)
+            do
+              local in_ch, out_ch = reaper.TrackFX_GetIOSize(src_track, fx)
+              if in_ch and out_ch then
+                for pin = 0, in_ch - 1 do
+                  local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx, 0, pin)
+                  if lo then reaper.TakeFX_SetPinMappings(tk, 0, 0, pin, lo, hi) end
+                end
+                for pin = 0, out_ch - 1 do
+                  local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx, 1, pin)
+                  if lo then reaper.TakeFX_SetPinMappings(tk, 0, 1, pin, lo, hi) end
+                end
+              end
+            end
             total = total + 1
           end
         else
           for fx = 0, chainN - 1 do
             local dest = reaper.TakeFX_GetCount(tk) or 0
             reaper.TrackFX_CopyToTake(src_track, fx, tk, dest, false)
+            do
+              local in_ch, out_ch = reaper.TrackFX_GetIOSize(src_track, fx)
+              if in_ch and out_ch then
+                for pin = 0, in_ch - 1 do
+                  local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx, 0, pin)
+                  if lo then reaper.TakeFX_SetPinMappings(tk, dest, 0, pin, lo, hi) end
+                end
+                for pin = 0, out_ch - 1 do
+                  local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx, 1, pin)
+                  if lo then reaper.TakeFX_SetPinMappings(tk, dest, 1, pin, lo, hi) end
+                end
+              end
+            end
             total = total + 1
           end
         end
@@ -661,6 +365,206 @@ local function AS_copy_chain_to_items(src_track, args)
     end
   end
   return total
+end
+
+local function AS_copy_to_selected_items(src_track, fx_index, args)
+  if args.mode == "focused" then
+    return AS_copy_focused_fx_to_items(src_track, fx_index, args)
+  end
+  return AS_copy_chain_to_items(src_track, args)
+end
+
+local function copy_trackfx_to_take(src_track, fx_index, tk, dest)
+  reaper.TrackFX_CopyToTake(src_track, fx_index, tk, dest, false)
+  local in_ch, out_ch = reaper.TrackFX_GetIOSize(src_track, fx_index)
+  if in_ch and out_ch then
+    for pin = 0, in_ch - 1 do
+      local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx_index, 0, pin)
+      if lo then reaper.TakeFX_SetPinMappings(tk, dest, 0, pin, lo, hi) end
+    end
+    for pin = 0, out_ch - 1 do
+      local lo, hi = reaper.TrackFX_GetPinMappings(src_track, fx_index, 1, pin)
+      if lo then reaper.TakeFX_SetPinMappings(tk, dest, 1, pin, lo, hi) end
+    end
+  end
+end
+
+local function copy_focused_fx_to_take(src_track, fx_index, tk, append_pos)
+  local dest = (append_pos == "head") and 0 or (reaper.TakeFX_GetCount(tk) or 0)
+  copy_trackfx_to_take(src_track, fx_index, tk, dest)
+  return 1
+end
+
+local function copy_chain_fx_to_take(src_track, tk, append_pos)
+  local chainN = reaper.TrackFX_GetCount(src_track) or 0
+  local total = 0
+  if append_pos == "head" then
+    for fx = chainN - 1, 0, -1 do
+      copy_trackfx_to_take(src_track, fx, tk, 0)
+      total = total + 1
+    end
+  else
+    for fx = 0, chainN - 1 do
+      local dest = reaper.TakeFX_GetCount(tk) or 0
+      copy_trackfx_to_take(src_track, fx, tk, dest)
+      total = total + 1
+    end
+  end
+  return total
+end
+
+local get_item_channels
+local clear_take_fx
+local snapshot_trackfx_pins
+local restore_trackfx_pins
+local set_trackfx_identity_pins
+
+local function resolve_apply_fx_mode_for_item(item)
+  local mode = reaper.GetExtState("hsuanice_AS", "AS_APPLY_FX_MODE")
+  if mode == "" or mode == "auto" then
+    return (get_item_channels(item) <= 1) and "mono" or "multi"
+  end
+  return mode
+end
+
+local function compute_desired_nchan_for_copy(item, FXmediaTrack, apply_fx_mode, source_track_nchan)
+  if apply_fx_mode ~= "multi" then return nil end
+  local multi_policy = reaper.GetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY")
+  if multi_policy == "" then multi_policy = "source_playback" end
+
+  if multi_policy == "source_playback" then
+    local ch = get_item_channels(item)
+    if ch <= 1 then return nil end
+    return (ch % 2 == 0) and ch or (ch + 1)
+  elseif multi_policy == "source_track" then
+    local tr_ch = source_track_nchan or 2
+    return (tr_ch % 2 == 0) and tr_ch or (tr_ch + 1)
+  elseif multi_policy == "target_track" then
+    return tonumber(reaper.GetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN")) or 2
+  end
+  return nil
+end
+
+local function copy_fx_to_non_active_takes(item, FXmediaTrack, fxIndex, source_track_nchan)
+  if not item then return 0 end
+  local take_count = reaper.CountTakes(item) or 0
+  if take_count <= 1 then return 0 end
+  local active = reaper.GetActiveTake(item)
+
+  local apply_fx_mode = resolve_apply_fx_mode_for_item(item)
+  local desired_nchan = nil
+  if apply_fx_mode == "multi" then
+    local ch = get_item_channels(item)
+    if ch and ch > 0 then
+      desired_nchan = (ch < 2) and 2 or ch
+    end
+  end
+  local prev_nchan = tonumber(reaper.GetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN")) or 2
+  local did_set = false
+  if apply_fx_mode == "multi" and desired_nchan then
+    reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", desired_nchan)
+    did_set = true
+  end
+
+  local total = 0
+  local copy_mode = (AS and AS.mode) or AS_merge_args_with_extstate({}).mode
+  for t = 0, take_count - 1 do
+    local tk = reaper.GetMediaItemTake(item, t)
+    if tk and tk ~= active then
+      clear_take_fx(tk)
+      if copy_mode == "focused" then
+        total = total + copy_focused_fx_to_take(FXmediaTrack, fxIndex, tk, "tail")
+      else
+        total = total + copy_chain_fx_to_take(FXmediaTrack, tk, "tail")
+      end
+    end
+  end
+
+  if did_set then
+    reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", prev_nchan)
+  end
+
+  return total
+end
+
+local function is_valid_item(it)
+  if not it then return false end
+  if reaper.ValidatePtr2 then
+    return reaper.ValidatePtr2(0, it, "MediaItem*")
+  end
+  if reaper.ValidatePtr then
+    return reaper.ValidatePtr(it, "MediaItem*")
+  end
+  return true
+end
+
+local function dbg_take_fx_io(label, items)
+  if not debug_enabled() then return end
+  local list = items or {}
+  for _, it in ipairs(list) do
+    if is_valid_item(it) then
+      local ok, tk = pcall(reaper.GetActiveTake, it)
+      if not ok then tk = nil end
+      if tk then
+        local chanmode = reaper.GetMediaItemTakeInfo_Value(tk, "I_CHANMODE") or 0
+        local fxn = reaper.TakeFX_GetCount(tk) or 0
+        log_step("IO", "%s item=%s take_fx=%d chanmode=%d", tostring(label), tostring(it), fxn, chanmode)
+        for fx = 0, fxn - 1 do
+          local in_ch, out_ch = reaper.TakeFX_GetIOSize(tk, fx)
+          if in_ch and out_ch then
+            log_step("IO", "  takefx#%d in=%d out=%d", fx, in_ch, out_ch)
+            for pin = 0, in_ch - 1 do
+              local lo, hi = reaper.TakeFX_GetPinMappings(tk, fx, 0, pin)
+              log_step("IO", "    in#%d map lo=%s hi=%s", pin, tostring(lo), tostring(hi))
+            end
+            for pin = 0, out_ch - 1 do
+              local lo, hi = reaper.TakeFX_GetPinMappings(tk, fx, 1, pin)
+              log_step("IO", "    out#%d map lo=%s hi=%s", pin, tostring(lo), tostring(hi))
+            end
+          end
+        end
+      end
+    else
+      log_step("IO", "%s skip invalid item=%s", tostring(label), tostring(it))
+    end
+  end
+end
+
+clear_take_fx = function(tk)
+  if not tk then return end
+  local n = reaper.TakeFX_GetCount(tk) or 0
+  for i = n - 1, 0, -1 do
+    reaper.TakeFX_Delete(tk, i)
+  end
+end
+
+local function snapshot_takefx_enabled(tk)
+  if not tk then return nil end
+  local n = reaper.TakeFX_GetCount(tk) or 0
+  local snap = {}
+  for i = 0, n - 1 do
+    snap[i] = reaper.TakeFX_GetEnabled(tk, i)
+  end
+  return snap
+end
+
+local function set_takefx_enabled(tk, enabled)
+  if not tk then return end
+  local n = reaper.TakeFX_GetCount(tk) or 0
+  for i = 0, n - 1 do
+    reaper.TakeFX_SetEnabled(tk, i, enabled)
+  end
+end
+
+local function restore_takefx_enabled(tk, snap)
+  if not tk or not snap then return end
+  local n = reaper.TakeFX_GetCount(tk) or 0
+  for i = 0, n - 1 do
+    local state = snap[i]
+    if state ~= nil then
+      reaper.TakeFX_SetEnabled(tk, i, state)
+    end
+  end
 end
 -- ================================================
 -- ==== Chain token helpers (for chain mode naming) ====
@@ -704,6 +608,57 @@ local function restore_fx_enables(tr, snap)
   for i = 0, cnt-1 do
     local en = snap[i]
     if en ~= nil then reaper.TrackFX_SetEnabled(tr, i, en) end
+  end
+end
+
+local function pin_mask_for_channel(ch)
+  if ch < 32 then
+    return 2 ^ ch, 0
+  end
+  return 0, 2 ^ (ch - 32)
+end
+
+snapshot_trackfx_pins = function(tr, fx)
+  if not tr then return nil end
+  local in_ch, out_ch = reaper.TrackFX_GetIOSize(tr, fx)
+  if not in_ch or not out_ch then return nil end
+  local snap = { in_ch = in_ch, out_ch = out_ch, in_map = {}, out_map = {} }
+  for pin = 0, in_ch - 1 do
+    local lo, hi = reaper.TrackFX_GetPinMappings(tr, fx, 0, pin)
+    snap.in_map[pin] = { lo, hi }
+  end
+  for pin = 0, out_ch - 1 do
+    local lo, hi = reaper.TrackFX_GetPinMappings(tr, fx, 1, pin)
+    snap.out_map[pin] = { lo, hi }
+  end
+  return snap
+end
+
+restore_trackfx_pins = function(tr, fx, snap)
+  if not tr or not snap then return end
+  for pin = 0, (snap.in_ch or 0) - 1 do
+    local m = snap.in_map[pin]
+    if m then reaper.TrackFX_SetPinMappings(tr, fx, 0, pin, m[1] or 0, m[2] or 0) end
+  end
+  for pin = 0, (snap.out_ch or 0) - 1 do
+    local m = snap.out_map[pin]
+    if m then reaper.TrackFX_SetPinMappings(tr, fx, 1, pin, m[1] or 0, m[2] or 0) end
+  end
+end
+
+set_trackfx_identity_pins = function(tr, fx, nch)
+  if not tr or not nch then return end
+  local in_ch, out_ch = reaper.TrackFX_GetIOSize(tr, fx)
+  if not in_ch or not out_ch then return end
+  for pin = 0, in_ch - 1 do
+    local lo, hi = 0, 0
+    if pin < nch then lo, hi = pin_mask_for_channel(pin) end
+    reaper.TrackFX_SetPinMappings(tr, fx, 0, pin, lo, hi)
+  end
+  for pin = 0, out_ch - 1 do
+    local lo, hi = 0, 0
+    if pin < nch then lo, hi = pin_mask_for_channel(pin) end
+    reaper.TrackFX_SetPinMappings(tr, fx, 1, pin, lo, hi)
   end
 end
 -- =====================================================================
@@ -1132,7 +1087,7 @@ end
 
 -- Get item's actual playback channel count (respects take channel mode setting)
 -- This considers whether the take is set to mono, stereo, or multichannel
-local function get_item_channels(it)
+get_item_channels = function(it)
   if not it then return 2 end
 
   local tk = reaper.GetActiveTake(it)
@@ -1373,7 +1328,7 @@ end
 local function move_items_to_track(items, destTrack)
   for _, it in ipairs(items) do
     -- Enhanced safety check: only move MediaItem*
-    if it and (reaper.ValidatePtr2 == nil or reaper.ValidatePtr2(0, it, "MediaItem*")) then
+    if is_valid_item(it) then
       reaper.MoveMediaItemToTrack(it, destTrack)
     else
       log_step("WARN", "move_items_to_track: skipped non-item entry=%s", tostring(it))
@@ -1395,7 +1350,7 @@ end
 local function select_only_items_checked(items)
   reaper.Main_OnCommand(40289, 0)
   for _,it in ipairs(items) do
-    if it and (reaper.ValidatePtr2 == nil or reaper.ValidatePtr2(0, it, "MediaItem*")) then
+    if is_valid_item(it) then
       reaper.SetMediaItemSelected(it, true)
     end
   end
@@ -1406,6 +1361,13 @@ local function isolate_focused_fx(FXtrack, focusedIndex)
   local cnt = reaper.TrackFX_GetCount(FXtrack)
   for i = 0, cnt-1 do
     reaper.TrackFX_SetEnabled(FXtrack, i, i == focusedIndex)
+  end
+end
+
+local function disable_all_fx(FXtrack)
+  local cnt = reaper.TrackFX_GetCount(FXtrack)
+  for i = 0, cnt-1 do
+    reaper.TrackFX_SetEnabled(FXtrack, i, false)
   end
 end
 
@@ -1483,15 +1445,115 @@ local function parse_as_tag(full)
 
   return base, tonumber(n), fx_tokens
 end
+local function embed_previous_tc_for_item(item)
+  if not item then return end
+  local tk = reaper.GetActiveTake(item)
+  if not tk then return end
+  local prev_tk = nil
+  local tc = reaper.CountTakes(item) or 0
+  local active_idx = -1
+  for i = 0, tc - 1 do
+    local t = reaper.GetMediaItemTake(item, i)
+    if t and t ~= tk then
+      prev_tk = t
+      if active_idx < 0 then active_idx = i end
+      break
+    elseif t == tk then
+      active_idx = i
+    end
+  end
+  if not prev_tk then return end
+  local meta_path = reaper.GetResourcePath() .. "/Scripts/hsuanice Scripts/Library/hsuanice_Metadata Embed.lua"
+  local ok_mod, E = pcall(dofile, meta_path)
+  if not ok_mod or type(E) ~= "table" then return end
+  if debug_enabled() then
+    local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION") or 0
+    local len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH") or 0
+    local offs_active = reaper.GetMediaItemTakeInfo_Value(tk, "D_STARTOFFS") or 0
+    local offs_prev = reaper.GetMediaItemTakeInfo_Value(prev_tk, "D_STARTOFFS") or 0
+    log_step("TC", "embed prev→active item=%s pos=%.6f len=%.6f takes=%d active_idx=%d offs_active=%.6f offs_prev=%.6f",
+      tostring(item), pos, len, tc, active_idx, offs_active, offs_prev)
+  end
+  local smp = E.TR_PrevToActive(prev_tk, tk)
+  local src = reaper.GetMediaItemTake_Source(tk)
+  local path = src and reaper.GetMediaSourceFileName(src, "") or ""
+  if path ~= "" and path:lower():sub(-4) == ".wav" then
+    local cli = E.CLI_Resolve()
+    if debug_enabled() and E.TR_Read then
+      local ok_read, smp_prev = pcall(E.TR_Read, cli, path)
+      log_step("TC", "embed tc: prev_read_ok=%s prev_smp=%s next_smp=%s path='%s'",
+        tostring(ok_read), tostring(smp_prev), tostring(smp), path)
+    end
+    local ok = (select(1, E.TR_Write(cli, path, smp)) == true)
+    if ok then
+      E.Refresh_Items({ tk })
+      if debug_enabled() then
+        log_step("TC", "embed tc: write ok path='%s' smp=%s", path, tostring(smp))
+      end
+    elseif debug_enabled() then
+      log_step("TC", "embed tc: write failed path='%s' smp=%s", path, tostring(smp))
+    end
+  elseif debug_enabled() then
+    log_step("TC", "embed tc: skip non-wav path='%s'", path)
+  end
+end
+local function embed_current_tc_from_item_start(item)
+  if not item then return end
+  local tk = reaper.GetActiveTake(item)
+  if not tk then return end
+  local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION") or 0
+  local offs = reaper.GetMediaItemTakeInfo_Value(tk, "D_STARTOFFS") or 0
+  local meta_path = reaper.GetResourcePath() .. "/Scripts/hsuanice Scripts/Library/hsuanice_Metadata Embed.lua"
+  local ok_mod, E = pcall(dofile, meta_path)
+  if not ok_mod or type(E) ~= "table" then return end
+  -- TR_FromItemStart already subtracts D_STARTOFFS internally
+  local smp = E.TR_FromItemStart(tk, pos)
+  local src = reaper.GetMediaItemTake_Source(tk)
+  local path = src and reaper.GetMediaSourceFileName(src, "") or ""
+  if debug_enabled() then
+    log_step("TC", "embed current(from item) pos=%.6f offs=%.6f smp=%s path='%s'",
+      pos, offs, tostring(smp), path)
+  end
+  if path ~= "" and path:lower():sub(-4) == ".wav" then
+    local cli = E.CLI_Resolve()
+    local ok = (select(1, E.TR_Write(cli, path, smp)) == true)
+    if ok then
+      E.Refresh_Items({ tk })
+    end
+    if debug_enabled() then
+      log_step("TC", "embed current(from item) write=%s path='%s'", tostring(ok), path)
+    end
+  end
+end
 -- Shared: move single item to FX track and apply "focused FX only"
-local function apply_focused_fx_to_item(item, FXmediaTrack, fxIndex, FXName)
+-- source_track_nchan_snapshot: optional table[source_track] = nchan for TS-WINDOW[GLOBAL] path (pre-glue snapshot of SOURCE tracks)
+local function apply_focused_fx_to_item(item, FXmediaTrack, fxIndex, FXName, source_track_nchan_snapshot)
   if not item then return false, -1 end
   local origTR = reaper.GetMediaItem_Track(item)
+
+  -- Ensure TC embed uses current timecode during Apply flow
+  local _, tc_embed_snap = reaper.GetProjExtState(0, "RGWH", "RENDER_TC_EMBED")
+  reaper.SetProjExtState(0, "RGWH", "RENDER_TC_EMBED", "current")
 
   -- ★ Snapshot take's channel info BEFORE moving (MoveMediaItemToTrack might affect it!)
   local tk = reaper.GetActiveTake(item)
   local orig_chanmode = tk and reaper.GetMediaItemTakeInfo_Value(tk, "I_CHANMODE") or 0
   local orig_src_ch = get_source_channels(item)
+
+  -- ★ Snapshot source track channel count (protect from REAPER auto-adjust on move back)
+  -- If called from TS-WINDOW[GLOBAL] with pre-glue snapshot, use that; otherwise snapshot now
+  local orig_track_nchan
+  if source_track_nchan_snapshot and source_track_nchan_snapshot[origTR] then
+    orig_track_nchan = source_track_nchan_snapshot[origTR]
+    if debug_enabled() then
+      log_step("TS-APPLY", "Using pre-glue SOURCE snapshot: orig_track_nchan=%d", orig_track_nchan)
+    end
+  else
+    orig_track_nchan = tonumber(reaper.GetMediaTrackInfo_Value(origTR, "I_NCHAN")) or 2
+    if debug_enabled() then
+      log_step("TS-APPLY", "Snapshot SOURCE now: orig_track_nchan=%d", orig_track_nchan)
+    end
+  end
 
   -- ★ NEW: snapshot FX enable state (preserve original bypass/enable)
   local fx_enable_snap = snapshot_fx_enables(FXmediaTrack)
@@ -1540,11 +1602,47 @@ local function apply_focused_fx_to_item(item, FXmediaTrack, fxIndex, FXName)
     end
   end
 
+  local multi_policy = reaper.GetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY")
+  if multi_policy == "" then multi_policy = "source_playback" end  -- default
+
+  -- In Multi+Source-Playback, keep mono items mono (use 40361).
+  if apply_fx_mode == "multi" and multi_policy == "source_playback" and ch <= 1 then
+    use_mono = true
+  end
+
   if use_mono then
     cmd_apply = 40361
   else
-    local desired = (ch % 2 == 0) and ch or (ch + 1)
-    if prev_nchan ~= desired then
+    -- Multi-channel mode: apply policy (only when explicitly set to "multi")
+    local desired = nil
+
+    if apply_fx_mode == "multi" then
+      -- Explicit Multi mode: apply policy
+      if multi_policy == "source_playback" then
+        -- Option 1: Match source item playback channels
+        desired = (ch % 2 == 0) and ch or (ch + 1)
+        if debug_enabled() then
+          log_step("TS-APPLY", "Multi policy: SOURCE-PLAYBACK (item_ch=%d → desired=%d)", ch, desired)
+        end
+      elseif multi_policy == "source_track" then
+        -- Option 2: Match source track channel count (use snapshotted value)
+        desired = (orig_track_nchan % 2 == 0) and orig_track_nchan or (orig_track_nchan + 1)
+        if debug_enabled() then
+          log_step("TS-APPLY", "Multi policy: SOURCE-TRACK (track_ch=%d → desired=%d)", orig_track_nchan, desired)
+        end
+      elseif multi_policy == "target_track" then
+        -- Option 3: Respect FX track's current channel count (no change)
+        desired = nil  -- Do not modify I_NCHAN
+        if debug_enabled() then
+          log_step("TS-APPLY", "Multi policy: TARGET-TRACK (keep I_NCHAN=%d)", prev_nchan)
+        end
+      end
+    else
+      -- Auto mode: use SOURCE-PLAYBACK logic (default behavior)
+      desired = (ch % 2 == 0) and ch or (ch + 1)
+    end
+
+    if desired and prev_nchan ~= desired then
       log_step("TS-APPLY", "I_NCHAN %d → %d (pre-apply)", prev_nchan, desired)
       reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", desired)
       did_set = true
@@ -1568,9 +1666,33 @@ local function apply_focused_fx_to_item(item, FXmediaTrack, fxIndex, FXName)
   local out = reaper.GetSelectedMediaItem(0, 0) or item
   append_fx_to_take_name(out, FXName)
   reaper.MoveMediaItemToTrack(out, origTR)
+  if debug_enabled() then
+    log_step("TC", "embed tc on output item=%s", tostring(out))
+  end
+  embed_previous_tc_for_item(out)
+
+  -- ★ Restore source track channel count (protect from REAPER auto-adjust)
+  -- Skip individual restore if called from TS-WINDOW[GLOBAL] (will be restored in batch at end)
+  if not source_track_nchan_snapshot then
+    reaper.SetMediaTrackInfo_Value(origTR, "I_NCHAN", orig_track_nchan)
+    if debug_enabled() then
+      log_step("TS-APPLY", "Restored SOURCE track I_NCHAN to %d", orig_track_nchan)
+    end
+  else
+    if debug_enabled() then
+      log_step("TS-APPLY", "Skipping individual SOURCE restore (will restore in batch at TS-WINDOW[GLOBAL] end)")
+    end
+  end
 
   -- ★ NEW: restore FX enable state (back to original bypass/enable)
   restore_fx_enables(FXmediaTrack, fx_enable_snap)
+
+  -- Restore TC embed setting
+  if tc_embed_snap ~= "" then
+    reaper.SetProjExtState(0, "RGWH", "RENDER_TC_EMBED", tc_embed_snap)
+  else
+    reaper.SetProjExtState(0, "RGWH", "RENDER_TC_EMBED", "")
+  end
 
   return true, cmd_apply
 end
@@ -1584,6 +1706,9 @@ local function apply_focused_via_rgwh_render_new_take(item, FXmediaTrack, fxInde
   local tk = reaper.GetActiveTake(item)
   local orig_chanmode = tk and reaper.GetMediaItemTakeInfo_Value(tk, "I_CHANMODE") or 0
   local orig_src_ch = get_source_channels(item)
+
+  -- ★ Snapshot source track channel count (protect from REAPER auto-adjust on move back)
+  local orig_track_nchan = tonumber(reaper.GetMediaTrackInfo_Value(origTR, "I_NCHAN")) or 2
 
   -- ★ NEW: snapshot FX enable state (preserve original bypass/enable)
   local fx_enable_snap = snapshot_fx_enables(FXmediaTrack)
@@ -1640,7 +1765,88 @@ local function apply_focused_via_rgwh_render_new_take(item, FXmediaTrack, fxInde
     end
   end
 
+  -- Apply Multi-Channel Policy if in explicit "multi" mode
+  if debug_enabled() then
+    log_step("RGWH-RENDER", "apply_fx_mode='%s' (checking if == 'multi')", apply_fx_mode)
+  end
+
+  if apply_fx_mode == "multi" then
+    local multi_policy = reaper.GetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY")
+    if multi_policy == "" then multi_policy = "source_playback" end
+    if debug_enabled() then
+      log_step("RGWH-RENDER", "Entering Multi-Channel Policy logic; policy='%s'", multi_policy)
+    end
+
+    local desired = nil
+
+    if multi_policy == "source_playback" then
+      -- Option 1: Match source item playback channels
+      local item_ch
+      if orig_chanmode == 2 or orig_chanmode == 3 or orig_chanmode == 4 then
+        item_ch = 1  -- mono modes
+      else
+        item_ch = orig_src_ch  -- use source channels
+      end
+      if item_ch <= 1 then
+        -- Keep mono items mono in source_playback policy
+        apply_fx_mode = "mono"
+      else
+        desired = (item_ch % 2 == 0) and item_ch or (item_ch + 1)
+      end
+      if debug_enabled() then
+        log_step("RGWH-RENDER", "Multi policy: SOURCE-PLAYBACK (item_ch=%d → desired=%d)", item_ch, desired or item_ch)
+      end
+    elseif multi_policy == "source_track" then
+      -- Option 2: Match source track channel count
+      local src_track_ch = tonumber(reaper.GetMediaTrackInfo_Value(origTR, "I_NCHAN")) or 2
+      desired = (src_track_ch % 2 == 0) and src_track_ch or (src_track_ch + 1)
+      if debug_enabled() then
+        log_step("RGWH-RENDER", "Multi policy: SOURCE-TRACK (track_ch=%d → desired=%d)", src_track_ch, desired)
+      end
+    elseif multi_policy == "target_track" then
+      -- Option 3: Respect FX track's current channel count (no change)
+      desired = nil  -- Do not modify I_NCHAN
+      if debug_enabled() then
+        local fx_track_ch = tonumber(reaper.GetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN")) or 2
+        log_step("RGWH-RENDER", "Multi policy: TARGET-TRACK (keep I_NCHAN=%d)", fx_track_ch)
+      end
+    end
+
+    if apply_fx_mode == "mono" then
+      -- Force mono render when source_playback is mono
+      local ok_call, ret_or_err = pcall(M.render_selection, 1, 1, "mono", "current")
+      reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "", false)
+      if not ok_call then
+        log_step("ERROR", "render_selection() runtime error: %s", tostring(ret_or_err))
+      end
+      local out = reaper.GetSelectedMediaItem(0, 0) or item
+      append_fx_to_take_name(out, FXName)
+      reaper.MoveMediaItemToTrack(out, origTR)
+      reaper.SetMediaTrackInfo_Value(origTR, "I_NCHAN", orig_track_nchan)
+      restore_fx_enables(FXmediaTrack, fx_enable_snap)
+      return true
+    end
+
+    -- Set FX track channel count before calling RGWH Core
+    if desired then
+      reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", desired)
+      if debug_enabled() then
+        log_step("RGWH-RENDER", "Set FX track I_NCHAN to %d before render", desired)
+      end
+    end
+
+    -- Tell RGWH Core to NOT restore FX track channel count (allows Multi-Channel Policy to work)
+    reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "0", false)
+  else
+    -- When not in Multi mode, allow RGWH Core to restore (for TARGET-TRACK policy compatibility)
+    reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "1", false)
+  end
+
   local ok_call, ret_or_err = pcall(M.render_selection, 1, 1, apply_fx_mode, "current")
+
+  -- Clear ExtState after RGWH Core execution
+  reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "", false)
+
   if not ok_call then
     log_step("ERROR", "render_selection() runtime error: %s", tostring(ret_or_err))
     -- Still attempt to retrieve new output below, in case Core errored but actually produced a new take
@@ -1650,6 +1856,12 @@ local function apply_focused_via_rgwh_render_new_take(item, FXmediaTrack, fxInde
   local out = reaper.GetSelectedMediaItem(0, 0) or item
   append_fx_to_take_name(out, FXName)
   reaper.MoveMediaItemToTrack(out, origTR)
+
+  -- ★ Restore source track channel count (protect from REAPER auto-adjust)
+  reaper.SetMediaTrackInfo_Value(origTR, "I_NCHAN", orig_track_nchan)
+  if debug_enabled() then
+    log_step("RGWH-RENDER", "Restored source track I_NCHAN to %d", orig_track_nchan)
+  end
 
   -- ★ NEW: restore FX enable state (back to original bypass/enable)
   restore_fx_enables(FXmediaTrack, fx_enable_snap)
@@ -1753,14 +1965,23 @@ function setNudge()
 end
 
 function main() -- main part of the script
-  reaper.Undo_BeginBlock()
+  -- Check if external caller wants to manage undo (for single undo in GUI/standalone scripts)
+  -- Set ExtState "hsuanice_AS/EXTERNAL_UNDO_CONTROL" = "1" to disable Core's internal undo block
+  local external_undo = (reaper.GetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL") == "1")
+
+  if not external_undo then
+    reaper.Undo_BeginBlock()
+  end
   reaper.PreventUIRefresh(1)
   if debug_enabled() then
     reaper.ShowConsoleMsg("\n=== AudioSweet (hsuanice) run ===\n")
   end
-  log_step("BEGIN", "selected_items=%d", reaper.CountSelectedMediaItems(0))
+  log_step("BEGIN", "selected_items=%d (external_undo=%s)", reaper.CountSelectedMediaItems(0), tostring(external_undo))
   -- snapshot original selection so we can restore it at the very end
   local sel_snapshot = snapshot_selection()
+
+  -- Snapshot track channel count (will be set after we know FXmediaTrack)
+  local track_nchan_snapshot = nil
 
   -- Focused FX check
   local AS_args = AS_merge_args_with_extstate({})
@@ -1780,7 +2001,9 @@ function main() -- main part of the script
   if ret_val ~= 1 then
     reaper.MB("Please focus a Track FX (not a Take FX).", "AudioSweet", 0)
     reaper.PreventUIRefresh(-1)
-    reaper.Undo_EndBlock("AudioSweet (no focused Track FX)", -1)
+    if not external_undo then
+      reaper.Undo_EndBlock("AudioSweet (no focused Track FX)", -1)
+    end
     return
   end
   log_step("FOCUSED-FX", "trackOut=%d  itemOut=%d  fxOut=%d  window=%s", tracknumber_Out, itemnumber_Out, fxnumber_Out, tostring(window))
@@ -1793,6 +2016,20 @@ function main() -- main part of the script
   log_step("FOCUSED-FX", "index(norm)=%d  name='%s' (raw='%s')  FXtrack=%s",
            fxIndex, tostring(FXName or ""), tostring(FXNameRaw or ""), tostring(FXmediaTrack))
 
+  -- Snapshot track channel count now that we have FXmediaTrack
+  if FXmediaTrack then
+    track_nchan_snapshot = reaper.GetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN")
+    log_step("SNAPSHOT", "track channel count = %d", track_nchan_snapshot or -1)
+  end
+
+  -- Helper function to restore track channel count
+  local function restore_track_nchan()
+    if FXmediaTrack and track_nchan_snapshot then
+      reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", track_nchan_snapshot)
+      log_step("RESTORE", "track channel count = %d", track_nchan_snapshot)
+    end
+  end
+
   -- Determine naming token based on mode (focused vs chain)
   local naming_token = FXName
   if AS_args.mode == "chain" then
@@ -1802,25 +2039,30 @@ function main() -- main part of the script
              tostring(naming_token), tostring(get_chain_token_source()))
   end
 
+  local AS = AS_merge_args_with_extstate({})
+  local is_apply_after_copy = (AS.action == "apply_after_copy")
+
   -- === Early branch: COPY mode (non-destructive; no rename) ===
-  do
-    local AS = AS_merge_args_with_extstate({})
-    if AS.action == "copy" then
-      local ops = 0
-      if AS.mode == "focused" then
-        ops = AS_copy_focused_fx_to_items(FXmediaTrack, fxIndex, AS)
-        log_step("COPY", "focused FX → items  scope=%s pos=%s  ops=%d", tostring(AS.scope), tostring(AS.append_pos), ops)
+  if AS.action == "copy" then
+    local ops = 0
+    if AS.mode == "focused" then
+      ops = AS_copy_focused_fx_to_items(FXmediaTrack, fxIndex, AS)
+      log_step("COPY", "focused FX → items  scope=%s pos=%s  ops=%d", tostring(AS.scope), tostring(AS.append_pos), ops)
+      if not external_undo then
         reaper.Undo_EndBlock(string.format("AudioSweet: Copy focused FX to items (%d op)", ops), 0)
-      else
-        ops = AS_copy_chain_to_items(FXmediaTrack, AS)
-        log_step("COPY", "FX CHAIN → items  scope=%s pos=%s  ops=%d", tostring(AS.scope), tostring(AS.append_pos), ops)
+      end
+    else
+      ops = AS_copy_chain_to_items(FXmediaTrack, AS)
+      log_step("COPY", "FX CHAIN → items  scope=%s pos=%s  ops=%d", tostring(AS.scope), tostring(AS.append_pos), ops)
+      if not external_undo then
         reaper.Undo_EndBlock(string.format("AudioSweet: Copy FX chain to items (%d op)", ops), 0)
       end
-      reaper.UpdateArrange()
-      restore_selection(sel_snapshot)
-      reaper.PreventUIRefresh(-1)
-      return
     end
+    reaper.UpdateArrange()
+    restore_selection(sel_snapshot)
+    restore_track_nchan()
+    reaper.PreventUIRefresh(-1)
+    return
   end
   -- === End COPY branch; continue into APPLY flow ===
 
@@ -1830,7 +2072,9 @@ function main() -- main part of the script
   if #units == 0 then
     reaper.MB("No media items selected.", "AudioSweet", 0)
     reaper.PreventUIRefresh(-1)
-    reaper.Undo_EndBlock("AudioSweet (no items)", -1)
+    if not external_undo then
+      reaper.Undo_EndBlock("AudioSweet (no items)", -1)
+    end
     return
   end
 
@@ -1869,6 +2113,23 @@ function main() -- main part of the script
       log_step("TS-WINDOW[GLOBAL]", "begin TS=[%.3f..%.3f] units_hit=%d", tsL, tsR, #hit)
       log_step("PATH", "ENTER TS-WINDOW[GLOBAL]")
 
+      -- ★ NEW: Snapshot all source track channel counts BEFORE glue operation
+      -- (Glue command 42432 may modify track channel counts, so we must snapshot first)
+      local source_track_nchan_snapshot = {}
+      for _,u in ipairs(hit) do
+        for _,it in ipairs(u.items) do
+          local tr = reaper.GetMediaItem_Track(it)
+          if tr and not source_track_nchan_snapshot[tr] then
+            local nchan = tonumber(reaper.GetMediaTrackInfo_Value(tr, "I_NCHAN")) or 2
+            source_track_nchan_snapshot[tr] = nchan
+            if debug_enabled() then
+              local tr_num = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER")
+              log_step("TS-WINDOW[GLOBAL]", "snapshot SOURCE track #%d I_NCHAN=%d (pre-glue)", tr_num, nchan)
+            end
+          end
+        end
+      end
+
       -- Select all items in intersecting units (on their original tracks)
       reaper.Main_OnCommand(40289, 0)
       for _,u in ipairs(hit) do
@@ -1891,12 +2152,20 @@ function main() -- main part of the script
       end
 
       for idx, it in ipairs(glued_items) do
-        local ok, used_cmd = apply_focused_fx_to_item(it, FXmediaTrack, fxIndex, naming_token)
+        local ok, used_cmd = apply_focused_fx_to_item(it, FXmediaTrack, fxIndex, naming_token, source_track_nchan_snapshot)
         if ok then
           log_step("TS-WINDOW[GLOBAL]", "applied %d to glued #%d", used_cmd or -1, idx)
           -- Get the actually applied item (function sets selection to this item)
           local out_item = reaper.GetSelectedMediaItem(0, 0)
-          if out_item then table.insert(outputs, out_item) end
+          if out_item then
+            if is_apply_after_copy then
+              local tr = reaper.GetMediaItem_Track(out_item)
+              local src_nchan = source_track_nchan_snapshot[tr]
+              local copied = copy_fx_to_non_active_takes(out_item, FXmediaTrack, fxIndex, src_nchan)
+              log_step("COPY", "apply_after_copy: copied FX to %d take(s)", copied)
+            end
+            table.insert(outputs, out_item)
+          end
         else
           log_step("TS-WINDOW[GLOBAL]", "apply failed on glued #%d", idx)
         end
@@ -1904,12 +2173,24 @@ function main() -- main part of the script
 
       log_step("TS-WINDOW[GLOBAL]", "done, outputs=%d", #outputs)
 
+      -- ★ NEW: Restore all source track channel counts (protect from REAPER auto-adjust during glue)
+      for tr, nchan in pairs(source_track_nchan_snapshot) do
+        reaper.SetMediaTrackInfo_Value(tr, "I_NCHAN", nchan)
+        if debug_enabled() then
+          local tr_num = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER")
+          log_step("TS-WINDOW[GLOBAL]", "restored SOURCE track #%d I_NCHAN=%d (post-all)", tr_num, nchan)
+        end
+      end
+
       -- Restore pre-execution selection (picks new glued/printed clips on same track and range)
       restore_selection(sel_snapshot)
       if debug_enabled() then dbg_dump_selection("RESTORE selection") end
+      restore_track_nchan()
 
       reaper.PreventUIRefresh(-1)
-      reaper.Undo_EndBlock("AudioSweet TS-Window (global) glue+print", 0)
+      if not external_undo then
+        reaper.Undo_EndBlock("AudioSweet TS-Window (global) glue+print", 0)
+      end
       return
     end
     -- else: TS hits 0 or 1 unit → fall through to per-unit branch below
@@ -1947,35 +2228,30 @@ function main() -- main part of the script
       local ok, used_cmd = apply_focused_fx_to_item(glued, FXmediaTrack, fxIndex, naming_token)
       if ok then
         log_step("TS-WINDOW[UNIT]", "applied %d", used_cmd or -1)
+        if is_apply_after_copy then
+          local src_nchan = tonumber(reaper.GetMediaTrackInfo_Value(u.track, "I_NCHAN")) or 2
+          local copied = copy_fx_to_non_active_takes(glued, FXmediaTrack, fxIndex, src_nchan)
+          log_step("COPY", "apply_after_copy: copied FX to %d take(s)", copied)
+        end
         table.insert(outputs, glued)  -- out item already moved back to original track
       else
         log_step("TS-WINDOW[UNIT]", "apply failed")
       end
     else
       --------------------------------------------------------------
-      -- Core/GLUE or RGWH Render:
+      -- Core/GLUE path (unified for both single and multi-item units):
       --   No TS or TS==unit:
-      --     • When unit has only 1 item → use RGWH Render (new take; keep old take)
-      --     • When unit has ≥2 items   → use Core/GLUE (with handles)
+      --     • All units (single or multi-item) → use Core/GLUE (with handles)
+      --     • GLUE mode produces single take (no old take preserved)
       --------------------------------------------------------------
-      if #u.items == 1 then
-        -- === Single item: use RGWH Render (render both Take FX and Track FX; keep old take) ===
-        local the_item = u.items[1]
-        -- Debug: check take chanmode BEFORE calling render function
+      -- === Use Core/GLUE for all units (single or multi-item) ===
+
+        -- ★ NEW: Snapshot source track channel count BEFORE moving items (protect from REAPER auto-adjust)
+        local orig_track_nchan_core = tonumber(reaper.GetMediaTrackInfo_Value(u.track, "I_NCHAN")) or 2
         if debug_enabled() then
-          local tk = reaper.GetActiveTake(the_item)
-          local pre_chanmode = tk and reaper.GetMediaItemTakeInfo_Value(tk, "I_CHANMODE") or 0
-          local pre_src_ch = get_source_channels(the_item)
-          log_step("UNIT", "pre-render: take chanmode=%d, source_ch=%d", pre_chanmode, pre_src_ch)
+          local tr_num = reaper.GetMediaTrackInfo_Value(u.track, "IP_TRACKNUMBER")
+          log_step("CORE", "snapshot SOURCE track #%d I_NCHAN=%d (pre-move)", tr_num, orig_track_nchan_core)
         end
-        local ok = apply_focused_via_rgwh_render_new_take(the_item, FXmediaTrack, fxIndex, naming_token)
-        if ok then
-          table.insert(outputs, the_item) -- already moved back to original track and renamed
-        else
-          log_step("ERROR", "single-item RGWH render failed")
-        end
-      else
-        -- === Multiple items: use Core/GLUE (with handles) ===
 
         -- Move all unit items to FX track (keep as-is), but select only the anchor for Core.
         move_items_to_track(u.items, FXmediaTrack)
@@ -2089,20 +2365,79 @@ function main() -- main part of the script
         snap.GLUE_TRACK_FX     = proj_get("RGWH","GLUE_TRACK_FX","")
         snap.GLUE_APPLY_MODE   = proj_get("RGWH","GLUE_APPLY_MODE","")
         snap.GLUE_SINGLE_ITEMS = proj_get("RGWH","GLUE_SINGLE_ITEMS","")
+        snap.RENDER_TC_EMBED   = proj_get("RGWH","RENDER_TC_EMBED","")
 
         -- Set desired flags
         proj_set("RGWH","GLUE_TAKE_FX","1")
         proj_set("RGWH","GLUE_TRACK_FX","1")
         proj_set("RGWH","GLUE_APPLY_MODE",apply_fx_mode)
         proj_set("RGWH","GLUE_SINGLE_ITEMS","1")
+        -- Do not override RGWH TC embed mode; preserve its own setting
 
         if debug_enabled() then
           local _, gsi = reaper.GetProjExtState(0, "RGWH", "GLUE_SINGLE_ITEMS")
           log_step("CORE", "flag GLUE_SINGLE_ITEMS=%s (expected=1 for unit-glue)", (gsi == "" and "(empty)") or gsi)
         end
 
+        -- ★ NEW: Apply Multi-Channel Policy (only when explicitly set to "multi")
+        local desired_nchan_for_copy = nil
+        if apply_fx_mode == "multi" then
+          local multi_policy = reaper.GetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY")
+          if multi_policy == "" then multi_policy = "source_playback" end
+          if debug_enabled() then
+            log_step("CORE", "Entering Multi-Channel Policy logic; policy='%s'", multi_policy)
+          end
+
+          local desired = nil
+
+          if multi_policy == "source_playback" then
+            -- Option 1: Match unit's max playback channels
+            local unit_ch = unit_max_channels(u)
+            if unit_ch <= 1 then
+              -- Keep mono items mono in source_playback policy
+              apply_fx_mode = "mono"
+            else
+              desired = (unit_ch % 2 == 0) and unit_ch or (unit_ch + 1)
+              desired_nchan_for_copy = desired
+            end
+            if debug_enabled() then
+              log_step("CORE", "Multi policy: SOURCE-PLAYBACK (unit_max_ch=%d → desired=%d)", unit_ch, desired or unit_ch)
+            end
+          elseif multi_policy == "source_track" then
+            -- Option 2: Match source track channel count
+            local src_track_ch = orig_track_nchan_core  -- Use the snapshotted value
+            desired = (src_track_ch % 2 == 0) and src_track_ch or (src_track_ch + 1)
+            desired_nchan_for_copy = desired
+            if debug_enabled() then
+              log_step("CORE", "Multi policy: SOURCE-TRACK (track_ch=%d → desired=%d)", src_track_ch, desired)
+            end
+          elseif multi_policy == "target_track" then
+            -- Option 3: Respect FX track's current channel count (no change)
+            desired = nil  -- Do not modify I_NCHAN
+            local fx_track_ch = tonumber(reaper.GetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN")) or 2
+            desired_nchan_for_copy = fx_track_ch
+            if debug_enabled() then
+              log_step("CORE", "Multi policy: TARGET-TRACK (keep I_NCHAN=%d)", fx_track_ch)
+            end
+          end
+
+          -- Set FX track channel count before calling RGWH Core
+          if desired then
+            reaper.SetMediaTrackInfo_Value(FXmediaTrack, "I_NCHAN", desired)
+            if debug_enabled() then
+              log_step("CORE", "Set FX track I_NCHAN to %d before glue", desired)
+            end
+          end
+
+          -- Tell RGWH Core to NOT restore FX track channel count (allows Multi-Channel Policy to work)
+          reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "0", false)
+        else
+          -- When not in Multi mode, allow RGWH Core to restore (default behavior)
+          reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "1", false)
+        end
+
         -- Prepare arguments and call Core
-        if not (anchor and (reaper.ValidatePtr2 == nil or reaper.ValidatePtr2(0, anchor, "MediaItem*"))) then
+        if not is_valid_item(anchor) then
           log_step("ERROR", "anchor item invalid (u.items[1]=%s)", tostring(anchor))
           reaper.MB("Internal error: unit anchor item is invalid.", "AudioSweet", 0)
           failed = true
@@ -2124,6 +2459,10 @@ function main() -- main part of the script
           end
 
           local ok_call, ok_apply, err = pcall(core_api, args)
+
+          -- Clear ExtState after RGWH Core execution
+          reaper.SetExtState("hsuanice_AS", "RGWH_PRESERVE_TRACK_CH", "", false)
+
           if not ok_call then
             log_step("ERROR", "M.core() runtime error: %s", tostring(ok_apply))
             reaper.MB("RGWH Core M.core() runtime error:\n" .. tostring(ok_apply), "AudioSweet — Core error", 0)
@@ -2144,6 +2483,7 @@ function main() -- main part of the script
         proj_set("RGWH","GLUE_TRACK_FX",     snap.GLUE_TRACK_FX)
         proj_set("RGWH","GLUE_APPLY_MODE",   snap.GLUE_APPLY_MODE)
         proj_set("RGWH","GLUE_SINGLE_ITEMS", snap.GLUE_SINGLE_ITEMS)
+        proj_set("RGWH","RENDER_TC_EMBED",   snap.RENDER_TC_EMBED)
 
         -- Pick output, rename, move back
         if not failed then
@@ -2155,6 +2495,12 @@ function main() -- main part of the script
             append_fx_to_take_name(postItem, naming_token)
             local origTR = u.track
             reaper.MoveMediaItemToTrack(postItem, origTR)
+            -- Fix TC after RGWH glue/apply; use item start minus handle (D_STARTOFFS)
+            embed_current_tc_from_item_start(postItem)
+            if is_apply_after_copy then
+              local copied = copy_fx_to_non_active_takes(postItem, FXmediaTrack, fxIndex, orig_track_nchan_core)
+              log_step("COPY", "apply_after_copy: copied FX to %d take(s)", copied)
+            end
             table.insert(outputs, postItem)
           end
 
@@ -2171,7 +2517,13 @@ function main() -- main part of the script
 
         -- ★ NEW: restore FX enable state (back to original bypass/enable)
         restore_fx_enables(FXmediaTrack, fx_enable_snap_core)
-      end
+
+        -- ★ NEW: Restore source track channel count (protect from REAPER auto-adjust during move back)
+        reaper.SetMediaTrackInfo_Value(u.track, "I_NCHAN", orig_track_nchan_core)
+        if debug_enabled() then
+          local tr_num = reaper.GetMediaTrackInfo_Value(u.track, "IP_TRACKNUMBER")
+          log_step("CORE", "restored SOURCE track #%d I_NCHAN=%d (post-move)", tr_num, orig_track_nchan_core)
+        end
     end
     ::continue_unit::
   end
@@ -2181,11 +2533,22 @@ function main() -- main part of the script
   -- Restore pre-execution selection
   restore_selection(sel_snapshot)
   if debug_enabled() then dbg_dump_selection("RESTORE selection") end
+  restore_track_nchan()
 
   reaper.PreventUIRefresh(-1)
-  reaper.Undo_EndBlock("AudioSweet multi-item glue", 0)
+  if not external_undo then
+    reaper.Undo_EndBlock("AudioSweet multi-item glue", 0)
+  end
 end
 
 reaper.PreventUIRefresh(1)
-main()
+local function as_err_handler(err)
+  return tostring(err)
+end
+local ok, err = xpcall(main, as_err_handler)
+if not ok then
+  local msg = "[AS][ERROR] " .. tostring(err)
+  reaper.ShowConsoleMsg(msg .. "\n")
+  reaper.MB("AudioSweet Core error:\n" .. tostring(err), "AudioSweet — Core error", 0)
+end
 reaper.PreventUIRefresh(-1)
