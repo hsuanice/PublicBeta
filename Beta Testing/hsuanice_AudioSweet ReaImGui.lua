@@ -1,7 +1,7 @@
 --[[
 @description AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)
 @author hsuanice
-@version 0.1.14
+@version 0.2.0
 @provides
   [main] .
 @about
@@ -27,227 +27,188 @@
   This script was developed with the assistance of AI tools
   including ChatGPT and Claude AI.
 
+  ## Future Development
+  Planned features and experimental ideas for future implementation:
+
+  ### Approved for Implementation
+  - **Independent AudioSweet Run Scripts**: Create standalone action list scripts
+    • Run (Stop mode): Standard execution reading all GUI ExtState settings
+    • Run (Preview mode): Process items in item/time selection during preview
+      - Stop preview, preserve FX state/bypass
+      - Execute RGWH Core print/render with current FX configuration
+      - Return processed items to original track positions
+      - Resume preview workflow
+
+  - **Independent Solo Script**: Unified solo logic extractable to action list
+    • Priority: Focused FX/chain track → Default chain track
+    • Can be assigned to keyboard shortcuts independently
+
+  - **Right Handle Only Mode**: Extends existing audio content (different from tail)
+    • Processes additional duration on right side only
+    • Handle extends content that already exists in source
+
+  - **Fixed-Length Tail Mode**: FX tail from non-handle content processing
+    • Important: RIGHT HANDLE ≠ TAIL MODE
+    • Tail = reverb/delay tail printed from non-handle processed content
+    • Fixed parameter: user-defined length (e.g., 3s, 5s)
+    • Tail processes decay/reverb after main content, not extended source
+
+  ### Deferred Ideas for Research
+  - **Live FX Switching During Preview**: Dynamic FX parameter changes
+    • Challenge: Requires real-time FX state synchronization
+    • Needs investigation of REAPER API capabilities
+
+  - **Auto Tail Detection**: Intelligent tail length via audio analysis
+    • Analyze processed audio amplitude/RMS to detect natural decay
+    • Auto-determine tail length based on reverb/delay characteristics
+    • Advanced feature requiring signal processing research
+
 
 @changelog
-  v0.1.14
-    + FIXED: Custom names now fully support type/vendor display toggles
-    + CHANGED: Rename dialog shows core name only, respects alias settings
-    + ADDED: Smart helper functions for custom name handling
-    + UPDATED: Display logic preserves original FX metadata while using custom names
-  0.1.13 [Internal Build 251220.0750] - Help System Refactoring
-    - ADDED: In-app User Manual window (Help → User Manual)
-      • New tabbed GUI window with 4 sections
-      • Tab 1: Getting Started (Overview, Core Features, Operation Modes)
-      • Tab 2: Actions & Presets (Main Actions, Preset System)
-      • Tab 3: History & Workflows (History System, Workflow Examples)
-      • Tab 4: Tips & Troubleshooting (Tips, Keyboard Shortcuts, Troubleshooting)
-      • Window size: 700x600, scrollable content
-      • Lines: 4186-4441 (help window implementation)
-    - SIMPLIFIED: @about section (lines 7-28)
-      • Removed all manual content (moved to GUI)
-      • Now only contains: Quick Start, Reference, Development credits
-      • Much cleaner ReaPack package description
-      • Users directed to Help → User Manual for full docs
-    - IMPROVED: Help menu structure
-      • Help → User Manual (opens GUI window)
-      • Help → About (prints reference to console)
-      • Clear separation between documentation and credits
-      • Lines: 3657-3685 (updated Help menu)
-    - ADDED: GUI state variable
-      • gui.show_help_window flag (line 1399)
-      • Controls help window visibility
-    - UX: Better documentation access
-      • No need to read @about in ReaPack or text editor
-      • Interactive, searchable (via tabs) manual
-      • Always available in Help menu
-      • Consistent with Settings window design
+  v0.2.0 [Internal Build 251223.2256] - Public Beta Release
+    - ADDED: Copy+Apply mode (GUI + Core) with consistent undo + stable multichannel IO
+    - ADDED: AudioSweet Run/Solo/Preview Toggle tools (Action List workflow)
+    - ADDED: Multi-Channel Policy system + Channel Mode settings
+    - ADDED: Whole File handle option + BWF MetaEdit detection/install guide
+    - ADDED: Unified Settings window + in-app User Manual
+    - FIXED: Unified Core/GLUE path for all processing (removes RGWH Render path)
+    - FIXED: Single undo behavior across GUI/Run/Saved/History
+    - FIXED: FX index tracking + name fallback after reorder
+    - FIXED: Preview target GUID handling + duplicate track name targeting
+    - REMOVED: Legacy Preview Solo Exclusive tools (replaced by Preview Toggle)
 
-  0.1.12 [Internal Build 251220.0744] - FX Index Tracking Fix
-    - FIXED: Critical bug where presets/history execute wrong FX after reordering
-      • Problem: Stored fx_index becomes invalid when FX order changes on track
-      • Impact: Open and Execute buttons would process incorrect FX
-      • Root cause: Only index validation without name verification
-      • Lines affected: run_history_focused_apply (3277+), run_focused_fx_copy_mode (2947+)
-    - ADDED: Unified FX resolution function for consistent lookup
-      • New function: find_fx_on_track(track, saved_fx_index, saved_fx_name)
-      • Method 1: Try saved index with name verification (fast path)
-      • Method 2: Search by exact name if index invalid (fallback)
-      • Returns: actual_fx_idx, actual_fx_name, status
-      • Status values: "found_by_index", "found_by_name", "invalid_track", "no_fx", "not_found"
-      • Lines: 2244-2274 (unified FX resolution function)
-    - REFACTORED: All FX lookup operations now use unified function
-      • get_chain_display_info(): Lines 2359+ (display name generation)
-      • get_history_display_name(): Lines 2444+ (history display names)
-      • show_preset_tooltip(): Lines 2507+ (tooltip hover highlighting)
-      • open_saved_chain_fx(): Lines 3265+ (Open button)
-      • run_history_focused_apply(): Lines 3283+ (Execute/Apply)
-      • run_focused_fx_copy_mode(): Lines 2953+ (Copy mode)
-      • Eliminated ~70 lines of duplicate FX lookup code
-    - ADDED: Smart debug logging with anti-spam cache
-      • Tooltip hover: Shows when FX moved (line 2477-2487)
-      • Open button: Shows saved vs actual index (line 3272-3277)
-      • Execute operations: Already had debug logs
-      • Cache mechanism: Only logs each FX movement ONCE per session
-      • Cache key: "track_guid|fx_name|saved_idx|actual_idx"
-      • Cache storage: gui.fx_move_logged table (line 1388)
-      • Result: Clean, readable debug output without repetition
-    - TECHNICAL: DRY principle applied to FX resolution
-      • Single source of truth for FX lookup logic
-      • Easier to maintain and extend (e.g., fuzzy matching)
-      • Consistent behavior across all operations
-    - BEHAVIOR: Graceful fallback when FX order changes
-      • Index mismatch: Falls back to name search automatically
-      • FX not found: Clear error message with FX name
-      • Backward compatible: Existing presets work without migration
-    - EDGE CASES: Handled edge cases
-      • Invalid track pointer: Returns "invalid_track" status
-      • Empty FX chain: Returns "no_fx" status
-      • FX deleted: Returns "not_found" with clear error message
-      • Duplicate FX names: Matches first occurrence (same as before)
+  v0.1.27 [Internal Build 251223.2236] - Version Sync
+    - CHANGED: Version bump to align with Core changes (no UI behavior change)
 
-  0.1.11 [Internal Build 251219.2245] - Unified Settings Window
-    - REDESIGNED: Unified Settings window with tabbed interface
-      • New: Settings → Settings... opens unified window
-      • Previous: 5 separate settings popups (History, File Naming, Preset/History Display, Preview, Timecode)
-      • Now: Single window with 5 tabs (FX Display, File Naming, Preview, History, Timecode)
-      • Lines: 3608-3945 (unified settings window implementation)
-    - IMPROVED: Settings menu reorganization
-      • Kept: Settings → Enable Window Docking (independent checkbox in menu)
-      • Removed: Individual setting menu items
-      • Added: Settings → Settings... (opens unified tabbed window)
-      • Lines: 3512-3526 (simplified settings menu)
-    - RENAMED: "Preset/History Display" → "FX Display"
-      • More accurate name covering all contexts: Button, Tooltip, Status, FX List
-      • Now appears as first tab in unified Settings window
-    - TECHNICAL: New GUI state variable
-      • Added: gui.show_unified_settings flag (line 1329)
-      • Controls unified settings window visibility
-    - IMPROVED: Better user experience with organized settings
-      • All settings in one place with clear categorization
-      • Easy navigation between different setting categories
-      • Consistent UI with tabbed interface
-    - LEGACY: Old popup code kept for backward compatibility
-      • Lines: 3947+ (legacy individual popups)
-      • Can be safely removed in future versions
+  v0.1.26 [Internal Build 251223.1924] - Copy+Apply UI + Settings Logs
+    - CHANGED: Copy+Apply label + hover note about IO mapping limitations
+    - CHANGED: Copy settings now show only for Copy (not Copy+Apply)
+    - FIXED: GUI startup logging duplication; include Channel Policy in settings log
 
-  0.1.10 [Internal Build 251219.2230] - FX Display Settings Refactoring
-    - REFACTORED: Unified FX label formatting with context-based settings
-      • New: format_fx_label(raw_label, context) function supports 4 contexts
-      • Contexts: "button", "tooltip", "status", "fxlist"
-      • Lines: 1669-1721 (unified formatting function)
-      • Legacy functions preserved for backward compatibility (1723-1730)
-    - ADDED: Individual display settings for 4 different contexts
-      • Button Display: Controls Preset/History button names
-      • Tooltip Display: Controls hover info formatting
-      • Status Display: Controls bottom status bar FX name
-      • FX List Display: Controls Chain mode FX list formatting
-      • Each context has 3 settings: show_type, show_vendor, use_alias
-      • Total: 12 new settings variables (lines 1243-1259)
-    - IMPROVED: Settings UI redesigned with 4 sections
-      • Menu: Settings → Preset/History Display...
-      • Section 1: Button Display (Preset/History Buttons)
-      • Section 2: Tooltip Display (Hover Info)
-      • Section 3: Status Display (Bottom Bar)
-      • Section 4: FX Chain List Display (Chain Mode)
-      • Lines: 3737-3837 (new settings popup)
-    - FIXED: Status bar now supports show_type and show_vendor settings
-      • Previous: Only formatted when use_alias = true
-      • Now: Respects all 3 settings independently
-      • Line: 1729 (uses unified format_fx_label function)
-    - FIXED: FX Chain List now applies formatting
-      • Previous: Displayed raw fx.name without formatting
-      • Now: Uses format_fx_label(fx.name, "fxlist")
-      • Line: 4382 (format FX names in chain list)
-    - IMPROVED: Tooltip formatting now uses dedicated settings
-      • Previous: Shared settings with buttons
-      • Now: Independent tooltip_show_type, tooltip_show_vendor, tooltip_use_alias
-      • Lines: 2358, 2374 (tooltip uses "tooltip" context)
-    - REMOVED: Old preset_display_* settings (backward incompatible)
-      • Replaced with new 4-context system
-      • Settings reset to defaults on first run with new version
-    - TECHNICAL: Updated save/load settings functions
-      • Save: Lines 1328-1341 (12 new ExtState keys)
-      • Load: Lines 1389-1402 (12 new settings with defaults)
-    - EXAMPLE: Flexible display configuration
-      • Button: Type=ON, Vendor=OFF, Alias=ON → "VST3: ProQ4"
-      • Tooltip: Type=ON, Vendor=ON, Alias=ON → "VST3: ProQ4 (FabFilter)"
-      • Status: Type=ON, Vendor=ON, Alias=OFF → "VST3: Pro-Q 4 (FabFilter)"
-      • FX List: Type=OFF, Vendor=OFF, Alias=OFF → "Pro-Q 4"
+  v0.1.25 [Internal Build 251222.2009] - Keyboard Shortcut Input Detection
+    - ADDED: Shortcut handling before ImGui.Begin()
+      • Space = Stop transport (command 40044)
+      • S = Solo toggle (respects Preview Solo Scope)
+    - SAFETY: Ignores shortcuts while typing in inputs (IsAnyItemActive)
 
-  0.1.9 [Internal Build 251219.2216] - Rename preset/history improvements
-    - IMPROVED: Preset rename now pre-fills with formatted FX name (matches button display)
-      • Previous: Focused mode showed raw FX name (e.g., "VST3: Pro-Q 4 (FabFilter)")
-      • Now: Shows formatted name respecting Display Settings (e.g., "ProQ4" if using alias)
-      • Lines: 4065-4080 (get current FX and apply format_fx_label_for_preset)
-    - IMPROVED: Rename popup hint text now shows formatted FX name (consistent with button)
-      • Previous: Hint showed raw FX name regardless of display settings
-      • Now: Hint uses format_fx_label_for_preset() to match current display format
-      • Line: 4464 (use formatted_name for hint text)
-    - ADDED: History items now support right-click rename (same as presets)
-      • New: Right-click context menu on history items with "Rename" option
-      • Lines: 4140-4166 (history context menu implementation)
-      • Pre-fills with formatted name for focused mode, track name for chain mode
-    - ADDED: New rename_history_item() function for renaming history entries
-      • Function: rename_history_item(idx, new_custom_name)
-      • Lines: 2041-2080 (bidirectional sync between history and presets)
-      • Syncs custom_name to matching saved presets automatically
-    - ADDED: Bidirectional rename sync between presets and history
-      • Rename preset → updates matching history items
-      • Rename history → updates matching saved presets
-      • Match criteria: track_guid + mode + (fx_index for focused, name for chain)
-    - IMPROVED: Rename popup now dynamically shows "Preset Name" or "History Name"
-      • Lines: 4441-4499 (unified popup for both preset and history)
-      • Uses gui.rename_is_history flag to determine source and target
-    - TECHNICAL: Added gui.rename_is_history flag to track rename source
-      • Line: 1239 (initialization)
-      • Set to false for preset rename (line 4101)
-      • Set to true for history rename (line 4187)
+  v0.1.24 [Internal Build 251222.1706] - Single Undo for All Executions
+    - CHANGED: All GUI Run executions now produce single undo operation
+      • Main Run button: External undo control enabled
+      • Saved Chains execution: External undo control enabled
+      • History execution: External undo control enabled
+      • AudioSweet Core v0.1.7: Skips internal undo when EXTERNAL_UNDO_CONTROL="1"
+      • Cleaner undo stack (one entry instead of nested blocks)
+    - BENEFIT: Simplified undo experience
+      • GUI Run → Single "AudioSweet GUI: Focused/Chain Apply/Copy" undo
+      • Saved Chain → Single "AudioSweet GUI: Apply/Copy [Chain Name]" undo
+      • History → Single "AudioSweet GUI: Apply/Copy [History Name]" undo
+    - CHANGED: Unified all processing to use Core/GLUE path (RGWH Render path eliminated)
+      • AudioSweet Core v0.1.7: Single-item units now use Core/GLUE instead of RGWH Render
+      • GLUE mode produces single take (no old take preserved)
+      • Fixes position issues that occurred with RGWH Render path
+      • Multi-Channel Policy already implemented in Core/GLUE path (works immediately)
+      • Consistent behavior across all unit sizes (single/multi-item)
 
-  0.1.8 [Internal Build 251219.1935] - Preset/History display alignment fix
-    - Fixed: Preset/History header toggles align without stretching window width
+  v0.1.23 [Internal Build 251222.1651] - Unified GLUE Path for All Processing
+    - CHANGED: All units now use Core/GLUE path (RGWH Render path eliminated)
+      • AudioSweet Core v0.1.6: Single-item units now use Core/GLUE instead of RGWH Render
+      • GLUE mode produces single take (no old take preserved)
+      • Fixes position issues that occurred with RGWH Render path
+      • Multi-Channel Policy already implemented in Core/GLUE path (works immediately)
+      • Consistent behavior across all unit sizes (single/multi-item)
+    - BENEFIT: All processing paths now behave identically
+      • Single-item: Core/GLUE
+      • Multi-item: Core/GLUE
+      • TS-WINDOW: Core/GLUE (already working)
+      • Simpler codebase, more predictable results
 
-  0.1.7 [Internal Build 251219.1915] - Preset/History display alias mapping
-    - Added: Preset/History display formatting now reads type/vendor/name from fx_alias.json when alias mode is enabled
+  v0.1.22 [Internal Build 251222.1622] - RGWH & AudioSweet Multi-Channel Policy Integration
+    - ADDED: Complete Multi-Channel Policy support across ALL execution paths
+      • RGWH Core v0.1.1: Added preserve_track_ch parameter + ExtState control (RGWH_PRESERVE_TRACK_CH)
+      • AudioSweet Core v0.1.5: All paths now correctly implement Multi-Channel Policy
+      • Single-item units (RGWH Render): Policy now works correctly (was overridden by RGWH Core)
+      • Multi-item units (Core/GLUE): Policy now fully implemented (was missing)
+      • TS-WINDOW paths: Continue to work correctly (no changes needed)
+    - FIXED: Single-item and multi-item units now produce consistent results
+      • SOURCE-PLAYBACK: Matches item/unit playback channels
+      • SOURCE-TRACK: Matches source track channel count
+      • TARGET-TRACK: Respects FX track channel count (passive mode)
+    - TECHNICAL: ExtState-based communication between AudioSweet and RGWH Core
+      • AudioSweet sets RGWH_PRESERVE_TRACK_CH before calling RGWH Core
+      • RGWH Core respects this setting (backward compatible, defaults to preserve=true)
+      • Enables both tools to work independently with their own policies
 
-  0.1.6 [Internal Build 251219.1800] - Apply layout compact
-    - Changed: Moved Handle control to the Channel row for a two-line top layout
+  v0.1.21 [Internal Build 251222.1122] - Core/GLUE Source Track Protection
+    - FIXED: Multi-item unit processing source track protection
+      • AudioSweet Core v0.1.4: Core/GLUE path now protects source track channel count
+      • Previously: processing 3-member unit changed source track from 4ch to 6ch (incorrect)
+      • Now: source track channel count preserved at original value (correct)
+      • Affects per-unit path when unit has ≥2 items without Time Selection
+      • Completes source track protection coverage for all execution paths
 
-  0.1.5 [Internal Build 251219.1754] - Preset/History show toggle
-    - Added: Toggle to show/hide Presets/History block with persistent setting
+  v0.1.20 [Internal Build 251222.1103] - Multi-Unit Multi-Channel Policy Fix
+    - FIXED: Multi-unit processing across tracks with SOURCE-TRACK policy
+      • When processing multiple units across different tracks simultaneously, second unit now reads correct source track channel count
+      • AudioSweet Core v0.1.3: TS-WINDOW[GLOBAL] path now snapshots ALL source track channel counts BEFORE glue operation
+      • Previously: glue operation modified track channel counts before second unit snapshot (incorrect)
+      • Now: all units use pre-glue snapshot values (correct)
+      • Ensures consistent behavior when processing single vs multiple units
 
-  0.1.4 [Internal Build 251219.1745] - Removed Presets menu tab
-    - Removed: Presets menu from the top menu bar (use main controls instead)
+  v0.1.19 [Internal Build 251222.1035] - Multi-Channel Policy System
+    - ADDED: Complete Multi-Channel Policy system with 3 options (Settings → Channel Mode)
+      • SOURCE playback: Match item's actual playback channels (default, current behavior)
+      • SOURCE track: Match source track channel count (RGWH/Pro Tools style)
+      • TARGET track: Respect FX track's current channel count (passive mode)
+      • Policy only applies when Channel Mode is explicitly set to "Multi"
+      • Auto/Mono modes use default behavior (not affected by policy)
+    - ADDED: Settings → Channel Mode tab with 3 RadioButton options
+      • Each option has description and example usage
+      • Orange warning when Channel Mode is not "Multi"
+      • Settings saved to ExtState: multi_channel_policy (source_playback/source_track/target_track)
+    - ADDED: Multi RadioButton tooltip update
+      • Shows current policy name
+      • Hints user to configure in Settings → Channel Mode
+      • Removed Shift+Click toggle (moved to Settings)
+    - ADDED: ExtState synchronization to Core namespace
+      • save_gui_settings() now syncs AS_MULTI_CHANNEL_POLICY to hsuanice_AS
+      • set_extstate_from_gui() syncs policy when running from GUI button
+      • Ensures policy works for both GUI button and Run.lua execution
+    - ADDED: Multi-Channel Policy display in startup debug log
+      • Shows policy when Channel Mode is Multi
+      • Format: "Multi-Channel Policy: SOURCE playback/track or TARGET track"
+    - CHANGED: Tab numbering updated (Channel Mode is Tab 4, Timecode is Tab 6)
 
-  0.1.3 [Internal Build 251219.1730] - Dynamic list height refinement
-    - Improved: Saved presets and History lists now auto-fit content height with no extra blank row
-
-  0.1.2 [Internal Build 251218.2240] - Disabled collapse arrow
-    - Added: Main GUI window now has collapse controls disabled (WindowFlags_NoCollapse) to prevent accidental collapse errors reported by users
-
-  0.1.1 [Internal Build 251218.2150] - BWF MetaEdit reminder + install guide
-    - Added: CLI detection at startup with warning banner so users know TC embedding requires bwfmetaedit
-    - Added: Settings > Timecode Embed modal showing status, custom path input, and re-check/install buttons
-    - Added: Homebrew install guide popup with copy-friendly commands for quick setup
-
-  0.1.0 [Internal Build 251215.1330] - ESC KEY FIX & WINDOW POSITION IMPROVEMENTS
-    - FIXED: ESC key now correctly closes main window and popups.
-      • Problem 1: ESC in Settings popups closed main window instead of popup
-      • Problem 2: ESC couldn't close main window when controls were active
-      • Root cause: ESC handler was in wrong location and missing IsWindowFocused() check
-      • Solution: Moved main window ESC handler to immediately after ImGui.Begin() (line 2774)
-      • Solution: Use IsWindowFocused() for all ESC handlers (main: 2774, popups: 2914, 2953, 3118)
-      • Impact: ESC closes focused window correctly, matching RGWH GUI behavior
-      • Reference: RGWH GUI ESC handler at line 1726 (immediately after Begin)
-    - FIXED: Main window position now remembered across sessions.
-      • Problem: Window always opened at default position, ignoring previous placement
-      • Root cause: SetNextWindowPos() overrode ImGui's automatic position memory
-      • Solution: Removed SetNextWindowPos() for main window, let ImGui handle position persistence
-      • Impact: Main window reopens where user last placed it
-    - ATTEMPTED: Settings popups open near mouse cursor (partial implementation).
-      • Implementation: Use GetMousePosition() + SetNextWindowPos() with Cond_Appearing
-      • Note: Popup modals may have limitations with position override in ReaImGui
-      • Affected popups: History Settings (2906-2907), File Naming (2945-2946), Preview (3110-3111)
-    - PURPOSE: Better UX - consistent window management matching RGWH GUI behavior
+  v0.1.18.1 [Internal Build 251221.2133] - Multi-Channel Policy UI (deprecated)
+    - NOTE: This version was experimental; v0.1.19 is the complete implementation
+  v0.1.18 [Internal Build 251221.1937] - Auto Mode + Single Rename
+    - ADDED: Auto mode for window-based focused/chain detection
+    - CHANGED: "Focused" label renamed to "Single"
+    - UI: Auto moved to first position with hover tooltips
+  v0.1.17 [Internal Build 251221.1822] - Chain Run Without Focus + Button Enable
+    - FIXED: Chain mode run now works without focused FX window
+      • Falls back to preview target track when no focused FX is available
+    - FIXED: AUDIOSWEET button now enabled in chain mode without focused FX
+  v0.1.16 [Internal Build 251221.1722] - Debug ExtState Logging
+    - ADDED: Console logging when GUI debug is enabled
+      • save_gui_settings() now prints a timestamped ExtState update header
+      • Logs key settings after each change (channel mode, handles, preview target, etc.)
+  v0.1.15 [Internal Build 251220.2350] - Whole File Handle Option
+    - ADDED: "Whole File" toggle option for rendering/gluing entire file length
+      • New GUI element: Checkbox next to handle seconds input
+      • When enabled, processes entire media item source length instead of handles
+      • Implementation: Sets HANDLE_SECONDS to 999999, RGWH Core auto-clamps to available length
+      • Handle seconds input becomes disabled (grayed out) when Whole File is checked
+      • Setting persisted in GUI state (saved/loaded between sessions)
+      • Lines: gui init (1210), save (1299), load (1361), GUI layout (4714-4735)
+    - CHANGED: GUI layout for handles section
+      • Removed "Handle:" and "seconds" text labels for cleaner layout
+      • Layout: Channel options → [65px spacing] → Whole File checkbox → handle input
+      • Handle input width: 80px (unchanged)
+    - FIXED: Whole file logic implementation
+      • Focused mode: Sets handle value before execution (lines 2631-2633)
+      • Chain mode: Sets handle value before execution (lines 3144-3146)
+      • Debug messages: Display "whole file" instead of seconds when enabled (lines 1425, 3151, 3351, 5348)
+      • Settings display: Shows "Whole File" in status output when enabled
 ]]--
 
 ------------------------------------------------------------
@@ -275,12 +236,14 @@ local ctx = ImGui.CreateContext('AudioSweet GUI')
 ------------------------------------------------------------
 local gui = {
   open = true,
-  mode = 0,              -- 0=focused, 1=chain
-  action = 0,            -- 0=apply, 1=copy
+  mode = 0,              -- 0=focused, 1=chain, 2=auto
+  action = 0,            -- 0=apply, 1=copy, 2=apply_after_copy
   copy_scope = 0,
   copy_pos = 0,
   channel_mode = 0,      -- 0=auto, 1=mono, 2=multi
+  multi_channel_policy = "source_playback",  -- "source_playback" | "source_track" | "target_track"
   handle_seconds = 5.0,
+  use_whole_file = false, -- Use whole file length instead of handles
   debug = false,
   max_history = 10,      -- Maximum number of history items to keep
   show_fx_on_recall = true,    -- Show FX window when executing SAVED CHAIN/HISTORY
@@ -357,18 +320,49 @@ local gui = {
   open_bwf_install_popup = false,
 }
 
+local function get_action_label(action)
+  if action == 0 then
+    return "Apply"
+  elseif action == 1 then
+    return "Copy"
+  end
+  return "Copy+Apply"
+end
+
+local function get_action_key(action)
+  if action == 0 then
+    return "apply"
+  elseif action == 1 then
+    return "copy"
+  end
+  return "apply_after_copy"
+end
+
 ------------------------------------------------------------
 -- GUI Settings Persistence
 ------------------------------------------------------------
 local SETTINGS_NAMESPACE = "hsuanice_AS_GUI"
 
 local function save_gui_settings()
+  -- Debug: Log ExtState update when debug mode is enabled
+  if gui.debug then
+    local timestamp = os.date("%H:%M:%S")
+    r.ShowConsoleMsg(string.format("\n[%s] [AS GUI] ExtState Update (save_gui_settings called)\n", timestamp))
+    r.ShowConsoleMsg("---------------------------------------------------------\n")
+  end
+
   r.SetExtState(SETTINGS_NAMESPACE, "mode", tostring(gui.mode), true)
   r.SetExtState(SETTINGS_NAMESPACE, "action", tostring(gui.action), true)
   r.SetExtState(SETTINGS_NAMESPACE, "copy_scope", tostring(gui.copy_scope), true)
   r.SetExtState(SETTINGS_NAMESPACE, "copy_pos", tostring(gui.copy_pos), true)
   r.SetExtState(SETTINGS_NAMESPACE, "channel_mode", tostring(gui.channel_mode), true)
+  r.SetExtState(SETTINGS_NAMESPACE, "multi_channel_policy", gui.multi_channel_policy, true)
+
+  -- Sync multi_channel_policy to Core namespace (for direct GUI execution without Run script)
+  r.SetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY", gui.multi_channel_policy, false)
+
   r.SetExtState(SETTINGS_NAMESPACE, "handle_seconds", tostring(gui.handle_seconds), true)
+  r.SetExtState(SETTINGS_NAMESPACE, "use_whole_file", gui.use_whole_file and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "debug", gui.debug and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "max_history", tostring(gui.max_history), true)
   r.SetExtState(SETTINGS_NAMESPACE, "show_fx_on_recall", gui.show_fx_on_recall and "1" or "0", true)
@@ -405,6 +399,28 @@ local function save_gui_settings()
   r.SetExtState(SETTINGS_NAMESPACE, "enable_docking", gui.enable_docking and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "show_presets_history", gui.show_presets_history and "1" or "0", true)
   r.SetExtState(SETTINGS_NAMESPACE, "bwfmetaedit_custom_path", gui.bwfmetaedit_custom_path or "", true)
+
+  -- Debug: Log key settings that were updated
+  if gui.debug then
+    local channel_names = {"Auto", "Mono", "Multi"}
+    local solo_scope_names = {"Track Solo", "Item Solo"}
+    local restore_mode_names = {"Time Selection", "GUID"}
+
+    r.ShowConsoleMsg("Key Settings Updated:\n")
+    r.ShowConsoleMsg(string.format("  * channel_mode: %s (%d)\n", channel_names[gui.channel_mode + 1], gui.channel_mode))
+    if gui.channel_mode == 2 then
+      r.ShowConsoleMsg(string.format("  * multi_channel_policy: %s\n", gui.multi_channel_policy))
+    end
+    r.ShowConsoleMsg(string.format("  * handle_seconds: %.1f\n", gui.handle_seconds))
+    r.ShowConsoleMsg(string.format("  * use_whole_file: %s\n", gui.use_whole_file and "Yes" or "No"))
+    r.ShowConsoleMsg(string.format("  * preview_target_track: %s\n", gui.preview_target_track))
+    if gui.preview_target_track_guid ~= "" then
+      r.ShowConsoleMsg(string.format("  * preview_target_track_guid: %s\n", gui.preview_target_track_guid))
+    end
+    r.ShowConsoleMsg(string.format("  * preview_solo_scope: %s (%d)\n", solo_scope_names[gui.preview_solo_scope + 1], gui.preview_solo_scope))
+    r.ShowConsoleMsg(string.format("  * preview_restore_mode: %s (%d)\n", restore_mode_names[gui.preview_restore_mode + 1], gui.preview_restore_mode))
+    r.ShowConsoleMsg("---------------------------------------------------------\n")
+  end
 end
 
 local function load_gui_settings()
@@ -424,12 +440,19 @@ local function load_gui_settings()
     return (val ~= "") and tonumber(val) or default
   end
 
+  local function get_string(key, default)
+    local val = r.GetExtState(SETTINGS_NAMESPACE, key)
+    return (val ~= "") and val or default
+  end
+
   gui.mode = get_int("mode", 0)
   gui.action = get_int("action", 0)
   gui.copy_scope = get_int("copy_scope", 0)
   gui.copy_pos = get_int("copy_pos", 0)
   gui.channel_mode = get_int("channel_mode", 0)
+  gui.multi_channel_policy = get_string("multi_channel_policy", "source_playback")
   gui.handle_seconds = get_float("handle_seconds", 5.0)
+  gui.use_whole_file = get_bool("use_whole_file", false)
   gui.debug = get_bool("debug", false)
   gui.max_history = get_int("max_history", 10)
   gui.show_fx_on_recall = get_bool("show_fx_on_recall", true)
@@ -471,41 +494,7 @@ local function load_gui_settings()
   gui.enable_docking = get_bool("enable_docking", false)
   gui.show_presets_history = get_bool("show_presets_history", true)
 
-  -- Debug output on startup
-  if gui.debug then
-    r.ShowConsoleMsg("========================================\n")
-    r.ShowConsoleMsg("[AS GUI] Script startup - Current settings:\n")
-    r.ShowConsoleMsg("========================================\n")
-    r.ShowConsoleMsg(string.format("  Mode: %s\n", gui.mode == 0 and "Focused" or "Chain"))
-    r.ShowConsoleMsg(string.format("  Action: %s\n", gui.action == 0 and "Apply" or "Copy"))
-    r.ShowConsoleMsg(string.format("  Copy Scope: %s\n", gui.copy_scope == 0 and "Active" or "All"))
-    r.ShowConsoleMsg(string.format("  Copy Position: %s\n", gui.copy_pos == 0 and "Last" or "Replace"))
-    local channel_mode_names = {"Auto", "Mono", "Multi"}
-    r.ShowConsoleMsg(string.format("  Channel Mode: %s\n", channel_mode_names[gui.channel_mode + 1]))
-    r.ShowConsoleMsg(string.format("  Handle Seconds: %.2f\n", gui.handle_seconds))
-    r.ShowConsoleMsg(string.format("  Debug Mode: %s\n", gui.debug and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Max History: %d\n", gui.max_history))
-    r.ShowConsoleMsg(string.format("  FX Name - Show Type: %s\n", gui.fxname_show_type and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  FX Name - Show Vendor: %s\n", gui.fxname_show_vendor and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  FX Name - Strip Symbol: %s\n", gui.fxname_strip_symbol and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  FX Name - Use Alias: %s\n", gui.use_alias and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Preset Display - Show Type: %s\n", gui.preset_display_show_type and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Preset Display - Show Vendor: %s\n", gui.preset_display_show_vendor and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Preset Display - Use Alias: %s\n", gui.preset_display_use_alias and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Max FX Tokens: %d\n", gui.max_fx_tokens))
-    local chain_token_source_names = {"Track Name", "FX Aliases", "FXChain"}
-    r.ShowConsoleMsg(string.format("  Chain Token Source: %s\n", chain_token_source_names[gui.chain_token_source + 1]))
-    if gui.chain_token_source == 1 then
-      r.ShowConsoleMsg(string.format("  Chain Alias Joiner: '%s'\n", gui.chain_alias_joiner))
-    end
-    r.ShowConsoleMsg(string.format("  Track Name Strip Symbols: %s\n", gui.trackname_strip_symbols and "ON" or "OFF"))
-    r.ShowConsoleMsg(string.format("  Preview Target Track: %s\n", gui.preview_target_track))
-    local solo_scope_names = {"Track Solo", "Item Solo"}
-    r.ShowConsoleMsg(string.format("  Preview Solo Scope: %s\n", solo_scope_names[gui.preview_solo_scope + 1]))
-    local restore_mode_names = {"Keep", "Restore"}
-    r.ShowConsoleMsg(string.format("  Preview Restore Mode: %s\n", restore_mode_names[gui.preview_restore_mode + 1]))
-    r.ShowConsoleMsg("========================================\n")
-  end
+  -- Debug output on startup now handled by log_gui_settings() at entry point.
 end
 
 ------------------------------------------------------------
@@ -1609,11 +1598,40 @@ local function get_focused_fx_info()
   return false, "None", "No focused FX", nil, nil
 end
 
+local function detect_window_mode()
+  local retval, trackOut, _, fxOut = r.GetFocusedFX()
+  if retval == 1 and trackOut then
+    local tr = r.GetTrack(0, math.max(0, (trackOut or 1) - 1))
+    if tr then
+      local chain_visible = r.TrackFX_GetChainVisible(tr)
+      local fx_open = r.TrackFX_GetOpen(tr, fxOut or 0)
+      if chain_visible ~= -1 then
+        return "chain", tr, fxOut or 0
+      end
+      if fx_open and chain_visible == -1 then
+        return "focused", tr, fxOut or 0
+      end
+    end
+  end
+  return "chain", nil, nil
+end
+
+local function get_effective_mode()
+  if gui.mode == 0 then
+    return "focused"
+  elseif gui.mode == 1 then
+    return "chain"
+  end
+  local mode_str = detect_window_mode()
+  return mode_str or "chain"
+end
+
 local function update_focused_fx_display()
+  local effective_mode = get_effective_mode()
   local found, fx_type, fx_name, tr, fx_index = get_focused_fx_info()
 
   -- In Chain mode: if no focused FX, try to use first selected track with FX
-  if gui.mode == 1 and not found then
+  if effective_mode == "chain" and not found then
     local sel_track = r.GetSelectedTrack(0, 0)  -- Get first selected track
     if sel_track and r.TrackFX_GetCount(sel_track) > 0 then
       tr = sel_track
@@ -1656,18 +1674,22 @@ end
 ------------------------------------------------------------
 -- AudioSweet Execution
 ------------------------------------------------------------
-local function set_extstate_from_gui()
-  local mode_names = { "focused", "chain" }
-  local action_names = { "apply", "copy" }
+local function set_extstate_from_gui(mode_override)
+  local mode_names = { "focused", "chain", "auto" }
   local scope_names = { "active", "all_takes" }
   local pos_names = { "tail", "head" }
   local channel_names = { "auto", "mono", "multi" }
 
-  r.SetExtState("hsuanice_AS", "AS_MODE", mode_names[gui.mode + 1], false)
-  r.SetExtState("hsuanice_AS", "AS_ACTION", action_names[gui.action + 1], false)
+  local mode_str = mode_override or mode_names[gui.mode + 1] or "focused"
+  if mode_str == "auto" then
+    mode_str = "chain"
+  end
+  r.SetExtState("hsuanice_AS", "AS_MODE", mode_str, false)
+  r.SetExtState("hsuanice_AS", "AS_ACTION", get_action_key(gui.action), false)
   r.SetExtState("hsuanice_AS", "AS_COPY_SCOPE", scope_names[gui.copy_scope + 1], false)
   r.SetExtState("hsuanice_AS", "AS_COPY_POS", pos_names[gui.copy_pos + 1], false)
   r.SetExtState("hsuanice_AS", "AS_APPLY_FX_MODE", channel_names[gui.channel_mode + 1], false)
+  r.SetExtState("hsuanice_AS", "AS_MULTI_CHANNEL_POLICY", gui.multi_channel_policy, false)
   r.SetExtState("hsuanice_AS", "DEBUG", gui.debug and "1" or "0", false)
 
   -- File Naming ExtStates
@@ -1688,7 +1710,9 @@ local function set_extstate_from_gui()
       channel_names[gui.channel_mode + 1], gui.channel_mode))
   end
   r.SetExtState("hsuanice_AS", "AS_SHOW_SUMMARY", "0", false)  -- Always disable summary dialog
-  r.SetProjExtState(0, "RGWH", "HANDLE_SECONDS", tostring(gui.handle_seconds))
+  -- Use whole file length if enabled, otherwise use configured handle seconds
+  local handle_value = gui.use_whole_file and 999999 or gui.handle_seconds
+  r.SetProjExtState(0, "RGWH", "HANDLE_SECONDS", tostring(handle_value))
 
   -- Set RGWH Core debug level (0 = silent, no console output)
   r.SetProjExtState(0, "RGWH", "DEBUG_LEVEL", gui.debug and "2" or "0")
@@ -1738,13 +1762,15 @@ local function toggle_preview()
 
   if gui.debug then
     r.ShowConsoleMsg(string.format("\n[AudioSweet] === PREVIEW TARGET SELECTION DEBUG ===\n"))
-    r.ShowConsoleMsg(string.format("  Mode: %s\n", gui.mode == 1 and "Chain" or "Focused"))
+    r.ShowConsoleMsg(string.format("  Mode: %s\n", effective_mode == "chain" and "Chain" or "Focused"))
     r.ShowConsoleMsg(string.format("  Settings preview_target_track: %s\n", gui.preview_target_track))
     r.ShowConsoleMsg(string.format("  Settings preview_target_track_guid: %s\n", gui.preview_target_track_guid or "(empty)"))
     r.ShowConsoleMsg(string.format("  Has focused_track: %s\n", gui.focused_track and "YES" or "NO"))
   end
 
-  if gui.mode == 1 then
+  local effective_mode = get_effective_mode()
+
+  if effective_mode == "chain" then
     -- Chain mode: prioritize focused FX chain track if available
     if gui.focused_track and r.ValidatePtr2(0, gui.focused_track, "MediaTrack*") then
       -- Get pure track name from track object (P_NAME doesn't include track number)
@@ -1798,7 +1824,7 @@ local function toggle_preview()
 
   local args = {
     debug = gui.debug,
-    chain_mode = (gui.mode == 1),  -- 0=focused, 1=chain
+    chain_mode = (effective_mode == "chain"),
     mode = "solo",
     -- Pass track object directly if available (avoids duplicate name issues)
     -- Otherwise fall back to track name search
@@ -1827,7 +1853,7 @@ local function toggle_solo()
   if gui.debug then
     local scope_name = (gui.preview_solo_scope == 0) and "Track Solo" or "Item Solo"
     r.ShowConsoleMsg(string.format("[AS GUI] SOLO button clicked (scope=%s, mode=%s)\n",
-      scope_name, gui.mode == 0 and "Focused" or "Chain"))
+      scope_name, get_effective_mode() == "focused" and "Focused" or "Chain"))
   end
 
   -- Toggle solo based on solo_scope setting
@@ -1835,8 +1861,8 @@ local function toggle_solo()
     -- Track solo: determine target track based on mode
     local target_track = nil
     local track_name = ""
-
-    if gui.mode == 0 then
+    local effective_mode = get_effective_mode()
+    if effective_mode == "focused" then
       -- Focused mode: use focused track
       target_track = gui.focused_track
       track_name = gui.focused_track_name
@@ -1905,14 +1931,44 @@ local function run_audiosweet(override_track)
     return
   end
 
+  local effective_mode = get_effective_mode()
   local target_track = override_track or gui.focused_track
 
   if not override_track then
     local has_valid_fx = update_focused_fx_display()
-    if not has_valid_fx then
+
+    if effective_mode == "focused" and not has_valid_fx then
       gui.last_result = "Error: No valid Track FX focused"
       return
     end
+
+    if effective_mode == "chain" then
+      -- Chain mode: allow default target track when no focused FX
+      if not (gui.focused_track and r.ValidatePtr2(0, gui.focused_track, "MediaTrack*")) then
+          local fallback_track = nil
+          if gui.preview_target_track_guid and gui.preview_target_track_guid ~= "" then
+            fallback_track = find_track_by_guid(gui.preview_target_track_guid)
+          end
+          if not fallback_track then
+            for i = 0, r.CountTracks(0) - 1 do
+              local tr = r.GetTrack(0, i)
+              local _, tn = r.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+              if tn == gui.preview_target_track then
+                fallback_track = tr
+                break
+              end
+            end
+          end
+          if fallback_track then
+            target_track = fallback_track
+          end
+        else
+          target_track = gui.focused_track
+        end
+      end
+  else
+    -- Explicit override implies chain execution on target track
+    effective_mode = "chain"
   end
 
   if not target_track then
@@ -1926,10 +1982,13 @@ local function run_audiosweet(override_track)
   r.Undo_BeginBlock()
   r.PreventUIRefresh(1)
 
+  -- Tell AudioSweet Core to NOT create its own undo block (we're managing it here for single undo)
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "1", false)
+
   -- Only use Core for focused FX mode
   -- (Core needs GetFocusedFX to work properly)
-  if gui.mode == 0 and not override_track then
-    set_extstate_from_gui()
+  if effective_mode == "focused" and not override_track then
+    set_extstate_from_gui("focused")
 
     local ok, err = pcall(dofile, CORE_PATH)
     r.UpdateArrange()
@@ -1966,7 +2025,7 @@ local function run_audiosweet(override_track)
     r.SetMixerScroll(target_track)
 
     -- Set ExtState for AudioSweet (chain mode)
-    set_extstate_from_gui()
+    set_extstate_from_gui("chain")
     r.SetExtState("hsuanice_AS", "AS_MODE", "chain", false)
 
     -- Set OVERRIDE ExtState to specify track and FX for Core
@@ -1995,9 +2054,12 @@ local function run_audiosweet(override_track)
   end
 
   r.PreventUIRefresh(-1)
-  local mode_name = (gui.mode == 0) and "Focused" or "Chain"
-  local action_name = (gui.action == 0) and "Apply" or "Copy"
+  local mode_name = (effective_mode == "focused") and "Focused" or "Chain"
+  local action_name = get_action_label(gui.action)
   r.Undo_EndBlock(string.format("AudioSweet GUI: %s %s", mode_name, action_name), -1)
+
+  -- Clear external undo control flag after execution
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "", false)
 
   gui.is_running = false
 end
@@ -2183,10 +2245,8 @@ local function run_saved_chain_apply_mode(tr, chain_name, item_count)
   end
 
   -- Set ExtState for AudioSweet (chain mode)
-  local action_names = { "apply", "copy" }
-
   r.SetExtState("hsuanice_AS", "AS_MODE", "chain", false)
-  r.SetExtState("hsuanice_AS", "AS_ACTION", action_names[gui.action + 1], false)
+  r.SetExtState("hsuanice_AS", "AS_ACTION", get_action_key(gui.action), false)
   r.SetExtState("hsuanice_AS", "DEBUG", gui.debug and "1" or "0", false)
 
   -- Set OVERRIDE ExtState to specify track and FX for Core
@@ -2199,12 +2259,15 @@ local function run_saved_chain_apply_mode(tr, chain_name, item_count)
     r.ShowConsoleMsg(string.format("[AS GUI] OVERRIDE set: track_idx=%d fx_idx=0\n", track_idx))
   end
   r.SetExtState("hsuanice_AS", "AS_SHOW_SUMMARY", "0", false)
-  r.SetProjExtState(0, "RGWH", "HANDLE_SECONDS", tostring(gui.handle_seconds))
+  -- Use whole file length if enabled, otherwise use configured handle seconds
+  local handle_value = gui.use_whole_file and 999999 or gui.handle_seconds
+  r.SetProjExtState(0, "RGWH", "HANDLE_SECONDS", tostring(handle_value))
   r.SetProjExtState(0, "RGWH", "DEBUG_LEVEL", gui.debug and "2" or "0")
 
   if gui.debug then
-    r.ShowConsoleMsg(string.format("[AS GUI] Executing AudioSweet Core (mode=chain, action=%s, handle=%.1fs)\n",
-      gui.action == 0 and "apply" or "copy", gui.handle_seconds))
+    local handle_display = gui.use_whole_file and "whole file" or string.format("%.1fs", gui.handle_seconds)
+    r.ShowConsoleMsg(string.format("[AS GUI] Executing AudioSweet Core (mode=chain, action=%s, handle=%s)\n",
+      get_action_key(gui.action), handle_display))
   end
 
   -- Run AudioSweet Core (it will use the focused track's FX chain)
@@ -2216,7 +2279,7 @@ local function run_saved_chain_apply_mode(tr, chain_name, item_count)
     if gui.debug then
       r.ShowConsoleMsg(string.format("[AS GUI] Execution completed successfully\n"))
     end
-    gui.last_result = string.format("Success! [%s] Apply (%d items)", chain_name, item_count)
+    gui.last_result = string.format("Success! [%s] %s (%d items)", chain_name, get_action_label(gui.action), item_count)
   else
     if gui.debug then
       r.ShowConsoleMsg(string.format("[AS GUI] ERROR: %s\n", tostring(err)))
@@ -2403,8 +2466,9 @@ local function run_history_focused_apply(tr, fx_name, fx_idx, item_count)
   r.SetExtState("hsuanice_AS", "OVERRIDE_FX_IDX", tostring(fx_idx), false)
 
   if gui.debug then
-    r.ShowConsoleMsg(string.format("[AS GUI] Executing AudioSweet Core (mode=focused, action=%s, handle=%.1fs)\n",
-      gui.action == 0 and "apply" or "copy", gui.handle_seconds))
+    local handle_display = gui.use_whole_file and "whole file" or string.format("%.1fs", gui.handle_seconds)
+    r.ShowConsoleMsg(string.format("[AS GUI] Executing AudioSweet Core (mode=focused, action=%s, handle=%s)\n",
+      get_action_key(gui.action), handle_display))
   end
 
   -- Run AudioSweet Core
@@ -2416,7 +2480,7 @@ local function run_history_focused_apply(tr, fx_name, fx_idx, item_count)
     if gui.debug then
       r.ShowConsoleMsg("[AS GUI] Execution completed successfully\n")
     end
-    gui.last_result = string.format("Success! [%s] Apply (%d items)", format_fx_label_for_status(fx_name), item_count)
+    gui.last_result = string.format("Success! [%s] %s (%d items)", format_fx_label_for_status(fx_name), get_action_label(gui.action), item_count)
   else
     if gui.debug then
       r.ShowConsoleMsg(string.format("[AS GUI] ERROR: %s\n", tostring(err)))
@@ -2456,6 +2520,9 @@ local function run_saved_chain(chain_idx)
   r.Undo_BeginBlock()
   r.PreventUIRefresh(1)
 
+  -- Tell AudioSweet Core to NOT create its own undo block (we're managing it here for single undo)
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "1", false)
+
   -- Execute based on saved mode (chain or focused)
   if chain.mode == "focused" then
     -- For focused mode, use stored FX index
@@ -2477,7 +2544,10 @@ local function run_saved_chain(chain_idx)
   add_to_history(chain.name, chain.track_guid, chain.track_name, chain.mode or "chain", chain.fx_index or 0, chain.custom_name)
 
   r.PreventUIRefresh(-1)
-  r.Undo_EndBlock(string.format("AudioSweet GUI: %s [%s]", gui.action == 1 and "Copy" or "Apply", chain.name), -1)
+  r.Undo_EndBlock(string.format("AudioSweet GUI: %s [%s]", get_action_label(gui.action), chain.name), -1)
+
+  -- Clear external undo control flag after execution
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "", false)
 end
 
 local function run_history_item(hist_idx)
@@ -2504,6 +2574,9 @@ local function run_history_item(hist_idx)
   r.Undo_BeginBlock()
   r.PreventUIRefresh(1)
 
+  -- Tell AudioSweet Core to NOT create its own undo block (we're managing it here for single undo)
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "1", false)
+
   -- Check if this was originally a focused FX or chain
   if hist_item.mode == "focused" then
     -- For focused mode, use stored FX index
@@ -2524,7 +2597,10 @@ local function run_history_item(hist_idx)
   -- Note: History doesn't re-add to history to avoid duplication
 
   r.PreventUIRefresh(-1)
-  r.Undo_EndBlock(string.format("AudioSweet GUI: %s [%s]", gui.action == 1 and "Copy" or "Apply", hist_item.name), -1)
+  r.Undo_EndBlock(string.format("AudioSweet GUI: %s [%s]", get_action_label(gui.action), hist_item.name), -1)
+
+  -- Clear external undo control flag after execution
+  r.SetExtState("hsuanice_AS", "EXTERNAL_UNDO_CONTROL", "", false)
 end
 
 ------------------------------------------------------------
@@ -2563,12 +2639,6 @@ local function draw_gui()
       toggle_solo()
     end
   end
-
-  -- Note: Preview shortcuts with modifiers (Ctrl+Space, etc.) should use Tools scripts
-  -- Users should bind keyboard shortcuts to:
-  --   - "hsuanice_AudioSweet Chain Preview Solo Exclusive" (for Chain mode)
-  --   - "hsuanice_AudioSweet Preview Solo Exclusive" (for Focused mode)
-  -- These scripts read settings from GUI ExtState automatically
 
   local window_flags = ImGui.WindowFlags_MenuBar |
                        ImGui.WindowFlags_AlwaysAutoResize |
@@ -2665,7 +2735,7 @@ local function draw_gui()
           "=================================================\n" ..
           "AudioSweet ReaImGui - ImGui Interface for AudioSweet\n" ..
           "=================================================\n" ..
-          "Version: 0.1.14 (251220.0802)\n" ..
+          "Version: 0.2.0 (251223.2256)\n" ..
           "Author: hsuanice\n\n" ..
 
           "Reference:\n" ..
@@ -2954,7 +3024,64 @@ end
       end
 
       -- ============================================================
-      -- Tab 4: History Settings
+      -- Tab 4: Channel Mode Settings
+      -- ============================================================
+      if ImGui.BeginTabItem(ctx, 'Channel Mode') then
+        ImGui.Text(ctx, "Multi-Channel Policy")
+        ImGui.TextDisabled(ctx, "Configure how multi-channel rendering determines track channel count")
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Note: This setting only applies when Channel Mode is set to "Multi"
+        local is_multi_mode = (gui.channel_mode == 2)
+        if not is_multi_mode then
+          ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFFAA00FF)  -- Orange color
+          ImGui.TextWrapped(ctx, "Note: Multi-channel policy only applies when Channel Mode is set to 'Multi'.")
+          ImGui.PopStyleColor(ctx)
+          ImGui.Separator(ctx)
+        end
+
+        -- Three RadioButton options
+        local changed = false
+
+        if ImGui.RadioButton(ctx, "SOURCE playback channels##policy", gui.multi_channel_policy == "source_playback") then
+          gui.multi_channel_policy = "source_playback"
+          changed = true
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextWrapped(ctx, "Match the actual playback channel count of the source item (respects item channel mode settings).")
+        ImGui.TextDisabled(ctx, "Example: 8ch file playing as 4ch → uses 4ch")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        if ImGui.RadioButton(ctx, "SOURCE track channels##policy", gui.multi_channel_policy == "source_track") then
+          gui.multi_channel_policy = "source_track"
+          changed = true
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextWrapped(ctx, "Match the channel count of the source item's track (RGWH/Pro Tools style).")
+        ImGui.TextDisabled(ctx, "Example: Item on 8ch track → uses 8ch (regardless of item settings)")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        if ImGui.RadioButton(ctx, "TARGET track channels##policy", gui.multi_channel_policy == "target_track") then
+          gui.multi_channel_policy = "target_track"
+          changed = true
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextWrapped(ctx, "Respect the FX/chain track's current channel count (passive mode).")
+        ImGui.TextDisabled(ctx, "Example: FX track is 16ch → keeps 16ch (no modification)")
+        ImGui.Unindent(ctx)
+
+        if changed then
+          save_gui_settings()
+        end
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- ============================================================
+      -- Tab 5: History Settings
       -- ============================================================
       if ImGui.BeginTabItem(ctx, 'History') then
         ImGui.Text(ctx, "Maximum History Items:")
@@ -2976,7 +3103,7 @@ end
       end
 
       -- ============================================================
-      -- Tab 5: Timecode Embed Settings
+      -- Tab 6: Timecode Embed Settings
       -- ============================================================
       if ImGui.BeginTabItem(ctx, 'Timecode') then
         if bwf_cli.available then
@@ -3014,6 +3141,112 @@ end
         ImGui.TextWrapped(ctx,
           "AudioSweet uses bwfmetaedit after renders to embed BWF TimeReference so downstream apps read the correct TC.\n" ..
           "If you skip installation, rendering still works but the embed step is skipped.")
+
+        ImGui.EndTabItem(ctx)
+      end
+
+      -- Keyboard Shortcuts Tab
+      if ImGui.BeginTabItem(ctx, 'Keyboard Shortcuts') then
+        ImGui.Spacing(ctx)
+        ImGui.TextWrapped(ctx, "AudioSweet keyboard shortcuts require setting up Tools scripts in REAPER's Action List.")
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Action List Scripts Section
+        ImGui.TextColored(ctx, 0x4DA6FFFF, "Required Action List Scripts:")
+        ImGui.Spacing(ctx)
+        ImGui.TextWrapped(ctx,
+          "To use keyboard shortcuts, assign these AudioSweet Tools scripts in REAPER's Action List:")
+
+        ImGui.Spacing(ctx)
+        ImGui.Indent(ctx)
+
+        -- Script 1: Run
+        local script_run = "hsuanice_AudioSweet Run"
+        ImGui.BulletText(ctx, "Script: " .. script_run)
+        ImGui.SameLine(ctx)
+        if ImGui.SmallButton(ctx, "Copy##run") then
+          r.ImGui_SetClipboardText(ctx, script_run)
+        end
+        if ImGui.IsItemHovered(ctx) then
+          ImGui.SetTooltip(ctx, "Copy script name to clipboard for searching in Action List")
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextColored(ctx, 0xAAAAAAFF, "Recommended shortcut: Ctrl+Enter")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Script 2: Solo Toggle
+        local script_solo = "hsuanice_AudioSweet Solo Toggle"
+        ImGui.BulletText(ctx, "Script: " .. script_solo)
+        ImGui.SameLine(ctx)
+        if ImGui.SmallButton(ctx, "Copy##solo") then
+          r.ImGui_SetClipboardText(ctx, script_solo)
+        end
+        if ImGui.IsItemHovered(ctx) then
+          ImGui.SetTooltip(ctx, "Copy script name to clipboard for searching in Action List")
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextColored(ctx, 0xAAAAAAFF, "Recommended shortcut: Ctrl+S")
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Script 3: Preview Toggle
+        local script_preview = "hsuanice_AudioSweet Preview Toggle"
+        ImGui.BulletText(ctx, "Script: " .. script_preview)
+        ImGui.SameLine(ctx)
+        if ImGui.SmallButton(ctx, "Copy##preview") then
+          r.ImGui_SetClipboardText(ctx, script_preview)
+        end
+        if ImGui.IsItemHovered(ctx) then
+          ImGui.SetTooltip(ctx, "Copy script name to clipboard for searching in Action List")
+        end
+        ImGui.Indent(ctx)
+        ImGui.TextColored(ctx, 0xAAAAAAFF, "Recommended shortcut: Ctrl+Space")
+        ImGui.Unindent(ctx)
+
+        ImGui.Unindent(ctx)
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- How to Set Shortcuts Tutorial
+        ImGui.TextColored(ctx, 0x4DA6FFFF, "How to set up keyboard shortcuts:")
+        ImGui.Spacing(ctx)
+        ImGui.TextWrapped(ctx, "1. Open REAPER's Actions window (? → Actions → Show action list)")
+        ImGui.TextWrapped(ctx, "2. Search for the script name using the 'Copy' buttons above")
+        ImGui.TextWrapped(ctx, "3. Select the script in the list")
+        ImGui.TextWrapped(ctx, "4. Click 'Add' button at the bottom to open the shortcut assignment window")
+        ImGui.TextWrapped(ctx, "5. In the Add window: Set 'Scope' dropdown to 'Global' (IMPORTANT!)")
+        ImGui.TextWrapped(ctx, "6. Press your desired key combination (e.g., Ctrl+Enter)")
+        ImGui.TextWrapped(ctx, "7. Click 'OK' to save")
+        ImGui.Spacing(ctx)
+        ImGui.TextWrapped(ctx, "Repeat for each script. Global scope ensures shortcuts work everywhere in REAPER, including when GUI is focused.")
+
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Important Notes
+        ImGui.TextColored(ctx, 0x4DA6FFFF, "Important:")
+        ImGui.Spacing(ctx)
+        ImGui.BulletText(ctx, "Shortcuts must be set to 'Global' scope to work when GUI window is focused")
+        ImGui.BulletText(ctx, "All REAPER keyboard shortcuts work normally when GUI is open")
+        ImGui.BulletText(ctx, "ESC key closes the GUI window")
+        ImGui.BulletText(ctx, "Text input fields capture keyboard input normally for editing")
+
+        ImGui.Spacing(ctx)
+        ImGui.Separator(ctx)
+        ImGui.Spacing(ctx)
+
+        -- Benefits Section
+        ImGui.TextColored(ctx, 0x4DA6FFFF, "Why use Action List shortcuts?")
+        ImGui.Spacing(ctx)
+        ImGui.BulletText(ctx, "Work globally throughout REAPER (not just in GUI)")
+        ImGui.BulletText(ctx, "Single configuration applies everywhere")
+        ImGui.BulletText(ctx, "Can be used in custom actions and macros")
+        ImGui.BulletText(ctx, "Faster execution with direct script calls")
 
         ImGui.EndTabItem(ctx)
       end
@@ -3680,22 +3913,37 @@ end
 
   -- Main content with compact layout
   local has_valid_fx = update_focused_fx_display()
+  local effective_mode = get_effective_mode()
   local item_count = r.CountSelectedMediaItems(0)
 
   -- === MODE & ACTION (Radio buttons, horizontal) ===
   ImGui.Text(ctx, "Mode:")
   ImGui.SameLine(ctx)
-  if ImGui.RadioButton(ctx, "Focused", gui.mode == 0) then
+  if ImGui.RadioButton(ctx, "Auto", gui.mode == 2) then
+    gui.mode = 2
+    save_gui_settings()
+  end
+  if ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "Auto: Detect chain vs single FX by window state")
+  end
+  ImGui.SameLine(ctx)
+  if ImGui.RadioButton(ctx, "Single", gui.mode == 0) then
     gui.mode = 0
     save_gui_settings()
+  end
+  if ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "Single: Process the focused FX only (floating window)")
   end
   ImGui.SameLine(ctx)
   if ImGui.RadioButton(ctx, "Chain", gui.mode == 1) then
     gui.mode = 1
     save_gui_settings()
   end
+  if ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "Chain: Process the entire FX chain")
+  end
 
-  ImGui.SameLine(ctx, 0, 30)
+  ImGui.SameLine(ctx, 0, 50)
   ImGui.Text(ctx, "Action:")
   ImGui.SameLine(ctx)
   if ImGui.RadioButton(ctx, "Apply", gui.action == 0) then
@@ -3707,9 +3955,17 @@ end
     gui.action = 1
     save_gui_settings()
   end
+  ImGui.SameLine(ctx)
+  if ImGui.RadioButton(ctx, "Copy+Apply", gui.action == 2) then
+    gui.action = 2
+    save_gui_settings()
+  end
+  if ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "Copy FX to active take, then render (keeps old take FX)\nNote: copied FX IO mapping may be incorrect; use FX parameters for sound. TODO: improve IO mapping.")
+  end
 
   -- === TARGET TRACK NAME (Chain mode only) ===
-  if gui.mode == 1 then
+  if gui.mode ~= 0 then
     ImGui.Text(ctx, "Preview Target:")
     ImGui.SameLine(ctx)
     -- Display current target track name as a button
@@ -3722,7 +3978,7 @@ end
     ImGui.TextDisabled(ctx, "(click to edit)")
   end
 
-  -- === COPY/APPLY SETTINGS (Compact horizontal) ===
+  -- === COPY SETTINGS (Compact horizontal) ===
   if gui.action == 1 then
     ImGui.Text(ctx, "Copy to:")
     ImGui.SameLine(ctx)
@@ -3745,7 +4001,8 @@ end
       gui.copy_pos = 1
       save_gui_settings()
     end
-  else
+  end
+  if gui.action == 0 or gui.action == 2 then
     -- Channel Mode
     ImGui.Text(ctx, "Channel:")
     ImGui.SameLine(ctx)
@@ -3759,29 +4016,61 @@ end
       save_gui_settings()
     end
     ImGui.SameLine(ctx)
+
+    -- Multi channel mode radio button
     if ImGui.RadioButton(ctx, "Multi##channel", gui.channel_mode == 2) then
       gui.channel_mode = 2
       save_gui_settings()
     end
 
-    ImGui.SameLine(ctx, 0, 20)
-    -- Handle seconds
-    ImGui.Text(ctx, "Handle:")
+    -- Tooltip showing current policy and hint to Settings
+    if ImGui.IsItemHovered(ctx) then
+      local policy_name = "SOURCE playback"
+      if gui.multi_channel_policy == "source_track" then
+        policy_name = "SOURCE track"
+      elseif gui.multi_channel_policy == "target_track" then
+        policy_name = "TARGET track"
+      end
+
+      local tooltip_text = "Multi-channel mode\n\n"
+      tooltip_text = tooltip_text .. "Current policy: " .. policy_name .. "\n\n"
+      tooltip_text = tooltip_text .. "• Configure policy in Settings → Channel Mode"
+      ImGui.SetTooltip(ctx, tooltip_text)
+    end
+
+    -- Whole File section
+    ImGui.SameLine(ctx, 0, 65)
+    local rv_whole = ImGui.Checkbox(ctx, "Whole File", gui.use_whole_file)
+    if rv_whole then
+      gui.use_whole_file = not gui.use_whole_file
+      save_gui_settings()
+    end
+
     ImGui.SameLine(ctx)
+    -- Handle seconds input (disabled when Whole File is checked)
+    if gui.use_whole_file then
+      ImGui.BeginDisabled(ctx)
+    end
     ImGui.SetNextItemWidth(ctx, 80)
     local rv, new_val = ImGui.InputDouble(ctx, "##handle_seconds", gui.handle_seconds, 0, 0, "%.1f")
     if rv then
       gui.handle_seconds = math.max(0, new_val)
       save_gui_settings()
     end
-    ImGui.SameLine(ctx)
-    ImGui.Text(ctx, "seconds")
+    if gui.use_whole_file then
+      ImGui.EndDisabled(ctx)
+    end
   end
 
   ImGui.Separator(ctx)
 
   -- === RUN BUTTONS: PREVIEW / SOLO / AUDIOSWEET ===
-  local can_run = has_valid_fx and item_count > 0 and not gui.is_running
+  local can_run
+  if effective_mode == "focused" then
+    can_run = has_valid_fx and item_count > 0 and not gui.is_running
+  else
+    can_run = item_count > 0 and not gui.is_running
+  end
 
   -- Calculate button widths (3 buttons with spacing)
   local avail_width = ImGui.GetContentRegionAvail(ctx)
@@ -3801,7 +4090,7 @@ end
   local preview_can_run
   if is_previewing_now then
     preview_can_run = true  -- Always allow stopping
-  elseif gui.mode == 0 then
+  elseif effective_mode == "focused" then
     -- Focused mode: requires valid FX
     preview_can_run = has_valid_fx and item_count > 0 and not gui.is_running
   else
@@ -3818,7 +4107,16 @@ end
 
   local button_label = is_previewing_now and "STOP" or "PREVIEW"
   if ImGui.Button(ctx, button_label, button_width, 35) then
-    toggle_preview()
+    if is_previewing_now then
+      -- Use OnStopButton instead of Main_OnCommand for better compatibility
+      r.OnStopButton()
+      gui.is_previewing = false
+      if gui.debug then
+        r.ShowConsoleMsg("[AS GUI] STOP button pressed (OnStopButton)\n")
+      end
+    else
+      toggle_preview()
+    end
   end
 
   if is_previewing_now then
@@ -3842,31 +4140,19 @@ end
   end
   if not can_run then ImGui.EndDisabled(ctx) end
 
-  -- === KEYBOARD SHORTCUTS INFO ===
-  ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0x808080FF)  -- Gray color
-  ImGui.Text(ctx, "Shortcuts: ESC = Close, Space = Stop, S = Solo")
-  if gui.mode == 1 then
-    -- Chain mode
-    ImGui.Text(ctx, "Tip: Set shortcut 'Script: hsuanice_AudioSweet Chain Preview...' (Ctrl+Space)")
-  else
-    -- Focused mode
-    ImGui.Text(ctx, "Tip: Set shortcut 'Script: hsuanice_AudioSweet Preview...' (Ctrl+Shift+Space)")
-  end
-  ImGui.PopStyleColor(ctx)
-
   ImGui.Separator(ctx)
 
   -- === SAVE BUTTON (above Saved/History) ===
   if gui.enable_saved_chains then
     -- Unified Save button that changes text based on mode
-    local save_button_label = (gui.mode == 1) and "Save This Chain" or "Save This FX"
-    local save_button_enabled = (gui.mode == 1 and #gui.focused_track_fx_list > 0) or (gui.mode == 0 and has_valid_fx)
+    local save_button_label = (effective_mode == "chain") and "Save This Chain" or "Save This FX"
+    local save_button_enabled = (effective_mode == "chain" and #gui.focused_track_fx_list > 0) or (effective_mode == "focused" and has_valid_fx)
 
     if not save_button_enabled then ImGui.BeginDisabled(ctx) end
     if ImGui.Button(ctx, save_button_label, -1, 0) then
       -- Unified save popup - we'll use one popup for both
       gui.show_save_popup = true
-      if gui.mode == 1 then
+      if effective_mode == "chain" then
         -- Extract only track name without "#N - " prefix
         local track_name, _ = get_track_name_and_number(gui.focused_track)
         gui.new_chain_name = track_name
@@ -4135,7 +4421,7 @@ end
     ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFF0000FF)
   end
 
-  if gui.mode == 0 then
+  if effective_mode == "focused" then
     if has_valid_fx then
       ImGui.Text(ctx, format_fx_label_for_status(gui.focused_fx_name))
     else
@@ -4148,7 +4434,7 @@ end
   ImGui.Text(ctx, string.format("Items: %d", item_count))
 
   -- Show FX chain in Chain mode (dynamic height, auto-resizes based on content)
-  if gui.mode == 1 and #gui.focused_track_fx_list > 0 then
+  if effective_mode == "chain" and #gui.focused_track_fx_list > 0 then
     -- Dynamic height based on FX count (each FX line ~20px), max 150px
     local line_height = 20
     local max_height = 150
@@ -4179,7 +4465,7 @@ end
 
   if ImGui.BeginPopupModal(ctx, "Save FX Preset", true, ImGui.WindowFlags_AlwaysAutoResize) then
     -- Show track# prefix for chain mode (outside input field)
-    if gui.mode == 1 and gui.focused_track then
+    if effective_mode == "chain" and gui.focused_track then
       local track_number = r.GetMediaTrackInfo_Value(gui.focused_track, "IP_TRACKNUMBER")
       ImGui.Text(ctx, string.format("Track #%d - Preset Name:", track_number))
     else
@@ -4218,7 +4504,7 @@ end
         -- Check for duplicates
         local duplicate_found = false
         local track_guid = get_track_guid(gui.focused_track)
-        local mode = (gui.mode == 1) and "chain" or "focused"
+        local mode = (effective_mode == "chain") and "chain" or "focused"
         local fx_index = (mode == "focused") and gui.focused_fx_index or nil
 
         -- For focused mode: get the ORIGINAL FX name from track (not processed by FX name settings)
@@ -4365,6 +4651,44 @@ end
 ------------------------------------------------------------
 -- Main Loop
 ------------------------------------------------------------
+local function log_gui_settings(context)
+  r.ShowConsoleMsg("========================================\n")
+  r.ShowConsoleMsg(string.format("[AS GUI] %s - Current settings:\n", context))
+  r.ShowConsoleMsg("========================================\n")
+  local mode_names = {"Single", "Chain", "Auto"}
+  r.ShowConsoleMsg(string.format("  Mode: %s\n", mode_names[gui.mode + 1] or "Focused"))
+  r.ShowConsoleMsg(string.format("  Action: %s\n", get_action_label(gui.action)))
+  r.ShowConsoleMsg(string.format("  Copy Scope: %s\n", gui.copy_scope == 0 and "Active" or "All"))
+  r.ShowConsoleMsg(string.format("  Copy Position: %s\n", gui.copy_pos == 0 and "Last" or "Replace"))
+  local channel_mode_names = {"Auto", "Mono", "Multi"}
+  r.ShowConsoleMsg(string.format("  Channel Mode: %s\n", channel_mode_names[gui.channel_mode + 1]))
+  r.ShowConsoleMsg(string.format("  Channel Policy: %s\n", gui.multi_channel_policy))
+  local handle_display = gui.use_whole_file and "Whole File" or string.format("%.2f", gui.handle_seconds)
+  r.ShowConsoleMsg(string.format("  Handle Seconds: %s\n", handle_display))
+  r.ShowConsoleMsg(string.format("  Debug Mode: %s\n", gui.debug and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Max History: %d\n", gui.max_history))
+  r.ShowConsoleMsg(string.format("  FX Name - Show Type: %s\n", gui.fxname_show_type and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  FX Name - Show Vendor: %s\n", gui.fxname_show_vendor and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  FX Name - Strip Symbol: %s\n", gui.fxname_strip_symbol and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  FX Name - Use Alias: %s\n", gui.use_alias and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Preset Display - Show Type: %s\n", gui.preset_display_show_type and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Preset Display - Show Vendor: %s\n", gui.preset_display_show_vendor and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Preset Display - Use Alias: %s\n", gui.preset_display_use_alias and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Max FX Tokens: %d\n", gui.max_fx_tokens))
+  local chain_token_source_names = {"Track Name", "FX Aliases", "FXChain"}
+  r.ShowConsoleMsg(string.format("  Chain Token Source: %s\n", chain_token_source_names[gui.chain_token_source + 1]))
+  if gui.chain_token_source == 1 then
+    r.ShowConsoleMsg(string.format("  Chain Alias Joiner: '%s'\n", gui.chain_alias_joiner))
+  end
+  r.ShowConsoleMsg(string.format("  Track Name Strip Symbols: %s\n", gui.trackname_strip_symbols and "ON" or "OFF"))
+  r.ShowConsoleMsg(string.format("  Preview Target Track: %s\n", gui.preview_target_track))
+  local solo_scope_names = {"Track Solo", "Item Solo"}
+  r.ShowConsoleMsg(string.format("  Preview Solo Scope: %s\n", solo_scope_names[gui.preview_solo_scope + 1]))
+  local restore_mode_names = {"Keep", "Restore"}
+  r.ShowConsoleMsg(string.format("  Preview Restore Mode: %s\n", restore_mode_names[gui.preview_restore_mode + 1]))
+  r.ShowConsoleMsg("========================================\n")
+end
+
 local function loop()
   gui.open = draw_gui()
   if gui.open then
@@ -4372,38 +4696,7 @@ local function loop()
   else
     -- Script is closing - output final settings if debug mode is on
     if gui.debug then
-      r.ShowConsoleMsg("========================================\n")
-      r.ShowConsoleMsg("[AS GUI] Script closing - Final settings:\n")
-      r.ShowConsoleMsg("========================================\n")
-      r.ShowConsoleMsg(string.format("  Mode: %s\n", gui.mode == 0 and "Focused" or "Chain"))
-      r.ShowConsoleMsg(string.format("  Action: %s\n", gui.action == 0 and "Apply" or "Copy"))
-      r.ShowConsoleMsg(string.format("  Copy Scope: %s\n", gui.copy_scope == 0 and "Active" or "All"))
-      r.ShowConsoleMsg(string.format("  Copy Position: %s\n", gui.copy_pos == 0 and "Last" or "Replace"))
-      local channel_mode_names = {"Auto", "Mono", "Multi"}
-      r.ShowConsoleMsg(string.format("  Channel Mode: %s\n", channel_mode_names[gui.channel_mode + 1]))
-      r.ShowConsoleMsg(string.format("  Handle Seconds: %.2f\n", gui.handle_seconds))
-      r.ShowConsoleMsg(string.format("  Debug Mode: %s\n", gui.debug and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Max History: %d\n", gui.max_history))
-      r.ShowConsoleMsg(string.format("  FX Name - Show Type: %s\n", gui.fxname_show_type and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  FX Name - Show Vendor: %s\n", gui.fxname_show_vendor and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  FX Name - Strip Symbol: %s\n", gui.fxname_strip_symbol and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  FX Name - Use Alias: %s\n", gui.use_alias and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Preset Display - Show Type: %s\n", gui.preset_display_show_type and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Preset Display - Show Vendor: %s\n", gui.preset_display_show_vendor and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Preset Display - Use Alias: %s\n", gui.preset_display_use_alias and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Max FX Tokens: %d\n", gui.max_fx_tokens))
-      local chain_token_source_names = {"Track Name", "FX Aliases", "FXChain"}
-      r.ShowConsoleMsg(string.format("  Chain Token Source: %s\n", chain_token_source_names[gui.chain_token_source + 1]))
-      if gui.chain_token_source == 1 then
-        r.ShowConsoleMsg(string.format("  Chain Alias Joiner: '%s'\n", gui.chain_alias_joiner))
-      end
-      r.ShowConsoleMsg(string.format("  Track Name Strip Symbols: %s\n", gui.trackname_strip_symbols and "ON" or "OFF"))
-      r.ShowConsoleMsg(string.format("  Preview Target Track: %s\n", gui.preview_target_track))
-      local solo_scope_names = {"Track Solo", "Item Solo"}
-      r.ShowConsoleMsg(string.format("  Preview Solo Scope: %s\n", solo_scope_names[gui.preview_solo_scope + 1]))
-      local restore_mode_names = {"Keep", "Restore"}
-      r.ShowConsoleMsg(string.format("  Preview Restore Mode: %s\n", restore_mode_names[gui.preview_restore_mode + 1]))
-      r.ShowConsoleMsg("========================================\n")
+      log_gui_settings("Script closing")
     end
   end
 end
@@ -4412,6 +4705,9 @@ end
 -- Entry Point
 ------------------------------------------------------------
 load_gui_settings()  -- Load saved GUI settings first
+if gui.debug then
+  log_gui_settings("Script opening")
+end
 check_bwfmetaedit(true)
 load_saved_chains()
 load_history()
