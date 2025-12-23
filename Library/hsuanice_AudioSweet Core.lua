@@ -1,8 +1,9 @@
 --[[
 @description AudioSweet Core - Focused Track FX render via RGWH Core
-@version 0.2.0
+@version 0.2.0.0.1
 @author hsuanice
-@noindex
+@provides
+  [main] .
 @notes
 
 Tim Chimes (original), adapted by hsuanice for AudioSweet Core integration.
@@ -2552,3 +2553,4 @@ if not ok then
   reaper.MB("AudioSweet Core error:\n" .. tostring(err), "AudioSweet — Core error", 0)
 end
 reaper.PreventUIRefresh(-1)
+
