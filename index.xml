@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="be8866a18f4f27b46926cc1456f1580be06a1e22">
+<index version="1" name="hsuanice Scripts" commit="afd905f9ef7a0c1c0e123416f1047d83a0d93174">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -124,6 +124,9 @@
     <reapack name="hsuanice_RGWH Core.lua" type="script" desc="RGWH Core - Render or Glue with Handles">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_RGWH%20Core.lua</source>
+      </version>
+      <version name="0.2.0" author="hsuanice" time="2025-12-23T15:25:01Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/afd905f9ef7a0c1c0e123416f1047d83a0d93174/Library/hsuanice_RGWH%20Core.lua</source>
       </version>
     </reapack>
   </category>
