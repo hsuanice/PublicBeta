@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="afd905f9ef7a0c1c0e123416f1047d83a0d93174">
+<index version="1" name="hsuanice Scripts" commit="c61e38a20f8ca8c0e7d18cc8b33090b23885eb0c">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -82,6 +82,9 @@
       </version>
       <version name="0.2.0" author="hsuanice" time="2025-12-23T15:16:21Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/4e4d8c1d49f583d22bb16a61b1344a2570adf8eb/Library/hsuanice_AS%20Preview%20Core.lua</source>
+      </version>
+      <version name="0.2.0.0.1" author="hsuanice" time="2025-12-23T15:54:09Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/c61e38a20f8ca8c0e7d18cc8b33090b23885eb0c/Library/hsuanice_AS%20Preview%20Core.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_Metadata Embed.lua" type="script" desc="Metadata Embed - BWF MetaEdit helpers">
