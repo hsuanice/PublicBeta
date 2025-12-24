@@ -1,12 +1,12 @@
 --[[
 @description RGWH Core - Render or Glue with Handles
-@version 0.2.0
+@version 0.2.1
 @author hsuanice
 
 @provides
   [main] .
 
-  @about
+@about
   Core library for handle-aware Render/Glue workflows with clear, single-entry API.
   Features:
     • Handle-aware windows with clamp-to-source.
@@ -63,18 +63,9 @@
   • For detailed operation modes guide, see RGWH GUI: Help > Manual (Operation Modes)
 
 @changelog
-  0.2.0 [v251223.2256] - PUBLIC BETA ALIGNMENT
-    - CHANGED: Version bump to 0.2.0 (public beta)
-    - ADDED: Multi-Channel Policy support hook for AudioSweet integration
-
-  0.1.1 [v251222.1145] - AUDIOSWEET MULTI-CHANNEL POLICY SUPPORT
-    - ADDED: preserve_track_ch parameter to apply_multichannel_no_fx_preserve_take()
-      • preserve_track_ch=true: restore track channel count after apply (default, RGWH standalone behavior)
-      • preserve_track_ch=false: allow track channel count to change (for AudioSweet Multi-Channel Policy)
-      • Default true for backward compatibility - existing RGWH Core calls unchanged
-      • AudioSweet can now control whether FX track channel count should be preserved
-      • Enables AudioSweet's SOURCE-TRACK and SOURCE-PLAYBACK policies to work correctly
-    - Debug log updated: shows preserve_track_ch value in apply log
+  0.2.1 [v251224.1318] - GLUE APPLY VOLUME HANDLING
+    - CHANGED: Glue-only path uses native volume behavior (item+take printed)
+    - CHANGED: Volume rendering options apply only when Apply is executed (render/apply)
 ]]--
 local r = reaper
 local M = {}
@@ -104,7 +95,7 @@ local DEFAULTS = {
   HANDLE_SECONDS     = 5.0,
   EPSILON_MODE       = "frames",
   EPSILON_VALUE      = 0.5,
-  DEBUG_LEVEL        = 1,
+  DEBUG_LEVEL        = 0,
   -- FX policies (separate for GLUE vs RENDER)
   GLUE_TAKE_FX       = 1,             -- 1=Glue 之後的成品要印入 take FX；0=不印入
   GLUE_TRACK_FX      = 0,             -- 1=Glue 成品再套用 Track/Take FX
@@ -1370,16 +1361,7 @@ local function glue_unit(tr, u, cfg)
   -- Unified logic for ALL modes (mono/multi/auto): Glue → (conditionally) Apply
   -- 時選=UL..UR → Glue → (必要時)對成品 Apply → Trim 回 UL..UR
 
-  -- Get volume settings (use GLUE settings for this mode)
-  local merge_volumes = (cfg.GLUE_MERGE_VOLUMES == true)
-  local print_volumes = (cfg.GLUE_PRINT_VOLUMES == true)
-
-  -- Snapshot volumes from first item (for later restoration)
-  -- Note: Glue (42432) will bake all volumes, we need first item's snapshot for restoration
-  local first_item_vol_snap = nil
-  if first_it then
-    first_item_vol_snap = preprocess_item_volumes(first_it, merge_volumes, print_volumes, false, DBG)
-  end
+  -- Glue always uses native volume behavior (item+take printed).
 
   -- Snapshot track channel count before Glue
   -- Issue: Action 42432 (Glue) can auto-expand track channels when source > track channels
@@ -1414,6 +1396,10 @@ local function glue_unit(tr, u, cfg)
   end
 
   if need_apply and glued_pre then
+    local merge_volumes = (cfg.GLUE_MERGE_VOLUMES == true)
+    local print_volumes = (cfg.GLUE_PRINT_VOLUMES == true)
+    local volume_snap = preprocess_item_volumes(glued_pre, merge_volumes, print_volumes, false, DBG)
+
     -- 清掉 fades（40361/41993 會把 fade 烘進音檔）
     r.SetMediaItemInfo_Value(glued_pre, "D_FADEINLEN",       0)
     r.SetMediaItemInfo_Value(glued_pre, "D_FADEINLEN_AUTO",  0)
@@ -1429,6 +1415,11 @@ local function glue_unit(tr, u, cfg)
       apply_multichannel_no_fx_preserve_take(glued_pre, (cfg.GLUE_TAKE_FX == true), DBG)
       -- Emulate Glue's TC in force-multi no-track-FX path as well
       embed_current_tc_for_item(glued_pre, u.start, DBG)
+    end
+
+    if volume_snap then
+      local gtk_final = r.GetActiveTake(glued_pre)
+      postprocess_item_volumes(glued_pre, volume_snap, gtk_final, nil, merge_volumes, print_volumes, false, DBG)
     end
   end
 
@@ -1470,12 +1461,7 @@ local function glue_unit(tr, u, cfg)
     r.SetMediaItemInfo_Value(glued,"D_FADEOUTLEN_AUTO", fout_auto)
     r.UpdateItemInProject(glued)
 
-    -- Volume handling for glued item
-    -- Note: Glue (42432) bakes all volumes, restore based on first item's snapshot
-    if first_item_vol_snap then
-      local gtk_final = r.GetActiveTake(glued)
-      postprocess_item_volumes(glued, first_item_vol_snap, gtk_final, nil, merge_volumes, print_volumes, false, DBG)
-    end
+    -- Volume handling intentionally skipped for Glue (native behavior already prints item+take volume).
 
     -- (Removed legacy take-marker emission. Glue cues are now pre-written as project markers with '#'.)
 
