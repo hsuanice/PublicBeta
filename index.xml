@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="0e5e6eb281dd0161738449ff4afecfd4eba89cdf">
+<index version="1" name="hsuanice Scripts" commit="aad556c0f9fda8ba2a0011ad65f4dbc98314bb33">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -45,6 +45,9 @@
       </version>
       <version name="0.2.0" author="hsuanice" time="2025-12-23T15:12:47Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/f1b239fd450bf8d395bb440ec8f969276139355c/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.3" author="hsuanice" time="2026-02-05T03:57:14Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/aad556c0f9fda8ba2a0011ad65f4dbc98314bb33/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
