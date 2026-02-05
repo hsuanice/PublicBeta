@@ -1,7 +1,7 @@
 --[[
 @description AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)
 @author hsuanice
-@version 0.2.0
+@version 0.2.3
 @provides
   [main] .
 @about
@@ -65,150 +65,18 @@
 
 
 @changelog
-  v0.2.0 [Internal Build 251223.2256] - Public Beta Release
-    - ADDED: Copy+Apply mode (GUI + Core) with consistent undo + stable multichannel IO
-    - ADDED: AudioSweet Run/Solo/Preview Toggle tools (Action List workflow)
-    - ADDED: Multi-Channel Policy system + Channel Mode settings
-    - ADDED: Whole File handle option + BWF MetaEdit detection/install guide
-    - ADDED: Unified Settings window + in-app User Manual
-    - FIXED: Unified Core/GLUE path for all processing (removes RGWH Render path)
-    - FIXED: Single undo behavior across GUI/Run/Saved/History
-    - FIXED: FX index tracking + name fallback after reorder
-    - FIXED: Preview target GUID handling + duplicate track name targeting
-    - REMOVED: Legacy Preview Solo Exclusive tools (replaced by Preview Toggle)
+  0.2.3 [260205.1040]
+    - ADJUSTED: Main page layout alignment and spacing tweaks
 
-  v0.1.27 [Internal Build 251223.2236] - Version Sync
-    - CHANGED: Version bump to align with Core changes (no UI behavior change)
+  0.2.2 [260205.1027]
+    - MOVED: Multi-Channel Policy from Settings tab to main page (two-row layout)
+      • Row 1: Channel mode (left) + Preview Target (right)
+      • Row 2: Policy radios — playback / track / target (left) + Whole File (right)
+      • Policy always visible (shows current selection even in Auto/Mono mode)
+      • Hover tooltips on each policy option
+    - REMOVED: Settings → Channel Mode tab (redundant, now on main page)
+    - UPDATED: Multi radio button tooltip simplified
 
-  v0.1.26 [Internal Build 251223.1924] - Copy+Apply UI + Settings Logs
-    - CHANGED: Copy+Apply label + hover note about IO mapping limitations
-    - CHANGED: Copy settings now show only for Copy (not Copy+Apply)
-    - FIXED: GUI startup logging duplication; include Channel Policy in settings log
-
-  v0.1.25 [Internal Build 251222.2009] - Keyboard Shortcut Input Detection
-    - ADDED: Shortcut handling before ImGui.Begin()
-      • Space = Stop transport (command 40044)
-      • S = Solo toggle (respects Preview Solo Scope)
-    - SAFETY: Ignores shortcuts while typing in inputs (IsAnyItemActive)
-
-  v0.1.24 [Internal Build 251222.1706] - Single Undo for All Executions
-    - CHANGED: All GUI Run executions now produce single undo operation
-      • Main Run button: External undo control enabled
-      • Saved Chains execution: External undo control enabled
-      • History execution: External undo control enabled
-      • AudioSweet Core v0.1.7: Skips internal undo when EXTERNAL_UNDO_CONTROL="1"
-      • Cleaner undo stack (one entry instead of nested blocks)
-    - BENEFIT: Simplified undo experience
-      • GUI Run → Single "AudioSweet GUI: Focused/Chain Apply/Copy" undo
-      • Saved Chain → Single "AudioSweet GUI: Apply/Copy [Chain Name]" undo
-      • History → Single "AudioSweet GUI: Apply/Copy [History Name]" undo
-    - CHANGED: Unified all processing to use Core/GLUE path (RGWH Render path eliminated)
-      • AudioSweet Core v0.1.7: Single-item units now use Core/GLUE instead of RGWH Render
-      • GLUE mode produces single take (no old take preserved)
-      • Fixes position issues that occurred with RGWH Render path
-      • Multi-Channel Policy already implemented in Core/GLUE path (works immediately)
-      • Consistent behavior across all unit sizes (single/multi-item)
-
-  v0.1.23 [Internal Build 251222.1651] - Unified GLUE Path for All Processing
-    - CHANGED: All units now use Core/GLUE path (RGWH Render path eliminated)
-      • AudioSweet Core v0.1.6: Single-item units now use Core/GLUE instead of RGWH Render
-      • GLUE mode produces single take (no old take preserved)
-      • Fixes position issues that occurred with RGWH Render path
-      • Multi-Channel Policy already implemented in Core/GLUE path (works immediately)
-      • Consistent behavior across all unit sizes (single/multi-item)
-    - BENEFIT: All processing paths now behave identically
-      • Single-item: Core/GLUE
-      • Multi-item: Core/GLUE
-      • TS-WINDOW: Core/GLUE (already working)
-      • Simpler codebase, more predictable results
-
-  v0.1.22 [Internal Build 251222.1622] - RGWH & AudioSweet Multi-Channel Policy Integration
-    - ADDED: Complete Multi-Channel Policy support across ALL execution paths
-      • RGWH Core v0.1.1: Added preserve_track_ch parameter + ExtState control (RGWH_PRESERVE_TRACK_CH)
-      • AudioSweet Core v0.1.5: All paths now correctly implement Multi-Channel Policy
-      • Single-item units (RGWH Render): Policy now works correctly (was overridden by RGWH Core)
-      • Multi-item units (Core/GLUE): Policy now fully implemented (was missing)
-      • TS-WINDOW paths: Continue to work correctly (no changes needed)
-    - FIXED: Single-item and multi-item units now produce consistent results
-      • SOURCE-PLAYBACK: Matches item/unit playback channels
-      • SOURCE-TRACK: Matches source track channel count
-      • TARGET-TRACK: Respects FX track channel count (passive mode)
-    - TECHNICAL: ExtState-based communication between AudioSweet and RGWH Core
-      • AudioSweet sets RGWH_PRESERVE_TRACK_CH before calling RGWH Core
-      • RGWH Core respects this setting (backward compatible, defaults to preserve=true)
-      • Enables both tools to work independently with their own policies
-
-  v0.1.21 [Internal Build 251222.1122] - Core/GLUE Source Track Protection
-    - FIXED: Multi-item unit processing source track protection
-      • AudioSweet Core v0.1.4: Core/GLUE path now protects source track channel count
-      • Previously: processing 3-member unit changed source track from 4ch to 6ch (incorrect)
-      • Now: source track channel count preserved at original value (correct)
-      • Affects per-unit path when unit has ≥2 items without Time Selection
-      • Completes source track protection coverage for all execution paths
-
-  v0.1.20 [Internal Build 251222.1103] - Multi-Unit Multi-Channel Policy Fix
-    - FIXED: Multi-unit processing across tracks with SOURCE-TRACK policy
-      • When processing multiple units across different tracks simultaneously, second unit now reads correct source track channel count
-      • AudioSweet Core v0.1.3: TS-WINDOW[GLOBAL] path now snapshots ALL source track channel counts BEFORE glue operation
-      • Previously: glue operation modified track channel counts before second unit snapshot (incorrect)
-      • Now: all units use pre-glue snapshot values (correct)
-      • Ensures consistent behavior when processing single vs multiple units
-
-  v0.1.19 [Internal Build 251222.1035] - Multi-Channel Policy System
-    - ADDED: Complete Multi-Channel Policy system with 3 options (Settings → Channel Mode)
-      • SOURCE playback: Match item's actual playback channels (default, current behavior)
-      • SOURCE track: Match source track channel count (RGWH/Pro Tools style)
-      • TARGET track: Respect FX track's current channel count (passive mode)
-      • Policy only applies when Channel Mode is explicitly set to "Multi"
-      • Auto/Mono modes use default behavior (not affected by policy)
-    - ADDED: Settings → Channel Mode tab with 3 RadioButton options
-      • Each option has description and example usage
-      • Orange warning when Channel Mode is not "Multi"
-      • Settings saved to ExtState: multi_channel_policy (source_playback/source_track/target_track)
-    - ADDED: Multi RadioButton tooltip update
-      • Shows current policy name
-      • Hints user to configure in Settings → Channel Mode
-      • Removed Shift+Click toggle (moved to Settings)
-    - ADDED: ExtState synchronization to Core namespace
-      • save_gui_settings() now syncs AS_MULTI_CHANNEL_POLICY to hsuanice_AS
-      • set_extstate_from_gui() syncs policy when running from GUI button
-      • Ensures policy works for both GUI button and Run.lua execution
-    - ADDED: Multi-Channel Policy display in startup debug log
-      • Shows policy when Channel Mode is Multi
-      • Format: "Multi-Channel Policy: SOURCE playback/track or TARGET track"
-    - CHANGED: Tab numbering updated (Channel Mode is Tab 4, Timecode is Tab 6)
-
-  v0.1.18.1 [Internal Build 251221.2133] - Multi-Channel Policy UI (deprecated)
-    - NOTE: This version was experimental; v0.1.19 is the complete implementation
-  v0.1.18 [Internal Build 251221.1937] - Auto Mode + Single Rename
-    - ADDED: Auto mode for window-based focused/chain detection
-    - CHANGED: "Focused" label renamed to "Single"
-    - UI: Auto moved to first position with hover tooltips
-  v0.1.17 [Internal Build 251221.1822] - Chain Run Without Focus + Button Enable
-    - FIXED: Chain mode run now works without focused FX window
-      • Falls back to preview target track when no focused FX is available
-    - FIXED: AUDIOSWEET button now enabled in chain mode without focused FX
-  v0.1.16 [Internal Build 251221.1722] - Debug ExtState Logging
-    - ADDED: Console logging when GUI debug is enabled
-      • save_gui_settings() now prints a timestamped ExtState update header
-      • Logs key settings after each change (channel mode, handles, preview target, etc.)
-  v0.1.15 [Internal Build 251220.2350] - Whole File Handle Option
-    - ADDED: "Whole File" toggle option for rendering/gluing entire file length
-      • New GUI element: Checkbox next to handle seconds input
-      • When enabled, processes entire media item source length instead of handles
-      • Implementation: Sets HANDLE_SECONDS to 999999, RGWH Core auto-clamps to available length
-      • Handle seconds input becomes disabled (grayed out) when Whole File is checked
-      • Setting persisted in GUI state (saved/loaded between sessions)
-      • Lines: gui init (1210), save (1299), load (1361), GUI layout (4714-4735)
-    - CHANGED: GUI layout for handles section
-      • Removed "Handle:" and "seconds" text labels for cleaner layout
-      • Layout: Channel options → [65px spacing] → Whole File checkbox → handle input
-      • Handle input width: 80px (unchanged)
-    - FIXED: Whole file logic implementation
-      • Focused mode: Sets handle value before execution (lines 2631-2633)
-      • Chain mode: Sets handle value before execution (lines 3144-3146)
-      • Debug messages: Display "whole file" instead of seconds when enabled (lines 1425, 3151, 3351, 5348)
-      • Settings display: Shows "Whole File" in status output when enabled
 ]]--
 
 ------------------------------------------------------------
@@ -2735,7 +2603,7 @@ local function draw_gui()
           "=================================================\n" ..
           "AudioSweet ReaImGui - ImGui Interface for AudioSweet\n" ..
           "=================================================\n" ..
-          "Version: 0.2.0 (251223.2256)\n" ..
+          "Version: 0.2.0.0.1 (251223.2328)\n" ..
           "Author: hsuanice\n\n" ..
 
           "Reference:\n" ..
@@ -3024,64 +2892,7 @@ end
       end
 
       -- ============================================================
-      -- Tab 4: Channel Mode Settings
-      -- ============================================================
-      if ImGui.BeginTabItem(ctx, 'Channel Mode') then
-        ImGui.Text(ctx, "Multi-Channel Policy")
-        ImGui.TextDisabled(ctx, "Configure how multi-channel rendering determines track channel count")
-        ImGui.Separator(ctx)
-        ImGui.Spacing(ctx)
-
-        -- Note: This setting only applies when Channel Mode is set to "Multi"
-        local is_multi_mode = (gui.channel_mode == 2)
-        if not is_multi_mode then
-          ImGui.PushStyleColor(ctx, ImGui.Col_Text, 0xFFAA00FF)  -- Orange color
-          ImGui.TextWrapped(ctx, "Note: Multi-channel policy only applies when Channel Mode is set to 'Multi'.")
-          ImGui.PopStyleColor(ctx)
-          ImGui.Separator(ctx)
-        end
-
-        -- Three RadioButton options
-        local changed = false
-
-        if ImGui.RadioButton(ctx, "SOURCE playback channels##policy", gui.multi_channel_policy == "source_playback") then
-          gui.multi_channel_policy = "source_playback"
-          changed = true
-        end
-        ImGui.Indent(ctx)
-        ImGui.TextWrapped(ctx, "Match the actual playback channel count of the source item (respects item channel mode settings).")
-        ImGui.TextDisabled(ctx, "Example: 8ch file playing as 4ch → uses 4ch")
-        ImGui.Unindent(ctx)
-        ImGui.Spacing(ctx)
-
-        if ImGui.RadioButton(ctx, "SOURCE track channels##policy", gui.multi_channel_policy == "source_track") then
-          gui.multi_channel_policy = "source_track"
-          changed = true
-        end
-        ImGui.Indent(ctx)
-        ImGui.TextWrapped(ctx, "Match the channel count of the source item's track (RGWH/Pro Tools style).")
-        ImGui.TextDisabled(ctx, "Example: Item on 8ch track → uses 8ch (regardless of item settings)")
-        ImGui.Unindent(ctx)
-        ImGui.Spacing(ctx)
-
-        if ImGui.RadioButton(ctx, "TARGET track channels##policy", gui.multi_channel_policy == "target_track") then
-          gui.multi_channel_policy = "target_track"
-          changed = true
-        end
-        ImGui.Indent(ctx)
-        ImGui.TextWrapped(ctx, "Respect the FX/chain track's current channel count (passive mode).")
-        ImGui.TextDisabled(ctx, "Example: FX track is 16ch → keeps 16ch (no modification)")
-        ImGui.Unindent(ctx)
-
-        if changed then
-          save_gui_settings()
-        end
-
-        ImGui.EndTabItem(ctx)
-      end
-
-      -- ============================================================
-      -- Tab 5: History Settings
+      -- Tab 4: History Settings
       -- ============================================================
       if ImGui.BeginTabItem(ctx, 'History') then
         ImGui.Text(ctx, "Maximum History Items:")
@@ -3964,20 +3775,6 @@ end
     ImGui.SetTooltip(ctx, "Copy FX to active take, then render (keeps old take FX)\nNote: copied FX IO mapping may be incorrect; use FX parameters for sound. TODO: improve IO mapping.")
   end
 
-  -- === TARGET TRACK NAME (Chain mode only) ===
-  if gui.mode ~= 0 then
-    ImGui.Text(ctx, "Preview Target:")
-    ImGui.SameLine(ctx)
-    -- Display current target track name as a button
-    -- Use ## ID to handle empty string case
-    local display_name = (gui.preview_target_track ~= "") and gui.preview_target_track or "(not set)"
-    if ImGui.Button(ctx, display_name .. "##target_track_btn", 150, 0) then
-      gui.show_target_track_popup = true
-    end
-    ImGui.SameLine(ctx)
-    ImGui.TextDisabled(ctx, "(click to edit)")
-  end
-
   -- === COPY SETTINGS (Compact horizontal) ===
   if gui.action == 1 then
     ImGui.Text(ctx, "Copy to:")
@@ -4003,7 +3800,7 @@ end
     end
   end
   if gui.action == 0 or gui.action == 2 then
-    -- Channel Mode
+    -- === ROW 1: Channel Mode (left) + Preview Target (right) ===
     ImGui.Text(ctx, "Channel:")
     ImGui.SameLine(ctx)
     if ImGui.RadioButton(ctx, "Auto##channel", gui.channel_mode == 0) then
@@ -4016,42 +3813,66 @@ end
       save_gui_settings()
     end
     ImGui.SameLine(ctx)
-
-    -- Multi channel mode radio button
     if ImGui.RadioButton(ctx, "Multi##channel", gui.channel_mode == 2) then
       gui.channel_mode = 2
       save_gui_settings()
     end
-
-    -- Tooltip showing current policy and hint to Settings
     if ImGui.IsItemHovered(ctx) then
-      local policy_name = "SOURCE playback"
-      if gui.multi_channel_policy == "source_track" then
-        policy_name = "SOURCE track"
-      elseif gui.multi_channel_policy == "target_track" then
-        policy_name = "TARGET track"
-      end
-
-      local tooltip_text = "Multi-channel mode\n\n"
-      tooltip_text = tooltip_text .. "Current policy: " .. policy_name .. "\n\n"
-      tooltip_text = tooltip_text .. "• Configure policy in Settings → Channel Mode"
-      ImGui.SetTooltip(ctx, tooltip_text)
+      local policy_names = {source_playback = "playback", source_track = "track", target_track = "target"}
+      local policy_name = policy_names[gui.multi_channel_policy] or gui.multi_channel_policy
+      ImGui.SetTooltip(ctx, "Multi-channel mode (policy: " .. policy_name .. ")")
     end
 
-    -- Whole File section
-    ImGui.SameLine(ctx, 0, 65)
+    -- Preview Target (right side of row 1)
+    if gui.mode ~= 0 then
+      ImGui.SameLine(ctx, 0, 120)
+      ImGui.Text(ctx, "Preview:")
+      ImGui.SameLine(ctx)
+      local display_name = (gui.preview_target_track ~= "") and gui.preview_target_track or "(not set)"
+      if ImGui.Button(ctx, display_name .. "##target_track_btn", 120, 0) then
+        gui.show_target_track_popup = true
+      end
+    end
+
+    -- === ROW 2: Policy (left) + Whole File (right) ===
+    ImGui.Text(ctx, "  ")
+    ImGui.SameLine(ctx)
+    if ImGui.RadioButton(ctx, "playback##policy", gui.multi_channel_policy == "source_playback") then
+      gui.multi_channel_policy = "source_playback"
+      save_gui_settings()
+    end
+    if ImGui.IsItemHovered(ctx) then
+      ImGui.SetTooltip(ctx, "Match item playback channels\nExample: 8ch file playing as 4ch \xe2\x86\x92 uses 4ch")
+    end
+    ImGui.SameLine(ctx)
+    if ImGui.RadioButton(ctx, "track##policy", gui.multi_channel_policy == "source_track") then
+      gui.multi_channel_policy = "source_track"
+      save_gui_settings()
+    end
+    if ImGui.IsItemHovered(ctx) then
+      ImGui.SetTooltip(ctx, "Match source track channels\nExample: Item on 8ch track \xe2\x86\x92 uses 8ch")
+    end
+    ImGui.SameLine(ctx)
+    if ImGui.RadioButton(ctx, "target##policy", gui.multi_channel_policy == "target_track") then
+      gui.multi_channel_policy = "target_track"
+      save_gui_settings()
+    end
+    if ImGui.IsItemHovered(ctx) then
+      ImGui.SetTooltip(ctx, "Keep FX track channels as-is\nExample: FX track is 16ch \xe2\x86\x92 keeps 16ch")
+    end
+
+    -- Whole File + handle input (right side of row 2)
+    ImGui.SameLine(ctx, 0, 130)
     local rv_whole = ImGui.Checkbox(ctx, "Whole File", gui.use_whole_file)
     if rv_whole then
       gui.use_whole_file = not gui.use_whole_file
       save_gui_settings()
     end
-
     ImGui.SameLine(ctx)
-    -- Handle seconds input (disabled when Whole File is checked)
     if gui.use_whole_file then
       ImGui.BeginDisabled(ctx)
     end
-    ImGui.SetNextItemWidth(ctx, 80)
+    ImGui.SetNextItemWidth(ctx, 93)
     local rv, new_val = ImGui.InputDouble(ctx, "##handle_seconds", gui.handle_seconds, 0, 0, "%.1f")
     if rv then
       gui.handle_seconds = math.max(0, new_val)
