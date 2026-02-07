@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="f2a91e3dc7d238a56514577df612dd2999220bb9">
+<index version="1" name="hsuanice Scripts" commit="079a7cea4de89996983dfe8e289423238928da0f">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -79,11 +79,18 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 Thin wrapper for calling RGWH Core via a single entry {\f1 RGWH.core(args)}. Use this as a starting point to test and ship wrappers that render/glue with handles.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 NEW: ExtState Mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Set USE_EXTSTATE = true to read ALL settings from RGWH ExtState (GUI settings)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Set USE_EXTSTATE = false to use the hardcoded settings below\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab This allows creating keyboard shortcuts that mirror GUI configuration\sa180\par}
 }
 ]]></description>
       </metadata>
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20Wrapper%20Template.lua</source>
+      </version>
+      <version name="0.2.2" author="hsuanice" time="2026-02-07T07:42:36Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/079a7cea4de89996983dfe8e289423238928da0f/Beta%20Testing/hsuanice_RGWH%20Wrapper%20Template.lua</source>
       </version>
     </reapack>
   </category>
