@@ -1,7 +1,7 @@
 --[[
 @description RGWH GUI - ImGui Interface for RGWH Core
 @author hsuanice
-@version 0.2.3
+@version 0.2.4
 @provides
   [main] .
 
@@ -14,6 +14,13 @@
   Adjust parameters using the visual controls and click operation buttons to execute.
 
 @changelog
+  0.2.4 [260206.2345] - ExtState: Full sync for wrapper scripts
+    - ADDED: SELECTION_SCOPE to ExtState (auto, units, ts, item)
+    - ADDED: SELECTION_POLICY to ExtState (progress, restore, none)
+    - ADDED: RENDER_MERGE_TO_ITEM, GLUE_MERGE_TO_ITEM to ExtState
+    - IMPACT: Wrapper scripts can now read ALL GUI settings from ExtState
+    - NOTE: Enables keyboard shortcuts to fully mirror GUI configuration
+
   0.2.3 [260205.1129] - RENAMED: Multi-Channel Policy labels simplified
     - CHANGED: "SOURCE-playback" → "playback", "SOURCE-track" → "track"
     - UPDATED: Radio buttons, tooltips, help text, console messages
@@ -69,6 +76,27 @@
     - REASON: Epsilon now internal constant (0.5 frames) in RGWH Core v0.2.2
     - IMPACT: Simplified GUI, epsilon no longer user-configurable
 
+  0.1.3 [v251224.1135] - Live ExtState Sync + Debug Setting Logs
+    - ADDED: Any setting change now updates RGWH ExtState immediately
+    - ADDED: Debug mode prints setting changes on every toggle/update
+
+  0.1.2 [v251218.2240] - Disabled collapse arrow
+    - Added: Main GUI window now uses WindowFlags_NoCollapse so users cannot collapse it accidentally
+
+  0.1.1 [v251218.1800] - BWF MetaEdit reminder + install guide
+    - Added: CLI detection flow that checks PATH/custom paths on startup, shows alert + guide when missing
+    - Added: Settings > Timecode section shows CLI status, allows custom path input and re-check action
+    - Added: Homebrew install modal with copy buttons for each step to simplify CLI installation
+
+  0.1.0 [v251215.1730] - DISABLED SETTINGS WINDOW DOCKING
+    - FIXED: Settings window now always has docking disabled (WindowFlags_NoDocking).
+      • Prevents Settings window from being docked into REAPER's dock system
+      • Settings window should remain floating for better usability
+      • Line: 985 (settings window flags)
+    - PURPOSE: Match Manual window behavior - both popup windows now always float
+    - IMPACT: Improved stability and consistent UX for popup windows
+
+  
 ]]--
 
 ------------------------------------------------------------
@@ -240,6 +268,8 @@ local function sync_rgwh_extstate_from_gui()
   local channel_names = { "auto", "mono", "multi" }
   local tc_names = { "previous", "current", "off" }
   local multi_channel_policy_names = { "source_playback", "source_track" }
+  local scope_names = { "auto", "units", "ts", "item" }
+  local policy_names = { "progress", "restore", "none" }
 
   local function set_rgwh(key, val)
     r.SetProjExtState(0, "RGWH", key, tostring(val))
@@ -261,10 +291,17 @@ local function sync_rgwh_extstate_from_gui()
   -- Timecode embed mode (render)
   set_rgwh("RENDER_TC_EMBED", tc_names[gui.tc_mode + 1])
 
-  -- Volume policies (ExtState only supports merge-to-take)
-  local merge_to_take = gui.merge_to_take and not gui.merge_to_item
-  set_rgwh("RENDER_MERGE_VOLUMES", merge_to_take and "1" or "0")
-  set_rgwh("GLUE_MERGE_VOLUMES", merge_to_take and "1" or "0")
+  -- Selection scope (for wrappers)
+  set_rgwh("SELECTION_SCOPE", scope_names[gui.selection_scope + 1])
+
+  -- Selection policy (for wrappers)
+  set_rgwh("SELECTION_POLICY", policy_names[gui.selection_policy + 1])
+
+  -- Volume policies (now includes merge_to_item)
+  set_rgwh("RENDER_MERGE_TO_ITEM", gui.merge_to_item and "1" or "0")
+  set_rgwh("GLUE_MERGE_TO_ITEM", gui.merge_to_item and "1" or "0")
+  set_rgwh("RENDER_MERGE_VOLUMES", gui.merge_to_take and "1" or "0")
+  set_rgwh("GLUE_MERGE_VOLUMES", gui.merge_to_take and "1" or "0")
   set_rgwh("RENDER_PRINT_VOLUMES", gui.print_volumes and "1" or "0")
   set_rgwh("GLUE_PRINT_VOLUMES", gui.print_volumes and "1" or "0")
 
