@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="aad556c0f9fda8ba2a0011ad65f4dbc98314bb33">
+<index version="1" name="hsuanice Scripts" commit="f2a91e3dc7d238a56514577df612dd2999220bb9">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -67,6 +67,9 @@
       </version>
       <version name="0.2.3" author="hsuanice" time="2026-02-05T03:46:19Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/3fdae655911f608bb0e36a997acded408403c50c/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.4" author="hsuanice" time="2026-02-07T07:33:43Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/f2a91e3dc7d238a56514577df612dd2999220bb9/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
