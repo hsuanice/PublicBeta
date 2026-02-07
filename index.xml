@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="079a7cea4de89996983dfe8e289423238928da0f">
+<index version="1" name="hsuanice Scripts" commit="946dcf865101f567b6cd0bd2c42ae7d37701e739">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -50,6 +50,26 @@
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/aad556c0f9fda8ba2a0011ad65f4dbc98314bb33/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
+    <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles (ExtState Shortcut)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Keyboard shortcut wrapper for RGWH Glue operation. Reads ALL settings from RGWH ExtState (same settings as GUI).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This script acts as a quick-launch shortcut:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Bind to a keyboard shortcut for instant glue access\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Uses the same settings you configured in RGWH GUI\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab No need to open GUI - just press the shortcut\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Settings are read from:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Project ExtState namespace "RGWH" (set by RGWH GUI)\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.2.2" author="hsuanice" time="2026-02-07T08:18:23Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/946dcf865101f567b6cd0bd2c42ae7d37701e739/Beta%20Testing/hsuanice_RGWH%20Glue.lua</source>
+      </version>
+    </reapack>
     <reapack name="hsuanice_RGWH Monitor.lua" type="script" desc="RGWH Monitor - Console Monitor for Items and Units">
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_RGWH%20Monitor.lua</source>
@@ -70,6 +90,11 @@
       </version>
       <version name="0.2.4" author="hsuanice" time="2026-02-07T07:33:43Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/f2a91e3dc7d238a56514577df612dd2999220bb9/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+    </reapack>
+    <reapack name="hsuanice_RGWH Render.lua" type="script" desc="RGWH Render - Render with Handles (ExtState Shortcut)">
+      <version name="0.2.2" author="hsuanice" time="2026-02-07T08:18:23Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/946dcf865101f567b6cd0bd2c42ae7d37701e739/Beta%20Testing/hsuanice_RGWH%20Render.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Wrapper Template.lua" type="script" desc="RGWH Wrapper Template - Template for Custom RGWH Wrappers">
