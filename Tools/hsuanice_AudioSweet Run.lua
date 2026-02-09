@@ -1,7 +1,7 @@
 --[[
 @description AudioSweet Run
 @author hsuanice
-@version 0.2.0
+@version 0.2.1
 @provides
   [main] .
 @about
@@ -48,61 +48,16 @@
   - Works independently - can be assigned to keyboard shortcuts
 
 @changelog
+  v0.2.1 (2026-02-09) [internal: v260209.2130]
+    - FIXED: Cross-platform path resolution for Windows/Linux compatibility
+      • Replaced debug.getinfo() relative path with reaper.GetResourcePath() absolute path
+      • Fixes "attempt to concatenate a nil value (local 'SCRIPT_DIR')" on Windows
+    - FIXED: Debug log path on Windows (os.getenv("HOME") returns nil)
+      • Added os.getenv("USERPROFILE") fallback for Windows
+
   v0.2.0 (2025-12-23) [internal: v251223.2256]
     - CHANGED: Version bump to 0.2.0 (public beta)
 
-  v0.1.2 (2025-12-23) [internal: v251223.1924]
-    - CHANGED: Added Copy+Apply action name support for GUI/Core integration
-
-  v0.1.1 (2025-12-22) [internal: v251222.1706]
-    - CHANGED: All executions now produce single undo operation
-      • External undo control enabled before calling AudioSweet Core
-      • AudioSweet Core v0.1.7: Skips internal undo when EXTERNAL_UNDO_CONTROL="1"
-      • Cleaner undo stack (one "AudioSweet Run (Normal/Preview)" entry)
-      • Matches GUI v0.1.24 behavior for consistent user experience
-
-  v0.1.0 (2025-12-21) [internal: v251221.1803]
-    - ADDED: Sync GUI settings to AudioSweet Core + RGWH Core before execution
-      • Apply/Copy action, copy scope/pos now set in hsuanice_AS ExtState
-      • File naming settings now set in hsuanice_AS ExtState
-      • Channel mode now set in hsuanice_AS (AS_APPLY_FX_MODE)
-      • Handle seconds now set in RGWH project ExtState
-    - ADDED: Optional debug file log on Desktop (Console + file)
-    - COMPLETE: Unified AudioSweet execution script with automatic mode detection
-    - Normal Mode: Intelligent window detection system
-      • Chain FX window focused → Chain mode (full FX chain processing)
-      • Single FX floating window → Single FX mode (isolated FX processing)
-      • No FX window → Chain mode on default preview target track
-      • Window state detection via GetFocusedFX + TrackFX_GetChainVisible + TrackFX_GetOpen
-      • Window state always takes priority over GUI settings
-      • Sets correct ExtState for AudioSweet Core: "hsuanice_AS/AS_MODE" = "focused"|"chain"
-      • Sets OVERRIDE ExtState for chain mode without focused FX
-    - Preview Mode: Complete workflow for preview execution
-      • Detects placeholder items (note format: "PREVIEWING @ Track <n> - <FXName>")
-      • Validates item selection on preview target track
-      • Stops preview: deletes placeholder, unsolo all
-      • Executes RGWH Core on selected items
-      • Moves rendered results back to original source track
-      • Stays in normal state (no preview restoration)
-      • Respects time selection for RGWH scope determination
-    - Integration:
-      • Reads all settings from AudioSweet GUI ExtState ("hsuanice_AS_GUI" namespace)
-      • Supports GUID-based track lookup for duplicate track names
-      • Compatible with AudioSweet Core OVERRIDE mechanism
-    - Debug Mode: Optional detailed logging (set DEBUG = true)
-    - Single script for unified workflow - no manual mode switching needed
-
-  [internal: v251221.1556]
-    - FIXED: Correct ExtState namespace and key for AudioSweet Core integration
-      • Changed from "hsuanice_AS_GUI/mode" to "hsuanice_AS/AS_MODE"
-      • Mode values changed from numeric (0/1) to string ("focused"/"chain")
-      • Resolves issue where chain mode was executing as focused mode
-    - DEBUG: Added MessageBox debug output (later removed - caused execution interference)
-
-  [internal: v251221.1158]
-    - Initial implementation of unified AudioSweet Run script
-    - Placeholder detection for Normal vs Preview mode split
-    - Basic window detection logic (later revised for correct priority)
 --]]
 
 local r = reaper
@@ -111,13 +66,14 @@ local r = reaper
 -- User Settings
 ------------------------------------------------------------
 local DEBUG = false  -- Set to true for detailed console logging
-local DEBUG_LOG_PATH = (os.getenv("HOME") or "") .. "/Desktop/AudioSweet Run Debug.log"
+local DEBUG_LOG_PATH = (os.getenv("HOME") or os.getenv("USERPROFILE") or "") .. "/Desktop/AudioSweet Run Debug.log"
 
 ------------------------------------------------------------
 -- Constants
 ------------------------------------------------------------
 local SETTINGS_NAMESPACE = "hsuanice_AS_GUI"
-local SCRIPT_DIR = debug.getinfo(1, "S").source:match("@(.*/)")
+local RES_PATH = r.GetResourcePath()
+local LIB_DIR = RES_PATH .. '/Scripts/hsuanice Scripts/Library/'
 
 local function debug_log(msg)
   if not DEBUG then
@@ -554,7 +510,7 @@ local function execute_normal_mode()
   end
 
   -- Load and execute AudioSweet Core
-  local AS_CORE = dofile(SCRIPT_DIR .. "../Library/hsuanice_AudioSweet Core.lua")
+  local AS_CORE = dofile(LIB_DIR .. "hsuanice_AudioSweet Core.lua")
 
   -- AudioSweet Core's main() is called during dofile()
   -- It will read the mode from ExtState and execute accordingly
@@ -685,7 +641,7 @@ local function execute_preview_mode(preview_info)
     debug_log("\n[Preview Mode] Step 4: Execute AudioSweet Core\n")
   end
 
-  local ok, err = pcall(dofile, SCRIPT_DIR .. "../Library/hsuanice_AudioSweet Core.lua")
+  local ok, err = pcall(dofile, LIB_DIR .. "hsuanice_AudioSweet Core.lua")
 
   if not ok then
     r.MB(string.format("AudioSweet Core error: %s", err or "unknown"), "AudioSweet Run - Preview Mode", 0)
