@@ -48,14 +48,14 @@
   - Works independently - can be assigned to keyboard shortcuts
 
 @changelog
-  v0.2.1 (2026-02-09) [internal: v260209.2130]
+  0.2.1 (2026-02-09) [internal: v260209.2130]
     - FIXED: Cross-platform path resolution for Windows/Linux compatibility
       • Replaced debug.getinfo() relative path with reaper.GetResourcePath() absolute path
       • Fixes "attempt to concatenate a nil value (local 'SCRIPT_DIR')" on Windows
     - FIXED: Debug log path on Windows (os.getenv("HOME") returns nil)
       • Added os.getenv("USERPROFILE") fallback for Windows
 
-  v0.2.0 (2025-12-23) [internal: v251223.2256]
+  0.2.0 (2025-12-23) [internal: v251223.2256]
     - CHANGED: Version bump to 0.2.0 (public beta)
 
 --]]
