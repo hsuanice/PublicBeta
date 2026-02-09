@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="44596df99e18b6e134b61fbff481d3812dfb4453">
+<index version="1" name="hsuanice Scripts" commit="bfb0c953814e4a9bb79f9b8a17ca385a68e9b0f3">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -207,6 +207,22 @@
   - Reads preview settings from AudioSweet GUI ExtState]]></changelog>
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/786e7e65a9c91c682acb149bc88b9073308af10d/Tools/hsuanice_AudioSweet%20Preview%20Toggle.lua</source>
       </version>
+      <version name="0.2.1" author="Hsuanice" time="2026-02-09T13:50:10Z">
+        <changelog><![CDATA[0.2.1 (2026-02-09) [internal: v260209.2130]
+  - FIXED: Cross-platform path resolution for Windows/Linux compatibility
+    • Replaced debug.getinfo() relative path with reaper.GetResourcePath() absolute path
+    • Fixes "attempt to concatenate a nil value (local 'SCRIPT_DIR')" on Windows
+
+0.2.0 (2025-12-23) [internal: v251223.2256]
+  - CHANGED: Version bump to 0.2.0 (public beta)
+
+0.1.0 (2025-12-21) [internal: v251221.1915]
+  - NEW: Unified preview script that auto-detects focused vs chain window
+  - Priority: Chain FX window → chain preview, Single FX floating → focused preview
+  - Fallback: No FX window → chain preview on preview target track
+  - Reads preview settings from AudioSweet GUI ExtState]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/11819d0a917633c140a03d36825999bd0da795cb/Tools/hsuanice_AudioSweet%20Preview%20Toggle.lua</source>
+      </version>
     </reapack>
     <reapack name="hsuanice_AudioSweet Run.lua" type="script" desc="AudioSweet Run">
       <metadata>
@@ -245,6 +261,9 @@
       </metadata>
       <version name="0.2.0" author="hsuanice" time="2025-12-23T16:53:50Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/786e7e65a9c91c682acb149bc88b9073308af10d/Tools/hsuanice_AudioSweet%20Run.lua</source>
+      </version>
+      <version name="0.2.1" author="hsuanice" time="2026-02-09T13:51:12Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/bfb0c953814e4a9bb79f9b8a17ca385a68e9b0f3/Tools/hsuanice_AudioSweet%20Run.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_AudioSweet Solo Toggle.lua" type="script" desc="AudioSweet Solo Toggle">
