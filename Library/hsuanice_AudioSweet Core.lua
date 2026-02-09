@@ -1,6 +1,6 @@
 --[[
 @description AudioSweet Core - Focused Track FX render via RGWH Core
-@version 0.3.2
+@version 0.3.3
 @author hsuanice
 @provides
   [main] .
@@ -13,93 +13,9 @@ Tim Chimes (original), adapted by hsuanice for AudioSweet Core integration.
   http://timchimes.com/scripting-with-reaper-audiosuite/
 
 @changelog
-  0.3.2 [260205.0458]
-    - BUGFIX: Mono mode completely broken — always passed channel_mode="auto" to RGWH.core()
-      • BUG: Both APPLY and CORE paths hardcoded channel_mode="auto" in RGWH.core() args
-      • When user selected Mono, RGWH received "auto" → detected multi-ch → used preserve → wrong output
-      • FIX: Pass actual channel_mode to RGWH — "mono" when mono, "auto" otherwise (let ExtState policy resolve)
-    - BUGFIX: TARGET-track (CORE path) ExtState handshake still broken
-      • BUG: CORE path still wrote empty MULTI_CHANNEL_POLICY (only APPLY path was fixed in v0.3.0)
-      • FIX: CORE path now also writes "source_track" for TARGET-track policy
-    - RENAMED: "SOURCE-target" → "TARGET-track" (clearer naming, no SOURCE/TARGET conflict)
-      • Internal ExtState value "target_track" unchanged (already matches new name)
-      • Updated all comments, logs, and changelog display names
-    - REQUIRES: RGWH Core v0.3.0 [v260205.0409]+
-
-  0.3.1 [260205.0433]
-    - BUGFIX: TARGET-track ExtState handshake broken after RGWH Core force_multi removal (APPLY path only)
-      • BUG: Wrote empty MULTI_CHANNEL_POLICY → RGWH v0.3.0 defaults to preserve → adjusts FX track to item ch
-      • Expected: TARGET-track should output FX track ch (not item ch)
-      • FIX: TARGET-track now writes "source_track" to RGWH (on FX track, target ch = track ch)
-    - IMPROVED: source_playback explicit odd channel handling in FX track pre-adjustment
-      • Old: desired_apply_nchan = item_ch (REAPER silently rounds odd to even)
-      • New: Odd multi ch (3,5,7...) → explicitly set item_ch+1 (even ceiling, matches RGWH hybrid logic)
-    - REQUIRES: RGWH Core v0.3.0 [v260205.0409]+
-
-  0.3.0 [260104.2143]
-    - CHANGED: Complete redesign of Multi-Channel Policy handling with TARGET-track support
-    - ARCHITECTURE: Three policies with clear separation of concerns
-      • SOURCE-playback: Adjust FX track to item playback channels, write "source_playback" ExtState to RGWH
-      • SOURCE-track: Adjust FX track to source track channels, write "source_track" ExtState to RGWH
-      • TARGET-track: Keep FX track channels as-is, write "source_track" ExtState (FX track ch = target ch)
-    - IMPLEMENTATION: FX track channel adjustment strategy
-      • Before RGWH.core() call: Snapshot FX track original channel count
-      • SOURCE-playback: Set FX track to max(2, item_playback_channels)
-      • SOURCE-track: Set FX track to source_track_channels
-      • TARGET-track: No adjustment (keep FX track channels, e.g., 6ch for Atmos)
-      • After RGWH.core() call: Restore FX track to original channel count
-    - CHANGED: ExtState protocol updated for RGWH Core v0.3.0 compatibility
-      • Write "RGWH"/"MULTI_CHANNEL_POLICY" = "source_playback" | "source_track" (TARGET-track → "source_track")
-      • TARGET-track mode: Write "source_track" (on FX track, target ch = track ch)
-    - IMPACT: Cleaner architecture, all three policies use unified source_track/source_playback protocol
-    - REQUIRES: RGWH Core v0.3.0+ for Multi-Channel Policy ExtState support
-    - BACKWARD COMPATIBLE: Existing behavior preserved when no policy set
-
-  0.2.3 [251226.0356]
-    - CHANGED: Unified Multi-Channel Policy ExtState Protocol
-      • BEFORE: Used hsuanice_AS.RGWH_PRESERVE_TRACK_CH = "0"/"1" (boolean handshake)
-      • NOW: Uses RGWH.MULTI_CHANNEL_POLICY = "source_playback"/"source_track"/"target_track" (semantic protocol)
-      • IMPACT: Shares same ExtState protocol as RGWH GUI (single source of truth)
-      • Implementation: Lines 2094-2119, 2783-2796, 2822-2823 (unified SetProjExtState)
-      • Backward compatible: RGWH Core v0.2.2c+ reads both protocols with fallback
-    - REFACTORED: AudioSweet Core is now a pure RGWH wrapper (Phase 4)
-      • apply_focused_fx_to_item() simplified from ~170 to ~50 lines
-      • apply_focused_via_rgwh_render_new_take() removed (merged into unified apply)
-      • All render/glue logic delegated to RGWH.core()
-      • Removed duplicated channel mode detection (~70 lines)
-      • Removed duplicated Multi-Channel Policy logic (~50 lines)
-      • Removed direct REAPER action calls (40361/41993)
-    - CHANGED: Unified apply flow
-      • Single apply function handles both focused and chain modes
-      • Channel mode detection moved to args preparation
-      • Multi-Channel Policy previously via RGWH_PRESERVE_TRACK_CH handshake (now unified protocol)
-    - FIXED: Multi-Channel Policy now works correctly in all execution paths
-      • ROOT CAUSE: Action 41993 (Apply multichannel) uses TRACK channel count, not item channel count
-      • SOLUTION: Temporarily adjust FX track channel count based on Multi-Channel Policy BEFORE apply
-      • source_playback: Set FX track to item playback channels → apply → restore FX track
-      • source_track: Set FX track to source track channels → apply → restore FX track
-      • target_track: Keep FX track as-is (no adjustment needed)
-      • TS-WINDOW[UNIT] path now snapshots source track channel count before glue (line 2467-2472)
-      • Fixed output item retrieval in TS-WINDOW[UNIT] path (line 2508: use GetSelectedMediaItem)
-      • Fixed CountTakes error when copying FX to non-active takes (use out_item instead of glued)
-      • ExtState namespace corrected: "hsuanice_AS" (was incorrectly using "RGWH")
-      • Implementation: lines 2051-2087 (FX track adjustment), 2128-2134 (FX track restore)
-    - IMPACT: ~200 lines removed, cleaner architecture, single source of truth
-    - NOTE: All Apply functionality now uses RGWH.core() API
-
-  0.2.2 [251225.2158]
-    - REFACTORED: Removed duplicated unit detection logic
-      • Removed build_units_from_selection() function (~47 lines of duplicated code)
-      • Now uses RGWH.utils.detect_units_from_selection() (single source of truth)
-      • Added format conversion: RGWH unit → AudioSweet unit (line 2516-2531)
-        RGWH: {kind, members=[{it,L,R},...], start, finish, track}
-        AS:   {track, items=[item,...], UL, UR}
-      • Helper functions (project_epsilon, approx_eq, ranges_touch_or_overlap) retained for AudioSweet-specific use
-    - CHANGED: Load RGWH Core early in main() to access utility functions
-      • RGWH loaded at script start (line 2401) instead of per-unit (line 2750+)
-      • Provides access to RGWH.utils API for unit detection
-    - IMPACT: Cleaner codebase, maintains DRY principle, no functionality change
-    - NOTE: Helper functions marked for future refactoring in v0.3.0
+  0.3.3 [260209.2130]
+    - FIXED: Debug log path on Windows (os.getenv("HOME") returns nil)
+      • Added os.getenv("USERPROFILE") fallback for Windows
 
 ]]--
 
@@ -163,7 +79,7 @@ function debug(message)
 end
 
 -- Step logger: always prints when DEBUG=1; use for deterministic tracing
-local DEBUG_FILE_PATH = (os.getenv("HOME") or "") .. "/Desktop/AudioSweet_Core_Debug.log"
+local DEBUG_FILE_PATH = (os.getenv("HOME") or os.getenv("USERPROFILE") or "") .. "/Desktop/AudioSweet_Core_Debug.log"
 local function log_step(tag, fmt, ...)
   if not debug_enabled() then return end
   local msg = fmt and string.format(fmt, ...) or ""
