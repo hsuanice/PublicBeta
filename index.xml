@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="3332b54f8a9ff61988516e053843bd586a096386">
+<index version="1" name="hsuanice Scripts" commit="f3c772c1cd7e673efc4633cce2dcccc1df306e7a">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -129,6 +129,9 @@
       </version>
       <version name="0.2.0.0.1" author="hsuanice" time="2025-12-23T15:54:09Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/c61e38a20f8ca8c0e7d18cc8b33090b23885eb0c/Library/hsuanice_AS%20Preview%20Core.lua</source>
+      </version>
+      <version name="0.2.3" author="hsuanice" time="2026-02-10T03:40:27Z">
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/f3c772c1cd7e673efc4633cce2dcccc1df306e7a/Library/hsuanice_AS%20Preview%20Core.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_AudioSweet Core.lua" type="script" desc="AudioSweet Core - Focused Track FX render via RGWH Core">
