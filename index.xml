@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="e9f2af69589e9727da6e9b403ddadbf3f8b7ffb3">
+<index version="1" name="hsuanice Scripts" commit="bf8508e56d684e038ace0e7adae6ccd5df104524">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -33,6 +33,7 @@
 {\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab {\b Auto Tail Detection}: Intelligent tail length via audio analysis \u8226 ? Analyze processed audio amplitude/RMS to detect natural decay \u8226 ? Auto-determine tail length based on reverb/delay characteristics \u8226 ? Advanced feature requiring signal processing research\sa180\par}
 }
 ]]></description>
+        <link rel="website">https://forum.cockos.com/showthread.php?p=2910884#post2910884</link>
       </metadata>
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
@@ -48,6 +49,19 @@
       </version>
       <version name="0.2.3" author="hsuanice" time="2026-02-05T03:57:14Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/aad556c0f9fda8ba2a0011ad65f4dbc98314bb33/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.4" author="hsuanice" time="2026-03-27T16:23:16Z">
+        <changelog><![CDATA[0.2.4 [260327.2345]
+  - ADDED: Independent Show/Hide checkboxes for Presets and History panels
+    • Split "Show Presets/History" into separate "Show Presets" and "Show History" checkboxes
+    • Layout: [Show Presets] ... [Show FX window on recall] ... [Show History]
+    • When only one panel is visible, it expands to use the full available width
+    • When both panels are visible, they share the width 50/50 as before
+  - ADDED: Drag-to-reorder for Saved FX Presets
+    • Drag handle (=) added to the left of each preset row
+    • Drop onto any row to insert the dragged item above it
+    • New order is persisted immediately via save_chains_to_extstate()]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/bf8508e56d684e038ace0e7adae6ccd5df104524/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles (ExtState Shortcut)">
