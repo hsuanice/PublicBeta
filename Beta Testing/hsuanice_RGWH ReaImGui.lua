@@ -1,103 +1,26 @@
---[[
-@description RGWH GUI - ImGui Interface for RGWH Core
-@author hsuanice
-@version 0.2.4
-@provides
-  [main] .
-
-@about
-  ImGui-based GUI for configuring and running RGWH Core operations.
-  Provides visual controls for all RGWH Wrapper Template parameters.
-
-@usage
-  Run this script in REAPER to open the RGWH GUI window.
-  Adjust parameters using the visual controls and click operation buttons to execute.
-
-@changelog
-  0.2.4 [260206.2345] - ExtState: Full sync for wrapper scripts
-    - ADDED: SELECTION_SCOPE to ExtState (auto, units, ts, item)
-    - ADDED: SELECTION_POLICY to ExtState (progress, restore, none)
-    - ADDED: RENDER_MERGE_TO_ITEM, GLUE_MERGE_TO_ITEM to ExtState
-    - IMPACT: Wrapper scripts can now read ALL GUI settings from ExtState
-    - NOTE: Enables keyboard shortcuts to fully mirror GUI configuration
-
-  0.2.3 [260205.1129] - RENAMED: Multi-Channel Policy labels simplified
-    - CHANGED: "SOURCE-playback" → "playback", "SOURCE-track" → "track"
-    - UPDATED: Radio buttons, tooltips, help text, console messages
-    - REASON: Consistency with AudioSweet GUI naming convention
-
-  0.2.2 [260205.0418] - REMOVE: force_multi / No-TrackFX Policy settings (redundant with MULTI_CHANNEL_POLICY)
-    - REMOVED: "Glue No-TrackFX Policy" and "Render No-TrackFX Policy" combo controls from Settings tab
-    - REMOVED: GUI state fields glue_no_trackfx_policy / render_no_trackfx_policy
-    - REMOVED: persist keys, ExtState sync, labels, debug output, args pass-through for the two policies
-    - REASON: MULTI_CHANNEL_POLICY now fully controls channel behavior
-      • source_track = old force_multi (Apply after Glue to force track ch)
-      • source_playback = old preserve (Glue natively preserves playback ch → skip Apply → faster)
-    - PERFORMANCE: Glue with SOURCE-playback is significantly faster (skips unnecessary Apply step)
-    - REQUIRES: RGWH Core v0.3.0 [v260205.0409]+
-
-  0.2.1 [260204.2352] - Multi mode hover info + Manual: mono 2ch floor documentation
-    - UPDATED: Multi channel mode tooltip
-      • Now explains Multi-Channel Policy (SOURCE-playback / SOURCE-track)
-      • Clarifies vs AUTO mode: MULTI does not detect mono items → 2ch minimum
-    - UPDATED: SOURCE-playback policy tooltip
-      • Separated mono handling by mode: AUTO → 1ch, MULTI → 2ch (40209 floor)
-      • Added note: "Use AUTO mode if mono should stay mono"
-    - UPDATED: Manual > Overview > Channel Mode table
-      • Multi row: now shows policy-based (40209/41993) instead of hardcoded 41993
-      • Auto row: clarified mono → 40361, multi → policy-based
-      • Apply Actions row: added 40209 (preserve)
-    - ADDED: Manual > Multi-Channel Policy section
-      • SOURCE-playback vs SOURCE-track explanation
-      • Mono items in MULTI mode: 40209 has 2ch floor
-      • Guidance: use AUTO mode for true 1ch mono preservation
-
-  0.2.0 [260104.2344] - Multi-Channel Policy Support
-    - ADDED: Multi-Channel Policy control for AUTO and MULTI channel modes
-      • Two policies: SOURCE-playback (preserve item channels) and SOURCE-track (match track channels)
-      • UI: Appears as indented radio buttons below Channel Mode when AUTO or MULTI is selected
-      • Tooltips explain each policy's behavior and use cases
-    - ADDED: ExtState synchronization for MULTI_CHANNEL_POLICY
-      • Writes "source_playback" or "source_track" to RGWH ExtState
-      • Integrated into sync_rgwh_extstate_from_gui() function
-    - ADDED: Debug logging for Multi-Channel Policy setting
-      • Shows in console output when debug mode is enabled
-      • Format: "Multi-Channel Policy: SOURCE-playback" or "SOURCE-track"
-    - CHANGED: GUI state now includes multi_channel_policy field (0=source_playback, 1=source_track)
-    - REQUIRES: RGWH Core v0.3.0+ for Multi-Channel Policy support
-    - IMPACT: Users can now control multi-channel behavior for AUTO/MULTI modes
-    - NOTE: Policy only applies to multi-channel items; mono items always output mono
-
-  0.1.4 [251225.1835] - Epsilon Removal (Internal Constant)
-    - REMOVED: Epsilon Mode and Epsilon Value GUI controls (lines 1467-1479)
-    - REMOVED: epsilon_mode and epsilon_value from gui state (lines 525-526)
-    - REMOVED: epsilon ExtState synchronization (lines 651-657, 1211-1216)
-    - REMOVED: epsilon debug logging entry (line 760)
-    - REASON: Epsilon now internal constant (0.5 frames) in RGWH Core v0.2.2
-    - IMPACT: Simplified GUI, epsilon no longer user-configurable
-
-  0.1.3 [v251224.1135] - Live ExtState Sync + Debug Setting Logs
-    - ADDED: Any setting change now updates RGWH ExtState immediately
-    - ADDED: Debug mode prints setting changes on every toggle/update
-
-  0.1.2 [v251218.2240] - Disabled collapse arrow
-    - Added: Main GUI window now uses WindowFlags_NoCollapse so users cannot collapse it accidentally
-
-  0.1.1 [v251218.1800] - BWF MetaEdit reminder + install guide
-    - Added: CLI detection flow that checks PATH/custom paths on startup, shows alert + guide when missing
-    - Added: Settings > Timecode section shows CLI status, allows custom path input and re-check action
-    - Added: Homebrew install modal with copy buttons for each step to simplify CLI installation
-
-  0.1.0 [v251215.1730] - DISABLED SETTINGS WINDOW DOCKING
-    - FIXED: Settings window now always has docking disabled (WindowFlags_NoDocking).
-      • Prevents Settings window from being docked into REAPER's dock system
-      • Settings window should remain floating for better usability
-      • Line: 985 (settings window flags)
-    - PURPOSE: Match Manual window behavior - both popup windows now always float
-    - IMPACT: Improved stability and consistent UX for popup windows
-
-  
-]]--
+-- @description RGWH ReaImGui - ImGui Interface for RGWH Core（Render or Glue with Handles）
+-- @version 0.2.5
+-- @author hsuanice
+-- @link https://forum.cockos.com/showthread.php?t=305456
+-- @provides
+--   [main] .
+--
+-- @about
+--   ImGui-based GUI for configuring and running RGWH Core operations.
+--   Provides visual controls for all RGWH Wrapper Template parameters.
+--
+-- @usage
+--   Run this script in REAPER to open the RGWH GUI window.
+--   Adjust parameters using the visual controls and click operation buttons to execute.
+--
+-- @changelog
+--   0.2.5 [260328.0408] - ADDED: Tail Seconds — FX decay extension (requires RGWH Core ≥ 0.3.7)
+--     - NEW: "Tail (s)" input field under Handle settings
+--       • Extends item into silence after right handle to capture reverb/delay/echo decay
+--       • 0 = disabled (backward-compatible default)
+--     - tail_seconds persisted in gui state (persist_keys + serialize/parse)
+--     - TAIL_SECONDS written to RGWH ExtState on every sync_to_extstate()
+--     - Debug log includes Tail Seconds value
 
 ------------------------------------------------------------
 -- Dependencies
@@ -178,8 +101,8 @@ local gui = {
   print_volumes = false,
 
   -- Handle settings
-  handle_mode = 0,          -- 0=ext, 1=seconds, 2=frames
   handle_length = 5.0,
+  tail_seconds = 0.0,       -- FX tail capture (reverb/delay/echo); appended after right handle
 
   -- Cues (v0.1.4: epsilon removed - now internal constant in RGWH Core)
   cue_write_edge = true,
@@ -214,7 +137,7 @@ local persist_keys = {
   'op','selection_scope','channel_mode','multi_channel_policy',
   'take_fx','track_fx','tc_mode',
   'merge_to_item','merge_to_take','print_volumes',
-  'handle_mode','handle_length',
+  'handle_length','tail_seconds',
   'epsilon_mode','epsilon_value',
   'cue_write_edge','cue_write_glue',
   'glue_single_items',
@@ -305,14 +228,10 @@ local function sync_rgwh_extstate_from_gui()
   set_rgwh("RENDER_PRINT_VOLUMES", gui.print_volumes and "1" or "0")
   set_rgwh("GLUE_PRINT_VOLUMES", gui.print_volumes and "1" or "0")
 
-  -- Handle/epsilon
-  if gui.handle_mode == 1 then
-    set_rgwh("HANDLE_MODE", "seconds")
-    set_rgwh("HANDLE_SECONDS", gui.handle_length)
-  elseif gui.handle_mode == 2 then
-    set_rgwh("HANDLE_MODE", "frames")
-    set_rgwh("HANDLE_SECONDS", gui.handle_length)
-  end
+  -- Handle (always seconds)
+  set_rgwh("HANDLE_MODE", "seconds")
+  set_rgwh("HANDLE_SECONDS", gui.handle_length)
+  set_rgwh("TAIL_SECONDS", gui.tail_seconds or 0.0)
 
   -- Cues (v0.1.4: epsilon sync removed)
   set_rgwh("WRITE_EDGE_CUES", gui.cue_write_edge and "1" or "0")
@@ -385,7 +304,7 @@ local function format_setting_value(key, val)
     return debug_names[val + 1] or tostring(val)
   elseif key == "selection_policy" then
     return selection_policy_names[val + 1] or tostring(val)
-  elseif key == "handle_length" or key == "epsilon_value" then
+  elseif key == "handle_length" or key == "epsilon_value" or key == "tail_seconds" then
     return string.format("%.3f", tonumber(val) or 0)
   end
 
@@ -576,7 +495,6 @@ local function print_all_settings(prefix)
   local scope_names = {"Auto", "Units", "Time Selection", "Per Item"}
   local channel_names = {"Auto", "Mono", "Multi"}
   local tc_names = {"Previous", "Current", "Off"}
-  local handle_names = {"Use ExtState", "Seconds", "Frames"}
   -- v0.1.4: epsilon_names removed (epsilon is now internal constant)
   local multi_channel_policy_names = {"playback", "track"}  -- v0.3.0
   local debug_names = {"Silent", "Normal", "Verbose"}
@@ -595,8 +513,8 @@ local function print_all_settings(prefix)
   r.ShowConsoleMsg(string.format("  TC Mode: %s\n", tc_names[gui.tc_mode + 1] or "Unknown"))
   r.ShowConsoleMsg(string.format("  Merge Volumes: %s\n", bool_str(gui.merge_volumes)))
   r.ShowConsoleMsg(string.format("  Print Volumes: %s\n", bool_str(gui.print_volumes)))
-  r.ShowConsoleMsg(string.format("  Handle Mode: %s\n", handle_names[gui.handle_mode + 1] or "Unknown"))
-  r.ShowConsoleMsg(string.format("  Handle Length: %.2f\n", gui.handle_length))
+  r.ShowConsoleMsg(string.format("  Handle: %.2fs\n", gui.handle_length))
+  r.ShowConsoleMsg(string.format("  Tail: %.2fs\n", gui.tail_seconds or 0.0))
   -- v0.1.4: Epsilon debug output removed (now internal constant: 0.1 frames)
   r.ShowConsoleMsg(string.format("  Write Edge Cues: %s\n", bool_str(gui.cue_write_edge)))
   r.ShowConsoleMsg(string.format("  Write Glue Cues: %s\n", bool_str(gui.cue_write_glue)))
@@ -842,15 +760,12 @@ local function build_args_from_gui(operation)
     },
   }
 
-  -- Handle
-  if gui.handle_mode == 0 then
-    args.handle = "ext"
-  elseif gui.handle_mode == 1 then
-    args.handle = { mode = "seconds", seconds = gui.handle_length }
-  else -- frames
-    local fps = r.TimeMap_curFrameRate(0) or 30
-    args.handle = { mode = "seconds", seconds = gui.handle_length / fps }
-  end
+  -- Handle (always seconds) + Tail
+  args.handle = {
+    mode    = "seconds",
+    seconds = gui.handle_length,
+    tail    = gui.tail_seconds or 0.0,
+  }
 
   -- Debug (v0.1.4: epsilon removed - now internal constant)
   args.debug = {
@@ -1319,6 +1234,11 @@ local function draw_manual_window()
         ImGui.TableNextColumn(ctx); ImGui.TextColored(ctx, 0xFFFF00FF, 'Handle as Offset')
         ImGui.TableNextColumn(ctx); ImGui.Text(ctx, 'D_STARTOFFS')
         ImGui.TableNextColumn(ctx); ImGui.Text(ctx, 'Store handle in take offset after processing')
+
+        ImGui.TableNextRow(ctx)
+        ImGui.TableNextColumn(ctx); ImGui.TextColored(ctx, 0xFFFF00FF, 'Tail (Glue only)')
+        ImGui.TableNextColumn(ctx); ImGui.Text(ctx, 'D_LENGTH += TAIL_SECONDS')
+        ImGui.TableNextColumn(ctx); ImGui.Text(ctx, 'Extends glued item into silence for FX decay (reverb/delay/echo). Ignored during Render.')
 
         ImGui.EndTable(ctx)
       end
@@ -2017,17 +1937,20 @@ local function draw_gui()
   -- === HANDLE SETTINGS ===
   draw_section_header("HANDLE (Pre/Post Roll)")
 
-  rv, new_val = ImGui.Combo(ctx, "Handle Mode", gui.handle_mode, "Use ExtState\0Seconds\0Frames\0")
-  if rv then gui.handle_mode = new_val end
-
-  if gui.handle_mode > 0 then
-    rv, new_val = ImGui.InputDouble(ctx, "Handle Length", gui.handle_length, 0.1, 1.0, "%.3f")
-    if rv then gui.handle_length = math.max(0, new_val) end
-
-    local unit = gui.handle_mode == 1 and "seconds" or "frames"
-    ImGui.SameLine(ctx)
-    ImGui.TextDisabled(ctx, unit)
+  ImGui.Text(ctx, "Handle (s)")
+  ImGui.SameLine(ctx)
+  ImGui.SetNextItemWidth(ctx, 100)
+  rv, new_val = ImGui.InputDouble(ctx, "##handle_length", gui.handle_length, 0.5, 1.0, "%.1f")
+  if rv then gui.handle_length = math.max(0, new_val) end
+  ImGui.SameLine(ctx, 0, 16)
+  ImGui.Text(ctx, "Tail (s)")
+  if ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "FX tail capture — Glue only (ignored during Render)\nExtends glued item into silence after the right handle\nCaptures reverb/delay/echo decay\n0 = disabled (default)")
   end
+  ImGui.SameLine(ctx)
+  ImGui.SetNextItemWidth(ctx, 100)
+  rv, new_val = ImGui.InputDouble(ctx, "##tail_seconds", gui.tail_seconds, 0.5, 1.0, "%.1f")
+  if rv then gui.tail_seconds = math.max(0, new_val) end
 
   -- === OPERATION BUTTONS & INFO ===
   ImGui.Spacing(ctx)
