@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="bf8508e56d684e038ace0e7adae6ccd5df104524">
+<index version="1" name="hsuanice Scripts" commit="6bf1782682be3b98c2dbcd077d2deff05a6f5c1a">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -202,7 +202,17 @@
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_Metadata%20Read.lua</source>
       </version>
     </reapack>
-    <reapack name="hsuanice_RGWH Core.lua" type="script" desc="RGWH Core - Render or Glue with Handles">
+    <reapack name="hsuanice_RGWH Core.lua" type="script" desc="RGWH Core - Core Library of Render or Glue with Handles">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Core library for handle-aware Render/Glue workflows with clear, single-entry API. Features: \u8226 ? Handle-aware windows with clamp-to-source. \u8226 ? Glue by Item Units (same-track grouping), with optional Glue Cues. \u8226 ? Render single items with apply policies and BWF TimeReference embed. \u8226 ? One-run overrides via ExtState snapshot/restore (non-destructive defaults). \u8226 ? Edge Cues (#in/#out) and Glue Cues (#Glue: ) for media cue workflows.\par}
+}
+]]></description>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=305456</link>
+      </metadata>
       <version name="0.1.0" author="hsuanice" time="2025-12-16T10:34:51Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/959c37339bbe980d3a3a9450421d76e4998f30d4/Library/hsuanice_RGWH%20Core.lua</source>
       </version>
@@ -217,6 +227,19 @@
       </version>
       <version name="0.3.6" author="hsuanice" time="2026-02-07T09:31:23Z">
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/d37fbf50a0243bc4ce5212328426c304c79bdc38/Library/hsuanice_RGWH%20Core.lua</source>
+      </version>
+      <version name="0.3.7" author="hsuanice" time="2026-03-28T12:22:35Z">
+        <changelog><![CDATA[0.3.7 [260328.0408] - ADDED: Tail Seconds — FX decay extension independent of handles
+  - NEW: TAIL_SECONDS setting (default 0.0): extends the processed item beyond the right handle,
+    into silence, to capture reverb/delay/echo decay naturally.
+  - Tail is NOT clamped to source length — item extends into silence (REAPER pads with zeros).
+  - Tail is always additive: finalR = gotR + TAIL (stacks on top of Right handle, not replacing it).
+  - Glue path only: UR window and final item length extended by TAIL on last member.
+    • Render intentionally ignores TAIL (tail is Glue-only by design).
+  - per_member_window_lr() now accepts tail param; returns finalR and tailH in result table.
+  - M.core() API: handle = { ..., tail=N } sets TAIL_SECONDS for a one-run override.
+  - DEFAULTS.TAIL_SECONDS = 0.0 (fully backward-compatible; no behaviour change when not set).]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/6bf1782682be3b98c2dbcd077d2deff05a6f5c1a/Library/hsuanice_RGWH%20Core.lua</source>
       </version>
     </reapack>
   </category>
