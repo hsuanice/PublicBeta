@@ -1,155 +1,75 @@
---[[
-@description RGWH Core - Render or Glue with Handles
-@version 0.3.6
-@author hsuanice
+-- @description RGWH Core - Core Library of Render or Glue with Handles
+-- @version 0.3.7
+-- @author hsuanice
+-- @link https://forum.cockos.com/showthread.php?t=305456
+-- @provides
+--   [main] .
+-- @about
+--   Core library for handle-aware Render/Glue workflows with clear, single-entry API.
+--   Features:
+--     • Handle-aware windows with clamp-to-source.
+--     • Glue by Item Units (same-track grouping), with optional Glue Cues.
+--     • Render single items with apply policies and BWF TimeReference embed.
+--     • One-run overrides via ExtState snapshot/restore (non-destructive defaults).
+--     • Edge Cues (#in/#out) and Glue Cues (#Glue: <TakeName>) for media cue workflows.
+--
+-- @api
+--   -- Primary:
+--   RGWH.core(args) -> (ok:boolean, err?:string)
+--     args = {
+--       op = "render" | "glue" | "auto",     -- render = single item only; glue supports scope (see below)
+--       selection_scope = "auto" | "units" | "ts" | "item",  -- glue/auto only; render ignores it
+--       item  = MediaItem*,                  -- optional single-item provider (render or glue/item)
+--       items = { MediaItem*, ... },         -- optional items provider for glue/units
+--
+--       -- Channel mode (maps to GLUE/RENDER_APPLY_MODE):
+--       channel_mode = "auto" | "mono" | "multi",
+--
+--       -- Render-specific toggles:
+--       take_fx  = true|false,               -- bake take FX (nil = keep ExtState)
+--       track_fx = true|false,               -- bake track FX (nil = keep ExtState)
+--       tc_mode  = "previous" | "current" | "off", -- TimeReference embed policy (render only)
+--       merge_volumes = true|false,          -- merge item volume into take volume before render (default: true)
+--       merge_to_item = true|false,          -- merge take volume into item volume (mutually exclusive with merge_volumes)
+--       print_volumes = true|false,          -- bake volumes into rendered audio; false = restore original (default: true)
+--
+--       -- One-run overrides (fallback: ExtState -> DEFAULTS):
+--       handle  = { mode="seconds", seconds=5.0, tail=0.0 } | "ext" | nil,
+--       cues    = { write_edge=true/false, write_glue=true/false },
+--       policies = {
+--         glue_single_items = true/false,
+--       },
+--       debug = { level=1..N, no_clear=true/false },
+--     }
+--
+--   -- Legacy (kept for compatibility):
+--   RGWH.glue_selection()
+--   RGWH.render_selection(take_fx?, track_fx?, mode?, tc_mode?, merge_volumes?, print_volumes?)
+--   RGWH.apply(args)  -- AudioSweet bridge (unchanged)
+--   
+-- @notes
+--   • "render" always processes a single item (selected or provided); selection_scope is ignored.
+--   • "glue" supports Item Units / TS-Window / single item.
+--   • "auto": NEW (v251107.0100) - analyzes each unit individually:
+--       - Single-item units → render
+--       - Multi-item units (TOUCH/CROSSFADE) → glue
+--       - Works with mixed unit types in single execution
+--   • All overrides are one-run only: ExtState is snapshotted and restored after operation.
+--   • For detailed operation modes guide, see RGWH GUI: Help > Manual (Operation Modes)
+--
+-- @changelog
+--   0.3.7 [260328.0408] - ADDED: Tail Seconds — FX decay extension independent of handles
+--     - NEW: TAIL_SECONDS setting (default 0.0): extends the processed item beyond the right handle,
+--       into silence, to capture reverb/delay/echo decay naturally.
+--     - Tail is NOT clamped to source length — item extends into silence (REAPER pads with zeros).
+--     - Tail is always additive: finalR = gotR + TAIL (stacks on top of Right handle, not replacing it).
+--     - Glue path only: UR window and final item length extended by TAIL on last member.
+--       • Render intentionally ignores TAIL (tail is Glue-only by design).
+--     - per_member_window_lr() now accepts tail param; returns finalR and tailH in result table.
+--     - M.core() API: handle = { ..., tail=N } sets TAIL_SECONDS for a one-run override.
+--     - DEFAULTS.TAIL_SECONDS = 0.0 (fully backward-compatible; no behaviour change when not set).
+--
 
-@provides
-  [main] .
-
-@about
-  Core library for handle-aware Render/Glue workflows with clear, single-entry API.
-  Features:
-    • Handle-aware windows with clamp-to-source.
-    • Glue by Item Units (same-track grouping), with optional Glue Cues.
-    • Render single items with apply policies and BWF TimeReference embed.
-    • One-run overrides via ExtState snapshot/restore (non-destructive defaults).
-    • Edge Cues (#in/#out) and Glue Cues (#Glue: <TakeName>) for media cue workflows.
-
-@api
-  -- Primary:
-  RGWH.core(args) -> (ok:boolean, err?:string)
-    args = {
-      op = "render" | "glue" | "auto",     -- render = single item only; glue supports scope (see below)
-      selection_scope = "auto" | "units" | "ts" | "item",  -- glue/auto only; render ignores it
-      item  = MediaItem*,                  -- optional single-item provider (render or glue/item)
-      items = { MediaItem*, ... },         -- optional items provider for glue/units
-
-      -- Channel mode (maps to GLUE/RENDER_APPLY_MODE):
-      channel_mode = "auto" | "mono" | "multi",
-
-      -- Render-specific toggles:
-      take_fx  = true|false,               -- bake take FX (nil = keep ExtState)
-      track_fx = true|false,               -- bake track FX (nil = keep ExtState)
-      tc_mode  = "previous" | "current" | "off", -- TimeReference embed policy (render only)
-      merge_volumes = true|false,          -- merge item volume into take volume before render (default: true)
-      merge_to_item = true|false,          -- merge take volume into item volume (mutually exclusive with merge_volumes)
-      print_volumes = true|false,          -- bake volumes into rendered audio; false = restore original (default: true)
-
-      -- One-run overrides (fallback: ExtState -> DEFAULTS):
-      handle  = { mode="seconds", seconds=5.0 } | "ext" | nil,
-      cues    = { write_edge=true/false, write_glue=true/false },
-      policies = {
-        glue_single_items = true/false,
-      },
-      debug = { level=1..N, no_clear=true/false },
-    }
-
-  -- Legacy (kept for compatibility):
-  RGWH.glue_selection()
-  RGWH.render_selection(take_fx?, track_fx?, mode?, tc_mode?, merge_volumes?, print_volumes?)
-  RGWH.apply(args)  -- AudioSweet bridge (unchanged)
-  
-@notes
-  • "render" always processes a single item (selected or provided); selection_scope is ignored.
-  • "glue" supports Item Units / TS-Window / single item.
-  • "auto": NEW (v251107.0100) - analyzes each unit individually:
-      - Single-item units → render
-      - Multi-item units (TOUCH/CROSSFADE) → glue
-      - Works with mixed unit types in single execution
-  • All overrides are one-run only: ExtState is snapshotted and restored after operation.
-  • For detailed operation modes guide, see RGWH GUI: Help > Manual (Operation Modes)
-
-@changelog
-  0.3.6 [260207.1717] - FIX: Multi-track Glue with TS now processes all tracks correctly
-    - BUG: When gluing multiple tracks with Time Selection, only Track #1 was processed as GAP unit
-      • Track #2+ were incorrectly treated as "no TS" mode (individual units with handles)
-    - ROOT CAUSE: get_current_ts() was called INSIDE the per-track loop
-      • After Track #1's GAP unit was processed, TS was cleared (line 2252)
-      • Subsequent tracks saw hasTS=false
-    - FIX: Capture TS state BEFORE the track loop starts
-      • capturedTsL, capturedTsR, capturedHasTS = get_current_ts()
-      • All tracks now use the captured values instead of re-querying
-
-  0.3.5 [260205.0409] - REMOVE: force_multi / no_trackfx_output_policy settings (redundant with MULTI_CHANNEL_POLICY)
-    - REMOVED: GLUE_OUTPUT_POLICY_WHEN_NO_TRACKFX and RENDER_OUTPUT_POLICY_WHEN_NO_TRACKFX settings
-      • These settings ("preserve" | "force_multi") are now fully replaced by MULTI_CHANNEL_POLICY
-      • source_track = old force_multi (Apply after Glue to force track ch)
-      • source_playback = old preserve (Glue natively preserves playback ch, skip Apply)
-    - SIMPLIFIED: Glue path condition — 3 locations (GAP unit, main unit, TS-Window)
-      • Old: (multi or preserve) AND force_multi policy → Apply
-      • New: unit_apply_mode == "multi" → Apply (source_track needs it; source_playback skips)
-    - SIMPLIFIED: Render path — merged force_multi + need_apply_for_multichannel into need_multichannel
-      • Multi/preserve modes always use Apply for correct channel control (40601 can't preserve multi-ch)
-    - REMOVED: DEFAULTS, read_settings(), snapshot/restore, one-run overrides for the two policies
-    - REMOVED: API args.policies.glue_no_trackfx_output_policy / render_no_trackfx_output_policy
-    - GUI: Removed Glue/Render No-TrackFX Policy combos, persist keys, sync, labels, debug output
-    - REASON: Reduces UI complexity — one setting (MULTI_CHANNEL_POLICY) controls all channel behavior
-
-  0.3.4 [260205.0144] - REFACTOR: preserve mode hybrid command — 41993 default + 40209 for odd ch
-    - CHANGE: SOURCE-playback (preserve) no longer uses 40209 exclusively
-      • Even ch (2,4,6...) and mono: 41993 + set track ch = target (deterministic, no FX Pin interference)
-      • Odd multi ch (3,5,7...): 40209 + set track ch = item_ch+1 as ceiling (preserves exact odd ch)
-    - REASON: 40209 is affected by Take FX Pin Connector (can expand output unpredictably)
-      • 41993 output = track ch (100% deterministic, ignores FX Pin)
-      • 40209 only needed for odd ch since REAPER track ch is always even
-    - UPDATED: apply_track_take_fx_to_item_with_policy() — hybrid preserve_cmd logic
-    - UPDATED: apply_multichannel_no_fx_preserve_take() — same hybrid logic
-    - UPDATED: get_apply_cmd() comments to note hybrid approach
-    - LOGGING: Now logs actual command ID in run_command for easier debugging
-    - IMPACT: All 4 FX quadrants × Render/Glue paths benefit from deterministic channel control
-
-  0.3.3 [260205.0023] - BUGFIX: preserve mode track ch adjustment was expand-only (not bidirectional)
-    - BUG: apply_track_take_fx_to_item_with_policy() only expanded track ch when item_ch > track_ch
-      • 40209 uses track I_NCHAN as ceiling → items on wider tracks output at track ch, not item ch
-      • e.g., 2ch item on 4ch track → output 4ch (wrong), should be 2ch
-      • e.g., 4ch item on 6ch track → output 6ch (wrong), should be 4ch
-    - FIXED: Bidirectional track ch adjustment for preserve mode
-      • Now adjusts track ch to match item ch in BOTH directions (expand AND shrink)
-      • Enforces 2ch floor (40209 REAPER limit) and even channel count
-    - FIXED: Same bug in apply_multichannel_no_fx_preserve_take() (Glue no-FX path)
-      • Applied identical bidirectional adjustment logic
-    - IMPACT: SOURCE-playback now correctly preserves item ch on tracks wider than source
-
-  0.3.2 [260204.2032] - BUGFIX: Glue path ignoring SOURCE-playback (preserve) policy
-    - FIXED: apply_multichannel_no_fx_preserve_take() always used ACT_APPLY_MULTI (41993)
-      • Added apply_mode parameter (5th arg, default "multi" for backward compatibility)
-      • Now uses get_apply_cmd(apply_mode) to select correct action per policy
-      • preserve mode: uses 40209, expands track ch to match item ch (40209 has 2ch floor)
-      • multi mode: uses 41993 (existing behavior, unchanged)
-    - FIXED: TS-Window glue path condition only checked unit_apply_mode == "multi"
-      • Added "preserve" to condition so preserve mode enters the no-Track-FX apply branch
-    - UPDATED: All 3 callers now pass unit_apply_mode as 5th argument
-      • GAP unit path (line ~2174)
-      • Main glue_unit path (line ~2412)
-      • TS-Window path (line ~2707)
-    - FIXED: get_multi_channel_policy() captured retval instead of string value
-      • Bug: local policy = r.GetProjExtState(...) → policy was always integer 1
-      • Fix: local _, policy = r.GetProjExtState(...)
-    - IMPACT: SOURCE-playback policy now works correctly for both Render and Glue paths
-
-  0.3.1 [260109.1430] - MULTI-CHANNEL POLICY: Track Channel Adjustment Implementation
-    - IMPLEMENTED: Track channel adjustment for SOURCE-playback policy
-      • New function: apply_track_take_fx_to_item_with_policy() - handles track ch snapshot/adjust/restore
-      • SOURCE-playback (preserve mode): Temporarily expands track ch to match item ch before 40209
-      • SOURCE-track (multi mode): Uses existing track ch with 41993 (no adjustment needed)
-      • Prevents 40209's stereo floor (2ch minimum) by pre-adjusting track channels for >2ch items
-      • ODD CHANNEL HANDLING: Rounds up to even (5ch→6ch) since REAPER enforces even track channel counts
-    - UPDATED: All apply paths now use policy-aware track channel adjustment
-      • apply_track_take_fx_to_item() - wraps new policy-aware function (glue flow uses this)
-      • Render flow - updated to use apply_track_take_fx_to_item_with_policy() directly
-      • Glue flow - automatically inherits via apply_track_take_fx_to_item()
-    - BEHAVIOR: Based on command testing results (40209 vs 41993)
-      • 40209 with Take FX: Respects Pin Connector, but has 2ch floor without track expansion
-      • 40209 without Take FX: Has 2ch floor (output = max(2ch, min(FX_output, track_ch)))
-      • 41993: Completely ignores FX Pin Connector, forces output = track_ch
-    - LOGGING: New debug messages for policy-based track channel adjustments
-      • "[POLICY] Track ch adjusted X→Y for SOURCE-playback (item has Ych)"
-      • "[POLICY] Track ch X→Y during apply, restored to X"
-    - IMPACT: SOURCE-playback policy now correctly preserves multi-channel items (4ch→4ch, 6ch→6ch, etc.)
-    - VERIFIED: Track channel snapshot/restore mechanism tested and working correctly
-    - READY: For user testing with actual multi-channel items and policies
-
-]]--
 local r = reaper
 local M = {}
 
@@ -183,6 +103,7 @@ local DEFAULTS = {
   GLUE_SINGLE_ITEMS  = true,
   HANDLE_MODE        = "seconds",
   HANDLE_SECONDS     = 5.0,
+  TAIL_SECONDS       = 0.0,
   DEBUG_LEVEL        = 0,
   -- FX policies (separate for GLUE vs RENDER)
   GLUE_TAKE_FX       = 1,             -- 1=Glue 之後的成品要印入 take FX；0=不印入
@@ -242,6 +163,7 @@ function M.read_settings()
     GLUE_SINGLE_ITEMS  = (get_ext_bool("GLUE_SINGLE_ITEMS",  DEFAULTS.GLUE_SINGLE_ITEMS)==1),
     HANDLE_MODE        = get_ext("HANDLE_MODE",              DEFAULTS.HANDLE_MODE),
     HANDLE_SECONDS     = get_ext_num("HANDLE_SECONDS",       DEFAULTS.HANDLE_SECONDS),
+    TAIL_SECONDS       = get_ext_num("TAIL_SECONDS",         DEFAULTS.TAIL_SECONDS),
     DEBUG_LEVEL        = get_ext_num("DEBUG_LEVEL",          DEFAULTS.DEBUG_LEVEL),
     GLUE_TAKE_FX       = (get_ext_bool("GLUE_TAKE_FX",      DEFAULTS.GLUE_TAKE_FX)==1),
     GLUE_TRACK_FX      = (get_ext_bool("GLUE_TRACK_FX",     DEFAULTS.GLUE_TRACK_FX)==1),
@@ -883,7 +805,7 @@ end
 ------------------------------------------------------------
 -- Handle window / clamp
 ------------------------------------------------------------
-local function per_member_window_lr(it, L, R, H_left, H_right)
+local function per_member_window_lr(it, L, R, H_left, H_right, tail)
   local tk   = r.GetActiveTake(it)
   local rate = tk and (r.GetMediaItemTakeInfo_Value(tk,"D_PLAYRATE") or 1.0) or 1.0
   local offs = tk and (r.GetMediaItemTakeInfo_Value(tk,"D_STARTOFFS") or 0.0) or 0.0
@@ -901,12 +823,18 @@ local function per_member_window_lr(it, L, R, H_left, H_right)
   local wantR = R + (H_right or 0.0)
   local gotR  = (wantR > (R + max_right_ext)) and (R + max_right_ext) or wantR
 
+  -- Tail: always appended after gotR, not clamped to source.
+  -- Represents FX decay time (reverb, delay, echo) — item extends into silence.
+  local tailH  = tail or 0.0
+  local finalR = gotR + tailH
+
   local clampL = (gotL > wantL + 1e-9)
   local clampR = (gotR < wantR - 1e-9)
 
   return {
     tk=tk, rate=rate, offs=offs,
     L=L, R=R, wantL=wantL, wantR=wantR, gotL=gotL, gotR=gotR,
+    finalR=finalR, tailH=tailH,
     clampL=clampL, clampR=clampR,
     leftH=H_left or 0.0, rightH=H_right or 0.0,
     name=get_take_name(it)
@@ -1356,6 +1284,7 @@ end
 local function glue_unit(tr, u, cfg)
   local DBG    = cfg.DEBUG_LEVEL or 1
   local HANDLE = (cfg.HANDLE_MODE=="seconds") and (cfg.HANDLE_SECONDS or 0.0) or 0.0
+  local TAIL   = cfg.TAIL_SECONDS or 0.0
   local eps_s  = frames_to_seconds(EPSILON_FRAMES, get_sr(), nil)  -- v0.2.2: internal constant
 
   -- Per-unit channel mode detection when GLUE_APPLY_MODE=="auto"
@@ -1561,17 +1490,17 @@ local function glue_unit(tr, u, cfg)
   for idx, m in ipairs(members) do
     local H_left  = (idx==1) and H_left_final or 0.0
     local H_right = (idx==#members) and H_right_final or 0.0
-    local d = per_member_window_lr(m.it, m.L, m.R, H_left, H_right)
+    local d = per_member_window_lr(m.it, m.L, m.R, H_left, H_right, (idx==#members) and TAIL or 0.0)
     UL = math.min(UL, d.gotL)
-    UR = math.max(UR, d.gotR)
+    UR = math.max(UR, d.finalR)
     details[idx] = d
   end
 
   dbg(DBG,1,"[RUN] unit kind=%s members=%d UL=%.3f UR=%.3f dur=%.3f", u.kind,#members,UL,UR,UR-UL)
   if DBG>=2 then
     for i,d in ipairs(details) do
-      dbg(DBG,2,"       member#%d want=%.3f..%.3f -> got=%.3f..%.3f  clampL=%s clampR=%s  name=%s",
-        i, d.wantL, d.wantR, d.gotL, d.gotR, tostring(d.clampL), tostring(d.clampR), d.name or "(none)")
+      dbg(DBG,2,"       member#%d want=%.3f..%.3f -> got=%.3f..%.3f finalR=%.3f(tail+%.3f)  clampL=%s clampR=%s  name=%s",
+        i, d.wantL, d.wantR, d.gotL, d.gotR, d.finalR, d.tailH, tostring(d.clampL), tostring(d.clampR), d.name or "(none)")
     end
   end
 
@@ -1726,7 +1655,7 @@ local function glue_unit(tr, u, cfg)
     if right_total < 0 then right_total = 0 end
 
     r.SetMediaItemInfo_Value(glued,"D_POSITION", u.start)
-    r.SetMediaItemInfo_Value(glued,"D_LENGTH",   u.finish - u.start)
+    r.SetMediaItemInfo_Value(glued,"D_LENGTH",   u.finish - u.start + TAIL)
     local gtk = r.GetActiveTake(glued)
     if gtk then r.SetMediaItemTakeInfo_Value(gtk,"D_STARTOFFS", left_total) end
     r.UpdateItemInProject(glued)
@@ -2358,6 +2287,7 @@ function M.render_selection(take_fx, track_fx, mode, tc_mode, merge_volumes, pri
   end
 
   local HANDLE = (cfg.HANDLE_MODE=="seconds") and (cfg.HANDLE_SECONDS or 0.0) or 0.0
+  -- NOTE: TAIL_SECONDS is intentionally ignored for Render. Tail is Glue-only.
 
   dbg(DBG,1,"[RUN] Render start  mode=%s  TAKE=%s TRACK=%s  items=%d  handles=%.3fs  WRITE_EDGE_CUES=%s  GLUE_CUE_POLICY=%s",
       cfg.RENDER_APPLY_MODE, tostring(cfg.RENDER_TAKE_FX), tostring(cfg.RENDER_TRACK_FX),
@@ -2444,11 +2374,11 @@ function M.render_selection(take_fx, track_fx, mode, tc_mode, merge_volumes, pri
 
     local L0, R0 = item_span(it)
     local name0  = get_take_name(it) or ""
-    local d      = per_member_window_lr(it, L0, R0, HANDLE, HANDLE)
+    local d      = per_member_window_lr(it, L0, R0, HANDLE, HANDLE, 0.0)
 
     if DBG >= 2 then
-      dbg(DBG,2,"[REN] item@%.3f..%.3f want=%.3f..%.3f -> got=%.3f..%.3f clampL=%s clampR=%s name=%s",
-          L0, R0, d.wantL, d.wantR, d.gotL, d.gotR, tostring(d.clampL), tostring(d.clampR), name0)
+      dbg(DBG,2,"[REN] item@%.3f..%.3f want=%.3f..%.3f -> got=%.3f..%.3f finalR=%.3f(tail+%.3f) clampL=%s clampR=%s name=%s",
+          L0, R0, d.wantL, d.wantR, d.gotL, d.gotR, d.finalR, d.tailH, tostring(d.clampL), tostring(d.clampR), name0)
     end
 
     local edge_ids = nil
@@ -2459,9 +2389,9 @@ function M.render_selection(take_fx, track_fx, mode, tc_mode, merge_volumes, pri
     end
 
 
-    -- move to render window and align take offset
+    -- move to render window and align take offset (finalR includes tail beyond source)
     r.SetMediaItemInfo_Value(it, "D_POSITION", d.gotL)
-    r.SetMediaItemInfo_Value(it, "D_LENGTH",   d.gotR - d.gotL)
+    r.SetMediaItemInfo_Value(it, "D_LENGTH",   d.finalR - d.gotL)
     if d.tk then
       local deltaL  = (L0 - d.gotL)
       local new_off = d.offs - (deltaL * d.rate)
@@ -2528,7 +2458,7 @@ function M.render_selection(take_fx, track_fx, mode, tc_mode, merge_volumes, pri
     end
 
 
-    -- restore item window and offset
+    -- restore item window and offset; tail extends final item beyond original right edge
     local left_total = L0 - d.gotL
     if left_total < 0 then left_total = 0 end
     r.SetMediaItemInfo_Value(it, "D_POSITION", L0)
@@ -2657,6 +2587,7 @@ function M.core(args)
   if args.handle and args.handle ~= "ext" then
     set_opt("HANDLE_MODE",    args.handle.mode or DEFAULTS.HANDLE_MODE)
     set_opt("HANDLE_SECONDS", tostring(args.handle.seconds or DEFAULTS.HANDLE_SECONDS))
+    set_opt("TAIL_SECONDS",   tostring(args.handle.tail   or 0.0))
   end
 
   -- cues
