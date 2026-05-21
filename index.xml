@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="1a6b573215084e5e7e18c8be18d6071f678ac559">
+<index version="1" name="hsuanice Scripts" commit="a8a21f53f0d75c0eb777159254ddb0ce81de58c5">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -82,6 +82,30 @@
     • Drop onto any row to insert the dragged item above it
     • New order is persisted immediately via save_chains_to_extstate()]]></changelog>
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/1a6b573215084e5e7e18c8be18d6071f678ac559/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.7" author="hsuanice" time="2026-05-21T03:53:02Z">
+        <changelog><![CDATA[0.2.7 [260517.1748]
+  - FIXED: Open button on Saved Presets / History no longer clobbers item/time/razor selection
+    • Previously: with REAPER's "item+time selection link to track" enabled,
+      clicking Open re-selected the FX-host track and the link wiped your
+      pre-open item / time / razor selection
+    • Now: open_saved_chain_fx() and open_history_fx() snapshot selection
+      state (items, time selection, razor edits, track selection) before
+      SetOnlyTrackSelected(), then restore it after TrackFX_Show — including
+      on every early-return error path
+    • Workflow: select items → click Open to adjust FX → press Execute,
+      all without re-selecting items
+
+0.2.6 [260330.1458]
+  - ADDED: Auto track FX chain online/offline restore on preview/run
+    • Saves and restores both I_FXEN (chain bypass) and per-FX offline bits
+      so all forms of "FX chain offline" in REAPER are covered
+    • Before preview or run: chain is brought online if offline; nothing changes if already online
+    • After preview/run (or transport auto-stops): original state is restored
+    • Applies to both Single FX (focused) mode and Chain mode
+    • Preview FX track resolution now has full fallback (focused → GUID → name),
+      matching the same logic used by Run]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/a8a21f53f0d75c0eb777159254ddb0ce81de58c5/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles (ExtState Shortcut)">
