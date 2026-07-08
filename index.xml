@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="a8a21f53f0d75c0eb777159254ddb0ce81de58c5">
+<index version="1" name="hsuanice Scripts" commit="33a441af68bcfb33ccdcfad9feaae8a7c32a9c8b">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -106,6 +106,15 @@
     • Preview FX track resolution now has full fallback (focused → GUID → name),
       matching the same logic used by Run]]></changelog>
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/a8a21f53f0d75c0eb777159254ddb0ce81de58c5/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.8" author="hsuanice" time="2026-07-08T04:56:27Z">
+        <changelog><![CDATA[[260708.1252]
+   - ADDED: Load Track FX now imports all single-FX presets from the selected REAPER track
+   - ADDED: Load Chain now loads presets from all selected tracks in REAPER
+   - IMPROVED: Preset panel UI now uses shorter labels and hover hints for clearer loading actions
+   - IMPROVED: Preset section title simplified to "SAVED PRESET"
+   - FIXED: Track-name parsing no longer misidentifies ordinary names like "8ChTrack" as track-number selectors]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/33a441af68bcfb33ccdcfad9feaae8a7c32a9c8b/Beta%20Testing/hsuanice_AudioSweet%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Glue.lua" type="script" desc="RGWH Glue - Glue with Handles (ExtState Shortcut)">
