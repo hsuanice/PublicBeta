@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="58edb15a0a2f88af38b77d247aea3f6932461fa9">
+<index version="1" name="hsuanice Scripts" commit="477fdac0b7fc45df9f0dcb407257684ba85f7262">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -334,6 +334,24 @@
   - M.core() API: handle = { ..., tail=N } sets TAIL_SECONDS for a one-run override.
   - DEFAULTS.TAIL_SECONDS = 0.0 (fully backward-compatible; no behaviour change when not set).]]></changelog>
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/6bf1782682be3b98c2dbcd077d2deff05a6f5c1a/Library/hsuanice_RGWH%20Core.lua</source>
+      </version>
+      <version name="0.3.9" author="hsuanice" time="2026-07-10T08:20:10Z">
+        <changelog><![CDATA[0.3.9 [260330.1415] - FIX: GLUE_MUTED_SEPARATE — muted items now group with other muted items
+  - BUG: muted items were always forced to SINGLE units, even when adjacent to other muted items
+  - FIX: detect_units_same_track() now breaks only at muted/non-muted boundaries, not at every muted item
+    • Muted items can now form TOUCH/CROSSFADE/MIXED units with other muted items
+    • The unit chain only breaks when mute state changes between adjacent items
+
+0.3.8 [260330.1354] - ADDED: Glue unit grouping options — muted_separate and split_at_crossfades
+  - NEW: GLUE_MUTED_SEPARATE (default: true) — muted items always form their own SINGLE unit;
+    a muted item breaks the chain on both sides (items before/after are separate units).
+  - NEW: GLUE_SPLIT_AT_CROSSFADES (default: false) — crossfading items are not grouped into the
+    same unit; only touching items share a unit.
+  - detect_units_same_track() now accepts optional opts table: {split_at_crossfades, muted_separate}
+  - Both flags are read from ExtState and exposed via GUI (RGWH ReaImGui >= 0.2.6).
+  - Both flags affect Glue and Auto paths only; Render path is unaffected.
+  - When a Time Selection is active, the TS-Window path is used instead and opts have no effect.]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/477fdac0b7fc45df9f0dcb407257684ba85f7262/Library/hsuanice_RGWH%20Core.lua</source>
       </version>
     </reapack>
   </category>
