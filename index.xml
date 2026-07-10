@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hsuanice Scripts" commit="33a441af68bcfb33ccdcfad9feaae8a7c32a9c8b">
+<index version="1" name="hsuanice Scripts" commit="58edb15a0a2f88af38b77d247aea3f6932461fa9">
   <category name="Beta Testing">
     <reapack name="hsuanice_AudioSweet ReaImGui.lua" type="script" desc="AudioSweet ReaImGui - AudioSuite Workflow (Pro Tools–Style)">
       <metadata>
@@ -177,6 +177,27 @@
   - TAIL_SECONDS written to RGWH ExtState on every sync_to_extstate()
   - Debug log includes Tail Seconds value]]></changelog>
         <source main="main">https://github.com/hsuanice/PublicBeta/raw/024e6891a4d9a1c22124e25459ee70fd140cf89b/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
+      </version>
+      <version name="0.2.8" author="hsuanice" time="2026-07-10T07:59:33Z">
+        <changelog><![CDATA[0.2.8 [260710.1556] - FIX: ImGui window stability + Settings collapse lock
+  - FIXED: Removed extra End() calls on non-visible Begin() paths (prevents "ImGui_End: Calling End() too many times!")
+  - FIXED: BWF install modal now uses NoDocking to avoid docking-related stack issues
+  - UI: Disabled Settings window collapse arrow (NoCollapse) to prevent accidental fold/collapse
+
+0.2.7 [260330.1415] - MOVED: "Keep MUTED as separate unit" to main panel alongside "Split at crossfades"
+  - Both unit grouping checkboxes now appear on the same row below Handle/Tail in the main panel
+  - REMOVED: "GLUE UNIT BEHAVIOUR" section from Settings tab (no longer needed)
+  - FIX (Core): muted items now group with other muted items — only muted/non-muted boundary breaks the chain
+
+0.2.6 [260330.1354] - ADDED: Glue unit grouping options (requires RGWH Core ≥ 0.3.8)
+  - NEW: "Split at crossfades" checkbox — main panel, below Tail, right side (default OFF)
+    • When ON: crossfading items are not grouped into the same unit; each becomes its own unit
+  - NEW: "Keep MUTED as separate unit" checkbox — main panel, below Handle/Tail (default ON)
+    • Muted items group only with other muted items; breaks at muted/non-muted boundary
+  - REMOVED: "HANDLE (Pre/Post Roll)" section header — "Handle (s)" label already self-explanatory
+  - Both settings persisted in GUI state, synced to RGWH ExtState on every change
+  - Both options are no-ops when a Time Selection is active (TS-Window path bypasses unit detection)]]></changelog>
+        <source main="main">https://github.com/hsuanice/PublicBeta/raw/58edb15a0a2f88af38b77d247aea3f6932461fa9/Beta%20Testing/hsuanice_RGWH%20ReaImGui.lua</source>
       </version>
     </reapack>
     <reapack name="hsuanice_RGWH Render.lua" type="script" desc="RGWH Render - Render with Handles (ExtState Shortcut)">
