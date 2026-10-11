@@ -608,18 +608,10 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is {\field{\*\fldinst{HYPERLINK "https://raw.githubusercontent.com/hsuanice/PublicBeta/master/index.xml"}}{\fldrslt{\ul
-https://github.com/hsuanice/PublicBeta/raw/master/index.xml
-}}}
-\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 The scripts in this repository are created and maintained by hsuanice, with the assistance of AI tools such as ChatGPT and Claude.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 2025-12-16 \u8212- Beta release\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 RGWH\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Render or glue items with handles.\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 AudioSweet\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab AudioSuite Workflow in REAPER (Pro Tools\u8211-Style)\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Reference: Inspired by AudioSuite-like Script by Tim Chimes 'AudioSweet' is a name originally given by Tim Chimes.\line This project continues to use the name in reference to his original work.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Original: Renders selected plugin to selected media item Written for REAPER 5.1 with Lua v1.1 12/22/2015 - Added PreventUIRefresh http://timchimes.com/scripting-with-reaper-audiosuite/\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 {\b \u9888 ?\u65039 ? This repository is no longer updated.} RGWH and AudioSweet have moved to {\b hsuanice/ReaScripts}.\par}
+{\pard \ql \f0 \sa0 \li1080 \fi-360 1.\tx360\tab In REAPER: Extensions > ReaPack > Manage repositories \u8594 ? right-click {\b hsuanice Scripts} \u8594 ? {\b Uninstall}\par}
+{\pard \ql \f0 \sa0 \li1080 \fi-360 2.\tx360\tab Import: {\f1 https://github.com/hsuanice/ReaScripts/raw/master/index.xml}\par}
+{\pard \ql \f0 \sa0 \li1080 \fi-360 3.\tx360\tab Install {\b hsuanice Library}, {\b RGWH} and {\b AudioSweet}\sa180\par}
 }
 ]]></description>
   </metadata>
